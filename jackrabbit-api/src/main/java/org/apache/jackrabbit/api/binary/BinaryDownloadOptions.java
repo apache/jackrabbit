@@ -62,24 +62,10 @@ public final class BinaryDownloadOptions {
 
     /**
      * Returns the MIME type that should be assumed for the binary that is to be
-     * downloaded.  This value should be a valid {@code jcr:mimeType}.
-     * <p>
-     * If this value is set, this has the effect of instructing the service
-     * provider to set this value as the MIME type of the content type in the
-     * {@code Content-Type} header of the response to a request issued with a
-     * URI obtained by calling {@link
-     * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be set by
-     * calling {@link BinaryDownloadOptionsBuilder#withMimeType(String)} when
-     * building an instance of this class.
-     * <p>
-     * Note that if the MIME type is text-based, the caller may also wish to set
-     * the encoding which is done separately; see {@link #getEncoding()}.
-     * <p>
-     * The caller should ensure that the MIME type specified is valid; the
-     * implementation is not required to perform any validation of this setting.
-     * <p>
-     * If no MIME type is specified, no {@code Content-Type} header will be
-     * specified to the service provider.
+     * downloaded.  This value should be a valid {@code jcr:mimeType}.  This
+     * value can be set by calling {@link
+     * BinaryDownloadOptionsBuilder#withMimeType(String)} when building an
+     * instance of this class.
      *
      * @return A String representation of the MIME type, or {@code null} if no
      *         MIME type has been specified.
@@ -91,22 +77,10 @@ public final class BinaryDownloadOptions {
 
     /**
      * Returns the encoding that should be assumed for the binary that is to be
-     * downloaded.  This value should be a valid {@code jcr:encoding}.
-     * <p>
-     * If this value is set, this has the effect of instructing the service
-     * provider to set this value as the encoding of the content type in the
-     * {@code Content-Type} header of the response to a request issued with a
-     * URI obtained by calling {@link
-     * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be set by
-     * calling {@link BinaryDownloadOptionsBuilder#withEncoding(String)} when
-     * building an instance of this class.
-     * <p>
-     * Note that setting the encoding only makes sense if the MIME type has also
-     * been set to a text-based MIME type.  See {@link #getMimeType()}.
-     * <p>
-     * The caller should ensure that the proper encoding has been set for the
-     * MIME type; the implementation is not required to perform any validation
-     * of these settings.
+     * downloaded.  This value should be a valid {@code jcr:encoding}.  This
+     * value can be set by calling {@link
+     * BinaryDownloadOptionsBuilder#withEncoding(String)} when building an
+     * instance of this class.
      *
      * @return A String representation of the encoding, or {@code null} if no
      *         encoding has been specified.
@@ -118,22 +92,9 @@ public final class BinaryDownloadOptions {
 
     /**
      * Returns the filename that should be assumed for the binary that is to be
-     * downloaded.
-     * <p>
-     * If this value is set, this has the effect of instructing the service
-     * provider to set this value as the filename in the {@code
-     * Content-Disposition} header of the response to a request issued with a
-     * URI obtained by calling {@link
-     * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be set by
-     * calling {@link BinaryDownloadOptionsBuilder#withFileName(String)} when
-     * building an instance of this class.
-     * <p>
-     * Note that a disposition type is also required for the {@code
-     * Content-Disposition} header.  If no disposition type is provided, {@code
-     * inline} is the default.
-     * <p>
-     * If no filename is specified, no {@code Content-Disposition} header will
-     * be specified to the service provider.
+     * downloaded.  This value can be set by calling {@link
+     * BinaryDownloadOptionsBuilder#withFileName(String)} when building an
+     * instance of this class.
      *
      * @return A String representation of the file name, or {@code null} if no
      * file name has been specified.
@@ -143,20 +104,11 @@ public final class BinaryDownloadOptions {
 
     /**
      * Returns the disposition type that should be assumed for the binary that
-     * is to be downloaded.
-     * <p>
-     * If this value is set, this has the effect of instructing the service
-     * provider to set this value as the disposition type in the {@code
-     * Content-Disposition} header of the response to a request issued with a
-     * URI obtained by calling {@link
-     * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be set by
-     * calling {@link BinaryDownloadOptionsBuilder#withDispositionTypeInline()}
-     * or {@link BinaryDownloadOptionsBuilder#withDispositionTypeAttachment()}
-     * when building an instance of this class.
-     * <p>
-     * Note that a disposition type is required for the {@code
-     * Content-Disposition} header.  If this value is not set, {@code inline} is
-     * the default.
+     * is to be downloaded.  This value can be set by calling {@link
+     * BinaryDownloadOptionsBuilder#withDispositionTypeInline()} or {@link
+     * BinaryDownloadOptionsBuilder#withDispositionTypeAttachment()} when
+     * building an instance of this class.  The default value of this setting is
+     * "attachment".
      *
      * @return A String representation of the disposition type, or {@code null}
      * if no disposition type has been specified.
@@ -266,12 +218,6 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getFileName()} on the instance returned by a
          * call to {@link #build()}.
          * <p>
-         * Note that a disposition type is also required for the {@code
-         * Content-Disposition} header.  If no disposition type is provided,
-         * {@code inline} is the default.  See {@link
-         * #withDispositionTypeInline()} or {@link
-         * #withDispositionTypeAttachment()} to set the disposition type.
-         * <p>
          * If no filename is provided, no {@code Content-Disposition} header
          * will be specified to the service provider.
          *
@@ -295,9 +241,8 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getDispositionType()} on the instance built by
          * calling {@link #build()}.
          * <p>
-         * Note that a disposition type is required for the {@code
-         * Content-Disposition} header.  If this value is not set, {@code
-         * inline} is the default.
+         * If this value is not set, the default value of {@code attachment}
+         * will be used.
          * <p>
          * Note that a fileName must also be set for the {@code
          * Content-Disposition} header to be specified to the service provider.
@@ -322,9 +267,8 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getDispositionType()} on the instance built by
          * calling {@link #build()}.
          * <p>
-         * Note that a disposition type is required for the {@code
-         * Content-Disposition} header.  If this value is not set, {@code
-         * inline} is the default.
+         * If this value is not set, the default value of {@code attachment}
+         * will be used.
          * <p>
          * Note that a fileName must also be set for the {@code
          * Content-Disposition} header to be specified to the service provider.
