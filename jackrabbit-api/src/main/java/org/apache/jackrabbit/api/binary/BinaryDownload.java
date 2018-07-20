@@ -33,10 +33,10 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface BinaryDownload extends Binary {
     /**
-     * Get a URI for downloading a binary directly from a storage location with
-     * the provided {@link BinaryDownloadOptions}.  This is probably a
-     * signed URI with a short TTL, although the API does not require it to be
-     * so.
+     * Get a URI for downloading a {@link Binary} directly from a storage
+     * location with the provided {@link BinaryDownloadOptions}.  This is
+     * probably a signed URI with a short TTL, although the API does not require
+     * it to be so.
      * <p>
      * The implementation will attempt to apply the specified {@code
      * downloadOptions} to the subsequent download.  For example, if the caller

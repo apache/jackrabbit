@@ -45,7 +45,72 @@ import org.osgi.annotation.versioning.ProviderType;
  * {@link JackrabbitValueFactory#completeBinaryUpload(String)} to complete the
  * upload.  This call requires an upload token which can be obtained from an
  * instance of this class by calling {@link #getUploadToken()}.
- */
+ * <p>
+ * Below is the detailed direct binary upload algorithm for the remote client.
+ * <p>
+ * In this example the following variables are used:
+ * <ul>
+ *     <li>{@code fileSize}: the actual binary size (must be known at this
+ *     point)
+ *     <li>{@code minPartSize}: the value from {@link #getMinPartSize()}
+ *     <li>{@code maxPartSize}: the value from {@link #getMaxPartSize()}
+ *     <li>{@code numUploadURIs: the number of entries in {@link
+ *     #getUploadURIs()}
+ *     <li>{@code uploadURIs}: the entries in {@link #getUploadURIs()}
+ *     <li>{@code partSize}: the part size to be used in the upload (to be
+ *     determined in the algorithm)
+ * </ul>
+ *
+ * Steps:
+ * <ol>
+ *     <li>If (fileSize divided by maxPartSize) is larger than numUploadURIs,
+ *     then the client cannot proceed and will have to request a new set of URIs
+ *     with the right fileSize as maxSize
+ *     <li>If fileSize is smaller than minPartSize, then take the first provided
+ *     upload URI to upload the entire binary, with partSize = fileSize</li>
+ *     <li>
+ *         (optional) If the client has more information to optimize, the
+ *         partSize can be chosen, under the condition that all of these are
+ *         true for the partSize:
+ *         <ol>
+ *             <li>larger than minPartSize
+ *             <li>smaller or equal than maxPartSize (unless it is -1 =
+ *             unlimited)
+ *             <li>larger than fileSize divided by numUploadURIs
+ *         </ol>
+ *     </li>
+ *     <li>Otherwise all part URIs are to be used and the partSize = fileSize
+ *     divided by numUploadURIs (integer division, discard modulo which will be
+ *     the last part)
+ *     <li>Upload: segment the binary into partSize, for each segment take the
+ *     next URI from uploadURIs (strictly in order), proceed with a standard
+ *     HTTP PUT for each, and for the last part use whatever segment size is
+ *     left
+ *     <li>If a segment fails during upload, retry (up to a certain time out)
+ *     <li>After the upload has finished successfully, notify the application,
+ *     for example through a complete request, passing the {@link
+ *     #getUploadToken() upload token}, and the application will call {@link
+ *     JackrabbitValueFactory#completeBinaryUpload(String)}  with the token
+ * </ol>
+ *
+ * <h2>JSON view</h2>
+ *
+ * A JSON representation of this interface as passed back to a remote client
+ * might look like this:
+ * <pre>
+ * {
+ *     "uploadToken": "aaaa-bbbb-cccc-dddd-eeee-ffff-gggg-hhhh",
+ *     "minPartSize": 10485760,
+ *     "maxPartSize": 104857600,
+ *     "uploadURIs": [
+ *         "http://server.com/upload/1",
+ *         "http://server.com/upload/2",
+ *         "http://server.com/upload/3",
+ *         "http://server.com/upload/4"
+ *     ]
+ * }
+ * </pre>
+ * */
 @ProviderType
 public interface BinaryUpload {
     /**

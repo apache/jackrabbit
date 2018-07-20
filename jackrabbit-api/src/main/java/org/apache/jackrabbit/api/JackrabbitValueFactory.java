@@ -21,9 +21,11 @@ package org.apache.jackrabbit.api;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.api.binary.BinaryUpload;
+import org.apache.jackrabbit.api.binary.BinaryDownload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ProviderType;
@@ -34,6 +36,71 @@ import org.osgi.annotation.versioning.ProviderType;
  * supporting all of the capabilities in this interface.  Each method of the
  * interface describes the behavior of that method if the underlying capability
  * is not available.
+ * <p>
+ * Currently this interface defines the following optional features:
+ * <ul>
+ *     <li>Direct Binary Access - enable a client to upload or download binaries
+ *         directly to/from a storage location
+ * </ul>
+ * <p>
+ * The features are described in more detail below.
+ *
+ * <h2>Direct Binary Access</h2>
+ * <p>
+ * The Direct Binary Access feature provides the capability for a client to
+ * upload or download binaries directly to/from a storage location.  For
+ * example, this might be a cloud storage providing high-bandwidth direct
+ * network access.  This API allows for requests to be authenticated and for
+ * access permission checks to take place within the repository, but for clients
+ * to then access the storage location directly.
+ * <p>
+ * The feature consists of two parts, direct binary upload and direct binary
+ * download.
+ * <p>
+ *
+ * <h3>Direct Binary Upload</h3>
+ * <p>
+ * This feature enables remote clients to upload binaries directly to a storage
+ * location.
+ * <p>
+ * When adding binaries already present on the same JVM or server as Jackrabbit
+ * or Oak, for example because they were generated locally, please use the
+ * regular JCR API for {@link javax.jcr.Property#setValue(Binary) adding
+ * binaries through input streams} instead. This feature is solely designed for
+ * remote clients.
+ * <p>
+ * The direct binary upload process is split into 3 phases:
+ * <ol>
+ *     <li>
+ *         <b>Initialize</b>: A remote client makes request to the
+ *         Jackrabbit-based application to request an upload, which calls {@link
+ *         #initiateBinaryUpload(long, int)} and returns the resulting {@link
+ *         BinaryUpload information} to the remote client.
+ *     </li>
+ *     <li>
+ *         <b>Upload</b>: The remote client performs the actual binary upload
+ *         directly to the binary storage provider.  The {@link BinaryUpload}
+ *         returned from the previous call to {@link
+ *         #initiateBinaryUpload(long, int)} contains detailed instructions on
+ *         how to complete the upload successfully. For more information, see
+ *         the BinaryUpload documentation.
+ *     </li>
+ *     <li>
+ *         <b>Complete</b>: The remote client notifies the Jackrabbit-based
+ *         application that step 2 is complete.  The upload token returned in
+ *         the first step (obtained by calling {@link
+ *         BinaryUpload#getUploadToken()} is passed by the client to {@link
+ *         #completeBinaryUpload(String)}. This will provide the application
+ *         with a regular {@link Binary JCR Binary} that can then be used to
+ *         write JCR content including the binary (such as an nt:file structure)
+ *         and {@link Session#save() persist} it.
+ *     </li>
+ * </ol>
+ * <p>
+ * <h3>Direct Binary Download</h3>
+ * <p>
+ * The direct binary download process is described in detail in {@link
+ * BinaryDownload}.
  */
 @ProviderType
 public interface JackrabbitValueFactory extends ValueFactory {
