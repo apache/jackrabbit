@@ -116,11 +116,10 @@ public final class BinaryDownloadOptions {
      * building an instance of this class.  The default value of this setting is
      * "inline".
      *
-     * @return The disposition type, or {@code null}
-     * if no disposition type has been specified.
+     * @return The disposition type.
      * @see <a href="https://tools.ietf.org/html/rfc6266#section-4.2">RFC 6266, Section 4.2</a> 
      */
-    @Nullable
+    @NotNull
     public final String getDispositionType() {
         return dispositionType;
     }
@@ -144,7 +143,7 @@ public final class BinaryDownloadOptions {
         private String mediaType = null;
         private String characterEncoding = null;
         private String fileName = null;
-        private DispositionType dispositionType = null;
+        private DispositionType dispositionType = DispositionType.INLINE;
 
         private BinaryDownloadOptionsBuilder() { }
 
@@ -188,9 +187,9 @@ public final class BinaryDownloadOptions {
          * built.  This value should be a valid {@code jcr:encoding}.
          * <p>
          * Calling this method has the effect of instructing the service
-         * provider to set {@code encoding} as the "charset" parameter of the content type
-         * in the {@code Content-Type} header field of the response to a request
-         * issued with a URI obtained by calling {@link
+         * provider to set {@code charecterEncoding} as the "charset" parameter
+         * of the content type in the {@code Content-Type} header field of the
+         * response to a request issued with a URI obtained by calling {@link
          * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be
          * later retrieved by calling {@link
          * BinaryDownloadOptions#getCharacterEncoding()} on the instance returned by a
@@ -210,7 +209,7 @@ public final class BinaryDownloadOptions {
          *     JCR 2.0 Repository Model - jcr:encoding</a>
          */
         @NotNull
-        public BinaryDownloadOptionsBuilder withEncoding(@NotNull String characterEncoding) {
+        public BinaryDownloadOptionsBuilder withCharacterEncoding(@NotNull String characterEncoding) {
             this.characterEncoding = characterEncoding;
             return this;
         }
@@ -295,7 +294,9 @@ public final class BinaryDownloadOptions {
             return new BinaryDownloadOptions(mediaType,
                     characterEncoding,
                     fileName,
-                    null != dispositionType ? dispositionType.toString() : null
+                    null != dispositionType
+                            ? dispositionType.toString()
+                            : DispositionType.INLINE.toString()
             );
         }
 
