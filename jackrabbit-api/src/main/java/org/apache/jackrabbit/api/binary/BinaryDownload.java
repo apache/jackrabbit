@@ -40,7 +40,7 @@ public interface BinaryDownload extends Binary {
      * <p>
      * The implementation will attempt to apply the specified {@code
      * downloadOptions} to the subsequent download.  For example, if the caller
-     * knows that the URL refers to a specific type of content, the caller can
+     * knows that the URI refers to a specific type of content, the caller can
      * specify that content type by setting the MIME type and encoding in the
      * {@code downloadOptions}.  The caller may also use a default instance
      * obtained via {@link BinaryDownloadOptions#DEFAULT} in which case the
