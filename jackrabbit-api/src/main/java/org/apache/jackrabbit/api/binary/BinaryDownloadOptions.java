@@ -37,16 +37,16 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public final class BinaryDownloadOptions {
-    private final String mimeType;
+    private final String mediaType;
     private final String encoding;
     private final String fileName;
     private final String dispositionType;
 
-    private BinaryDownloadOptions(final String mimeType,
+    private BinaryDownloadOptions(final String mediaType,
                                   final String encoding,
                                   final String fileName,
                                   final String dispositionType) {
-        this.mimeType = mimeType;
+        this.mediaType = mediaType;
         this.encoding = encoding;
         this.fileName = fileName;
         this.dispositionType = dispositionType;
@@ -61,34 +61,38 @@ public final class BinaryDownloadOptions {
             BinaryDownloadOptions.builder().build();
 
     /**
-     * Returns the MIME type that should be assumed for the binary that is to be
+     * Returns the internet media type that should be assumed for the binary that is to be
      * downloaded.  This value should be a valid {@code jcr:mimeType}.  This
      * value can be set by calling {@link
-     * BinaryDownloadOptionsBuilder#withMimeType(String)} when building an
+     * BinaryDownloadOptionsBuilder#withMediaType(String)} when building an
      * instance of this class.
      *
-     * @return A String representation of the MIME type, or {@code null} if no
-     *         MIME type has been specified.
+     * @return A String representation of the internet media type, or {@code null} if no
+     *         type has been specified.
      * @see <a href="https://docs.adobe.com/content/docs/en/spec/jcr/2.0/3_Repository_Model.html#3.7.11.10%20mix:mimeType">
      *     JCR 2.0 Repository Model - jcr:mimeType</a>
      */
     @Nullable
-    public final String getMimeType() { return mimeType; }
+    public final String getMediaType() {
+        return mediaType;
+    }
 
     /**
-     * Returns the encoding that should be assumed for the binary that is to be
-     * downloaded.  This value should be a valid {@code jcr:encoding}.  This
-     * value can be set by calling {@link
+     * Returns the character encoding that should be assumed for the binary that
+     * is to be downloaded.  This value should be a valid {@code jcr:encoding}.
+     * It can be set by calling {@link
      * BinaryDownloadOptionsBuilder#withEncoding(String)} when building an
      * instance of this class.
      *
-     * @return A String representation of the encoding, or {@code null} if no
+     * @return The character encoding, or {@code null} if no
      *         encoding has been specified.
      * @see <a href="https://docs.adobe.com/content/docs/en/spec/jcr/2.0/3_Repository_Model.html#3.7.11.10%20mix:mimeType">
      *     JCR 2.0 Repository Model - jcr:encoding</a>
      */
     @Nullable
-    public final String getEncoding() { return encoding; }
+    public final String getEncoding() {
+        return encoding;
+    }
 
     /**
      * Returns the filename that should be assumed for the binary that is to be
@@ -96,11 +100,13 @@ public final class BinaryDownloadOptions {
      * BinaryDownloadOptionsBuilder#withFileName(String)} when building an
      * instance of this class.
      *
-     * @return A String representation of the file name, or {@code null} if no
+     * @return The file name, or {@code null} if no
      * file name has been specified.
      */
     @Nullable
-    public final String getFileName() { return fileName; }
+    public final String getFileName() {
+        return fileName;
+    }
 
     /**
      * Returns the disposition type that should be assumed for the binary that
@@ -108,13 +114,16 @@ public final class BinaryDownloadOptions {
      * BinaryDownloadOptionsBuilder#withDispositionTypeInline()} or {@link
      * BinaryDownloadOptionsBuilder#withDispositionTypeAttachment()} when
      * building an instance of this class.  The default value of this setting is
-     * "attachment".
+     * "inline".
      *
-     * @return A String representation of the disposition type, or {@code null}
+     * @return The disposition type, or {@code null}
      * if no disposition type has been specified.
+     * @see <a href="https://tools.ietf.org/html/rfc6266#section-4.2">RFC 6266, Section 4.2</a> 
      */
     @Nullable
-    public final String getDispositionType() { return dispositionType; }
+    public final String getDispositionType() {
+        return dispositionType;
+    }
 
     /**
      * Returns a {@link BinaryDownloadOptionsBuilder} instance to be used for
@@ -132,7 +141,7 @@ public final class BinaryDownloadOptions {
      * options set as desired by the caller.
      */
     public static final class BinaryDownloadOptionsBuilder {
-        private String mimeType = null;
+        private String mediaType = null;
         private String encoding = null;
         private String fileName = null;
         private DispositionType dispositionType = null;
@@ -140,58 +149,59 @@ public final class BinaryDownloadOptions {
         private BinaryDownloadOptionsBuilder() { }
 
         /**
-         * Sets the MIME type of the {@link BinaryDownloadOptions} object to be
+         * Sets the internet media type of the {@link BinaryDownloadOptions} object to be
          * built.  This value should be a valid {@code jcr:mimeType}.
          * <p>
          * Calling this method has the effect of instructing the service
-         * provider to set {@code mimeType} as the MIME type of the content type
-         * in the {@code Content-Type} header of the response to a request
+         * provider to set {@code mediaType} as the internet media type
+         * in the {@code Content-Type} header field of the response to a request
          * issued with a URI obtained by calling {@link
          * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be
          * later retrieved by calling {@link
-         * BinaryDownloadOptions#getMimeType()} on the instance returned from a
+         * BinaryDownloadOptions#getMediaType()} on the instance returned from a
          * call to {@link #build()}.
          * <p>
-         * Note that if the MIME type is text-based, the caller may also wish to
-         * set the encoding which is done separately.  See {@link
+         * Note that if the internet media type defines a "charset" parameter
+         * (as many textual types do), the caller may also wish to set the
+         * character encoding which is done separately.  See {@link
          * #withEncoding(String)}.
          * <p>
-         * The caller should ensure that the MIME type set is valid; the
+         * The caller should ensure that the internet media type set is valid; the
          * implementation does not perform any validation of this setting.
          * <p>
-         * If no MIME type is provided, no {@code Content-Type} header will be
+         * If no internet media type is provided, no {@code Content-Type} header field will be
          * specified to the service provider.
          *
-         * @param mimeType A String representation of the jcr:mimeType.
+         * @param mediaType The internet media type.
          * @return The calling instance.
          * @see <a href="https://docs.adobe.com/content/docs/en/spec/jcr/2.0/3_Repository_Model.html#3.7.11.10%20mix:mimeType">
          *     JCR 2.0 Repository Model - jcr:mimeType</a>
          */
         @NotNull
-        public BinaryDownloadOptionsBuilder withMimeType(@NotNull String mimeType) {
-            this.mimeType = mimeType;
+        public BinaryDownloadOptionsBuilder withMediaType(@NotNull String mediaType) {
+            this.mediaType = mediaType;
             return this;
         }
 
         /**
-         * Sets the encoding of the {@link BinaryDownloadOptions} object to be
+         * Sets the character encoding of the {@link BinaryDownloadOptions} object to be
          * built.  This value should be a valid {@code jcr:encoding}.
          * <p>
          * Calling this method has the effect of instructing the service
-         * provider to set {@code encoding} as the encoding of the content type
-         * in the {@code Content-Type} header of the response to a request
+         * provider to set {@code encoding} as the "charset" parameter of the content type
+         * in the {@code Content-Type} header field of the response to a request
          * issued with a URI obtained by calling {@link
          * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be
          * later retrieved by calling {@link
          * BinaryDownloadOptions#getEncoding()} on the instance returned by a
          * call to {@link #build()}.
          * <p>
-         * Note that setting the encoding only makes sense if the MIME type has
-         * also been set to a text-based MIME type.  See {@link
-         * #withMimeType(String)}.
+         * Note that setting the character encoding only makes sense if the interned media type has
+         * also been set.  See {@link
+         * #withMediaType(String)}.
          * <p>
          * The caller should ensure that the proper encoding has been set for
-         * the MIME type; the implementation does not perform any validation of
+         * the internet media type; the implementation does not perform any validation of
          * these settings.
          *
          * @param encoding A String representation of the jcr:encoding.
@@ -218,11 +228,10 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getFileName()} on the instance returned by a
          * call to {@link #build()}.
          * <p>
-         * If no filename is provided, no {@code Content-Disposition} header
-         * will be specified to the service provider.
          *
-         * @param fileName A String representation of the filename.
+         * @param fileName The filename.
          * @return The calling instance.
+         * @see <a href="https://tools.ietf.org/html/rfc6266#section-4.3">RFC 6266, Section 4.3</a> 
          */
         @NotNull
         public BinaryDownloadOptionsBuilder withFileName(@NotNull String fileName) {
@@ -241,12 +250,8 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getDispositionType()} on the instance built by
          * calling {@link #build()}.
          * <p>
-         * If this value is not set, the default value of {@code attachment}
+         * If this value is not set, the default value of {@code inline}
          * will be used.
-         * <p>
-         * Note that a fileName must also be set for the {@code
-         * Content-Disposition} header to be specified to the service provider.
-         * See {@link #withFileName(String)}.
          *
          * @return The calling instance.
          */
@@ -267,12 +272,8 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getDispositionType()} on the instance built by
          * calling {@link #build()}.
          * <p>
-         * If this value is not set, the default value of {@code attachment}
+         * If this value is not set, the default value of {@code inline}
          * will be used.
-         * <p>
-         * Note that a fileName must also be set for the {@code
-         * Content-Disposition} header to be specified to the service provider.
-         * See {@link #withFileName(String)}.
          *
          * @return The calling instance.
          */
@@ -291,7 +292,7 @@ public final class BinaryDownloadOptions {
          */
         @NotNull
         public BinaryDownloadOptions build() {
-            return new BinaryDownloadOptions(mimeType,
+            return new BinaryDownloadOptions(mediaType,
                     encoding,
                     fileName,
                     null != dispositionType ? dispositionType.toString() : null
