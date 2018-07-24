@@ -54,7 +54,7 @@ import org.osgi.annotation.versioning.ProviderType;
  *     point)
  *     <li>{@code minPartSize}: the value from {@link #getMinPartSize()}
  *     <li>{@code maxPartSize}: the value from {@link #getMaxPartSize()}
- *     <li>{@code numUploadURIs: the number of entries in {@link
+ *     <li>{@code numUploadURIs}: the number of entries in {@link
  *     #getUploadURIs()}
  *     <li>{@code uploadURIs}: the entries in {@link #getUploadURIs()}
  *     <li>{@code partSize}: the part size to be used in the upload (to be
@@ -84,13 +84,13 @@ import org.osgi.annotation.versioning.ProviderType;
  *     the last part)
  *     <li>Upload: segment the binary into partSize, for each segment take the
  *     next URI from uploadURIs (strictly in order), proceed with a standard
- *     HTTP PUT for each, and for the last part use whatever segment size is
- *     left
+ *     HTTP PUT for each (for "http(s)" URIs, otherwise currently unspecified),
+ *     and for the last part use whatever segment size is left
  *     <li>If a segment fails during upload, retry (up to a certain time out)
  *     <li>After the upload has finished successfully, notify the application,
  *     for example through a complete request, passing the {@link
  *     #getUploadToken() upload token}, and the application will call {@link
- *     JackrabbitValueFactory#completeBinaryUpload(String)}  with the token
+ *     JackrabbitValueFactory#completeBinaryUpload(String)} with the token
  * </ol>
  *
  * <h2>JSON view</h2>

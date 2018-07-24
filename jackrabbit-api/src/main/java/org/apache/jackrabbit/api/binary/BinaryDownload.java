@@ -34,29 +34,30 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface BinaryDownload extends Binary {
     /**
      * Get a URI for downloading a {@link Binary} directly from a storage
-     * location with the provided {@link BinaryDownloadOptions}.  This is
-     * probably a signed URI with a short TTL, although the API does not require
-     * it to be so.
+     * location with the provided {@link BinaryDownloadOptions}. This is
+     * probably a signed URI with a short TTL (time to live), although the API
+     * does not require it to be so.
      * <p>
      * The implementation will attempt to apply the specified {@code
-     * downloadOptions} to the subsequent download.  For example, if the caller
-     * knows that the URL refers to a specific type of content, the caller can
-     * specify that content type by setting the MIME type and encoding in the
-     * {@code downloadOptions}.  The caller may also use a default instance
-     * obtained via {@link BinaryDownloadOptions#DEFAULT} in which case the
-     * caller is indicating that the default behavior of the service provider is
-     * acceptable.
+     * downloadOptions} to the subsequent download. For example, if the caller
+     * knows that the URI refers to a specific type of content, the caller can
+     * specify that content type by setting the internet media type and
+     * character encoding in the {@code downloadOptions}. The caller may also
+     * use a default instance obtained via {@link BinaryDownloadOptions#DEFAULT}
+     * in which case the caller is indicating that the default behavior of the
+     * service provider is acceptable.
      *
-     * @param downloadOptions A {@link BinaryDownloadOptions} instance
-     *         which is used to request specific options on the binary to be
-     *         downloaded.  {@link BinaryDownloadOptions#DEFAULT} should be used
-     *         if the caller wishes to accept the service provider's default
-     *         behavior.
+     * @param downloadOptions
+     *            A {@link BinaryDownloadOptions} instance which is used to
+     *            request specific options on the binary to be downloaded.
+     *            {@link BinaryDownloadOptions#DEFAULT} should be used if the
+     *            caller wishes to accept the service provider's default
+     *            behavior.
      * @return A URI for downloading the binary directly, or {@code null} if the
      *         binary cannot be downloaded directly or if the underlying
      *         implementation does not support this capability.
-     * @throws {@link RepositoryException} if an error occurs trying to locate
-     *         the binary.
+     * @throws RepositoryException if an error occurs trying to locate the
+     *             binary.
      */
     @Nullable
     URI getURI(BinaryDownloadOptions downloadOptions)
