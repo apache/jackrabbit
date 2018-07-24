@@ -196,7 +196,7 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getEncoding()} on the instance returned by a
          * call to {@link #build()}.
          * <p>
-         * Note that setting the character encoding only makes sense if the interned media type has
+         * Note that setting the character encoding only makes sense if the internet media type has
          * also been set.  See {@link
          * #withMediaType(String)}.
          * <p>
