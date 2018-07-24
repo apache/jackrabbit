@@ -16,6 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+/**
+ * Interfaces related to direct upload/download of binaries.
+ */
 @Version("1.0.0")
 package org.apache.jackrabbit.api.binary;
 
