@@ -38,16 +38,16 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public final class BinaryDownloadOptions {
     private final String mediaType;
-    private final String encoding;
+    private final String characterEncoding;
     private final String fileName;
     private final String dispositionType;
 
     private BinaryDownloadOptions(final String mediaType,
-                                  final String encoding,
+                                  final String characterEncoding,
                                   final String fileName,
                                   final String dispositionType) {
         this.mediaType = mediaType;
-        this.encoding = encoding;
+        this.characterEncoding = characterEncoding;
         this.fileName = fileName;
         this.dispositionType = dispositionType;
     }
@@ -81,7 +81,7 @@ public final class BinaryDownloadOptions {
      * Returns the character encoding that should be assumed for the binary that
      * is to be downloaded.  This value should be a valid {@code jcr:encoding}.
      * It can be set by calling {@link
-     * BinaryDownloadOptionsBuilder#withEncoding(String)} when building an
+     * BinaryDownloadOptionsBuilder#withCharacterEncoding(String)} when building an
      * instance of this class.
      *
      * @return The character encoding, or {@code null} if no
@@ -90,8 +90,8 @@ public final class BinaryDownloadOptions {
      *     JCR 2.0 Repository Model - jcr:encoding</a>
      */
     @Nullable
-    public final String getEncoding() {
-        return encoding;
+    public final String getCharacterEncoding() {
+        return characterEncoding;
     }
 
     /**
@@ -142,7 +142,7 @@ public final class BinaryDownloadOptions {
      */
     public static final class BinaryDownloadOptionsBuilder {
         private String mediaType = null;
-        private String encoding = null;
+        private String characterEncoding = null;
         private String fileName = null;
         private DispositionType dispositionType = null;
 
@@ -164,7 +164,7 @@ public final class BinaryDownloadOptions {
          * Note that if the internet media type defines a "charset" parameter
          * (as many textual types do), the caller may also wish to set the
          * character encoding which is done separately.  See {@link
-         * #withEncoding(String)}.
+         * #withCharacterEncoding(String)}.
          * <p>
          * The caller should ensure that the internet media type set is valid; the
          * implementation does not perform any validation of this setting.
@@ -193,25 +193,25 @@ public final class BinaryDownloadOptions {
          * issued with a URI obtained by calling {@link
          * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be
          * later retrieved by calling {@link
-         * BinaryDownloadOptions#getEncoding()} on the instance returned by a
+         * BinaryDownloadOptions#getCharacterEncoding()} on the instance returned by a
          * call to {@link #build()}.
          * <p>
          * Note that setting the character encoding only makes sense if the internet media type has
          * also been set.  See {@link
          * #withMediaType(String)}.
          * <p>
-         * The caller should ensure that the proper encoding has been set for
+         * The caller should ensure that the proper character encoding has been set for
          * the internet media type; the implementation does not perform any validation of
          * these settings.
          *
-         * @param encoding A String representation of the jcr:encoding.
+         * @param characterEncoding A String representation of the jcr:encoding.
          * @return The calling instance.
          * @see <a href="https://docs.adobe.com/content/docs/en/spec/jcr/2.0/3_Repository_Model.html#3.7.11.10%20mix:mimeType">
          *     JCR 2.0 Repository Model - jcr:encoding</a>
          */
         @NotNull
-        public BinaryDownloadOptionsBuilder withEncoding(@NotNull String encoding) {
-            this.encoding = encoding;
+        public BinaryDownloadOptionsBuilder withEncoding(@NotNull String characterEncoding) {
+            this.characterEncoding = characterEncoding;
             return this;
         }
 
@@ -293,7 +293,7 @@ public final class BinaryDownloadOptions {
         @NotNull
         public BinaryDownloadOptions build() {
             return new BinaryDownloadOptions(mediaType,
-                    encoding,
+                    characterEncoding,
                     fileName,
                     null != dispositionType ? dispositionType.toString() : null
             );
