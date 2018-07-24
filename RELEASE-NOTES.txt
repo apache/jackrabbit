@@ -1,52 +1,31 @@
-Release Notes -- Apache Jackrabbit -- Version 2.17.4
+Release Notes -- Apache Jackrabbit -- Version 2.17.5
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.17.4, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.17.5, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.17.4 is an unstable release cut directly from
+Apache Jackrabbit 2.17.5 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.16.x
 release.
 
-Changes in Jackrabbit 2.17.4
+Changes in Jackrabbit 2.17.5
 ----------------------------
 
-Bug
+New Feature
 
-    [JCR-4317] - davex remoting fails for non-ASCII characters in node names
-    [JCR-4324] - NPE on Version.getLinearPredecessor() implementation
-
-Improvement
-
-    [JCR-3211] - Support HTTP proxy in SPI2DAV
+    [JCR-4335] - API for direct binary access
 
 Task
 
-    [JCR-4301] - get rid of JSR 305 dependency
-    [JCR-4302] - BTreeManager: fix Eclipse compiler error
-    [JCR-4304] - update Jetty to supported version 9.2.*
-    [JCR-4307] - Update animal-sniffer-maven-plugin to 1.16
-    [JCR-4312] - set baseline comparisonVersion to latest stable (2.16.1)
-    [JCR-4316] - set baseline comparisonVersion to latest stable (2.16.2)
-    [JCR-4318] - Update failsafe and surefire plugin versions to 2.22.0
-    [JCR-4320] - Update spotbugs plugin to 3.1.5
-    [JCR-4321] - Update maven plugins from org.apache.maven.plugins
-    [JCR-4322] - Consistent use of log4j versions
-    [JCR-4323] - webapp: update Tomcat dependency to 8.5.32
-    [JCR-4326] - Update aws java sdk version to 1.11.330 (consistent with Oak)
-    [JCR-4327] - Update httpcore dependency to 4.4.10
-    [JCR-4331] - Update httpclient dependency to 4.5.6
-    [JCR-4332] - Update httpmime dependency to 4.5.6
-    [JCR-4333] - Update javax.transaction dependency to 1.3
+    [JCR-4336] - Upgrade commons-dbcp dependencies
 
 Sub-task
 
-    [JCR-4306] - switch to findbugs replacement that is still maintained (spotbugs)
-
+    [JCR-4338] - avoid use of javax.rmi.PortableRemoteObject (removed in Java 11)
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.16.x release.
