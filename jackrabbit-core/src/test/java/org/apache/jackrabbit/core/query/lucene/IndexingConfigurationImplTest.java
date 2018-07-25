@@ -106,6 +106,17 @@ public class IndexingConfigurationImplTest extends AbstractIndexingTest {
         assertTrue(config.isIndexed(nState, NameConstants.JCR_UUID)); // from mixReferenceable ... should be indexed
     }
 
+    public void testMatchCondition() throws Exception{
+        IndexingConfiguration config = createConfig("config6");
+        Node n = testRootNode.addNode(nodeName1, ntUnstructured);
+        n.addMixin(mixReferenceable);
+        n.setProperty(FOO.getLocalName(), "high");
+        session.save();
+        nState = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
+                new NodeId(n.getIdentifier()));        
+        assertFalse(config.isIndexed(nState, FOO));
+    }
+
     //----------------------------< internal >----------------------------------
     protected IndexingConfiguration createConfig(String name) throws Exception {
         IndexingConfiguration config = new IndexingConfigurationImpl();
