@@ -19,7 +19,6 @@ package org.apache.jackrabbit.api;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 
-import javax.annotation.Nonnull;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -27,6 +26,8 @@ import javax.jcr.Session;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Jackrabbit specific extension of the JCR {@link javax.jcr.Session} interface.
@@ -189,7 +190,7 @@ public interface JackrabbitSession extends Session {
      * @throws RepositoryException if an error occurs.
      * @see Session#hasPermission(String, String)
      */
-    public boolean hasPermission(@Nonnull String absPath, @Nonnull String... actions) throws RepositoryException;
+    public boolean hasPermission(@NotNull String absPath, @NotNull String... actions) throws RepositoryException;
 
     /**
      * Returns the <code>PrincipalManager</code> for the current <code>Session</code>.

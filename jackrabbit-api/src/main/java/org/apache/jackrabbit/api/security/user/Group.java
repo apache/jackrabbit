@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import java.util.Iterator;
 import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A Group is a collection of {@link #getMembers() Authorizable}s.
@@ -88,7 +89,7 @@ public interface Group extends Authorizable {
      * @throws RepositoryException If one of the specified memberIds is invalid or
      * if some other error occurs.
      */
-    Set<String> addMembers(@Nonnull String... memberIds) throws RepositoryException;
+    Set<String> addMembers(@NotNull String... memberIds) throws RepositoryException;
 
     /**
      * Remove a member from this Group.
@@ -114,5 +115,5 @@ public interface Group extends Authorizable {
      * @throws RepositoryException If one of the specified memberIds is invalid
      * or if some other error occurs.
      */
-    Set<String> removeMembers(@Nonnull String... memberIds) throws RepositoryException;
+    Set<String> removeMembers(@NotNull String... memberIds) throws RepositoryException;
 }
