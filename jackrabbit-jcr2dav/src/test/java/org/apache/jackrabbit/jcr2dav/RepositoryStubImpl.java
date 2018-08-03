@@ -32,7 +32,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -44,7 +44,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     private static Repository repository;
 
-    private static SocketConnector connector;
+    private static ServerConnector connector;
 
     private static Server server;
 
@@ -66,17 +66,8 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             repository = super.getRepository();
         }
 
-        if (connector == null) {
-            connector = new SocketConnector();
-            connector.setHost("localhost");
-            String pvalue = System.getProperty("org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port", "0");
-            int port = pvalue.equals("") ? 0 : Integer.parseInt(pvalue);
-            connector.setPort(port);
-        }
-
         if (server == null) {
             server = new Server();
-            server.addConnector(connector);
 
             ServletHolder holder = new ServletHolder(new JcrRemotingServlet() {
                 protected Repository getRepository() {
@@ -89,6 +80,15 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
             ServletContextHandler schandler = new ServletContextHandler(server, "/");
             schandler.addServlet(holder, "/*");
+        }
+
+        if (connector == null) {
+            connector = new ServerConnector(server);
+            connector.setHost("localhost");
+            String pvalue = System.getProperty("org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port", "0");
+            int port = pvalue.equals("") ? 0 : Integer.parseInt(pvalue);
+            connector.setPort(port);
+            server.addConnector(connector);
 
             try {
                 server.start();
