@@ -346,7 +346,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             cmgr.setDefaultMaxPerRoute(maximumHttpConnections);
             cmgr.setMaxTotal(maximumHttpConnections);
         }
-        httpClientBuilder = HttpClients.custom().setConnectionManager(cmgr);
+        HttpClientBuilder hcb = HttpClients.custom().setConnectionManager(cmgr);
+        if (Boolean.getBoolean("jackrabbit.client.useSystemProperties")) {
+            // support Java system proxy? (JCR-3211)
+            hcb = hcb.useSystemProperties();
+        }
+        httpClientBuilder = hcb;
 
         // This configuration of the clients cache assumes that the level of
         // concurrency on this map will be equal to the default number of maximum
