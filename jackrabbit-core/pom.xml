@@ -165,7 +165,6 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
      <plugin>
        <groupId>org.apache.maven.plugins</groupId>
        <artifactId>maven-jar-plugin</artifactId>
-       <version>3.0.2</version>
        <configuration>
           <excludes>
             <exclude>logback-test.xml</exclude>
