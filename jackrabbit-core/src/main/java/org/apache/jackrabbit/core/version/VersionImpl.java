@@ -127,7 +127,7 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     public javax.jcr.version.Version getLinearPredecessor() throws RepositoryException {
         InternalVersion pred = getInternalVersion().getLinearPredecessor();
-        return (Version) sessionContext.getSessionImpl().getNodeById(pred.getId());
+        return pred == null ? null : (Version) sessionContext.getSessionImpl().getNodeById(pred.getId());
     }
 
     /**
