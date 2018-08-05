@@ -24,7 +24,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.rmi.PortableRemoteObject;
 
 /**
  * Implements the abstract class <code>RepositoryStub</code> and uses JNDI
@@ -55,12 +54,11 @@ public class JNDIRepositoryStub extends RepositoryStub {
                 InitialContext initial = new InitialContext(environment);
                 Object obj = initial.lookup(lookupName);
 
-                repository = (Repository)PortableRemoteObject.narrow(obj, Repository.class);
-
-            } catch (ClassCastException e) {
-                // ClassCastException may be thrown by ProtableRemoteObject.narrow()
-                throw new RepositoryStubException(
-                        "Object cannot be narrowed to javax.jcr.Repository", e);
+                if (obj instanceof Repository) {
+                    repository = (Repository) obj;
+                } else {
+                    throw new RepositoryStubException("Object is not instanceof javax.jcr.Repository: " + obj.getClass().getName());
+                }
             } catch (NamingException e) {
                 throw new RepositoryStubException(e);
             }
