@@ -279,6 +279,9 @@ public class VFSFileSystem implements FileSystem {
 
     @Override
     public void close() throws FileSystemException {
+        if (fileSystemManager instanceof DefaultFileSystemManager) {
+            ((DefaultFileSystemManager) fileSystemManager).close();
+        }
     }
 
     @Override
