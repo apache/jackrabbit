@@ -518,7 +518,7 @@ public class VFSFileSystem implements FileSystem {
     /**
      * Creates a {@link FileSystemManager} instance.
      * @return a {@link FileSystemManager} instance.
-     * @throws RepositoryException if an error occurs creating the manager.
+     * @throws FileSystemException if an error occurs creating the manager.
      */
     protected FileSystemManager createFileSystemManager() throws FileSystemException {
         FileSystemManager fileSystemManager = null;
@@ -549,7 +549,7 @@ public class VFSFileSystem implements FileSystem {
      * and uses the rest of the key name after the {@link #FILE_SYSTEM_OPTIONS_PROP_PREFIX} as the combination of scheme and property name
      * when building a {@link FileSystemOptions} using {@link DelegatingFileSystemOptionsBuilder}.
      * @return {@link FileSystemOptions} instance which is used when resolving the {@link #baseFolder} during the initialization
-     * @throws RepositoryException if any file system exception occurs
+     * @throws FileSystemException if any file system exception occurs
      */
     protected FileSystemOptions createFileSystemOptions() throws FileSystemException {
         FileSystemOptions fso = null;
