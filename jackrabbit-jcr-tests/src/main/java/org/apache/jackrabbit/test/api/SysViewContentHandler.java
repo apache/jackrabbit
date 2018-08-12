@@ -40,8 +40,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import java.util.Hashtable;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -67,7 +65,7 @@ class SysViewContentHandler extends DefaultHandler {
     // the propElem in process
     PropElemData currentPropElem;
     // the valueElem in process
-    protected StringBuffer currentValue;
+    protected StringBuilder currentValue;
     // prefix mapping data
     protected Map<String, String> prefixes;
     // if the first node is yet treated
@@ -89,7 +87,7 @@ class SysViewContentHandler extends DefaultHandler {
 
     /**
      * Constructor
-     * @param path Thepath to the  root node of the tree to be exported.
+     * @param path The path to the root node of the tree to be exported.
      * @param session The session used.
      * @param skipBinary Boolean if the binary properties are not exported.
      * @param noRecurse Boolean if only the root node of the tree should be exported.
@@ -252,7 +250,7 @@ class SysViewContentHandler extends DefaultHandler {
 
             else if (qName.equals(svValue)) {
                 // init
-                currentValue = new StringBuffer();
+                currentValue = new StringBuilder();
             }
             else {
                 // invalid element name is used
@@ -427,7 +425,7 @@ class SysViewContentHandler extends DefaultHandler {
         List<PropElemData> propElems = nodeElem.propElems;
 
         // no props exported
-        if (propElems.size() == 0) {
+        if (propElems.isEmpty()) {
             // if node has properties they should be of Binary type and skipBinary should be true
             if (node.hasProperties()) {
                 if (skipBinary) {
@@ -561,13 +559,10 @@ class SysViewContentHandler extends DefaultHandler {
     private void checkChildren(NodeElemData nodeElem, boolean noRecurse)
             throws RepositoryException {
 
-        Hashtable<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
-        boolean totalSumOk = false;
+        Map<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
+        boolean totalSumOk;
         boolean partialSumOk = true;
-        if (noRecurse) {
-            totalSumOk = (childElemsFound.size() == 0);
-        }
-        else {
+        if (!noRecurse) {
             // all children found if number of node.getNodes(name) is the same as found
             // in childElemsFound and if sum(number of nodeGetNodes(names))
             // == number of node.getNodes()
@@ -575,8 +570,7 @@ class SysViewContentHandler extends DefaultHandler {
             NodeIterator nodeIter = nodeElem.node.getNodes();
 
             long children = getSize(nodeIter);
-            for (Enumeration<ChildNodeElem> e = childElemsFound.elements();  e.hasMoreElements();) {
-                ChildNodeElem child = e.nextElement();
+            for (ChildNodeElem child : childElemsFound.values()) {
                 String name = child.name;
                 long number = child.number;
 
@@ -653,7 +647,7 @@ class SysViewContentHandler extends DefaultHandler {
         int position = 0;
         // the childNodeElems (stored are key: name and
         // value: number of the same name siblings)
-        Hashtable<String, ChildNodeElem> childNodeElemNames = new Hashtable<String, ChildNodeElem>();
+        Map<String, ChildNodeElem> childNodeElemNames = new HashMap<String, ChildNodeElem>();
     }
 
     /**
