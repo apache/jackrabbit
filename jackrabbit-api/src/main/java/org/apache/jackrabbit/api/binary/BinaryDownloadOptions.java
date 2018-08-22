@@ -184,10 +184,10 @@ public final class BinaryDownloadOptions {
 
         /**
          * Sets the character encoding of the {@link BinaryDownloadOptions} object to be
-         * built.  This value should be a valid {@code jcr:encoding}.
+         * built. This value should be a valid {@code jcr:encoding} property value.
          * <p>
          * Calling this method has the effect of instructing the service
-         * provider to set {@code charecterEncoding} as the "charset" parameter
+         * provider to set {@code characterEncoding} as the "charset" parameter
          * of the content type in the {@code Content-Type} header field of the
          * response to a request issued with a URI obtained by calling {@link
          * BinaryDownload#getURI(BinaryDownloadOptions)}.  This value can be
@@ -195,9 +195,9 @@ public final class BinaryDownloadOptions {
          * BinaryDownloadOptions#getCharacterEncoding()} on the instance returned by a
          * call to {@link #build()}.
          * <p>
-         * Note that setting the character encoding only makes sense if the internet media type has
-         * also been set.  See {@link
-         * #withMediaType(String)}.
+         * Note that setting the character encoding only makes sense if the internet
+         * media type has also been set, and that media type actually defines a
+         * "charset" parameter. See {@link #withMediaType(String)}.
          * <p>
          * The caller should ensure that the proper character encoding has been set for
          * the internet media type; the implementation does not perform any validation of
@@ -216,7 +216,7 @@ public final class BinaryDownloadOptions {
 
         /**
          * Sets the filename of the {@link BinaryDownloadOptions} object to be
-         * built.
+         * built. This would typically be based on a JCR node name.
          * <p>
          * Calling this method has the effect of instructing the service
          * provider to set {@code fileName} as the filename in the {@code

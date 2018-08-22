@@ -33,25 +33,72 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface BinaryDownload extends Binary {
     /**
-     * Get a URI for downloading a {@link Binary} directly from a storage
-     * location with the provided {@link BinaryDownloadOptions}. This is
-     * probably a signed URI with a short TTL (time to live), although the API
-     * does not require it to be so.
+     *
+     * Returns a URI for downloading this binary directly from the storage location.
+     *
      * <p>
-     * The implementation will attempt to apply the specified {@code
-     * downloadOptions} to the subsequent download. For example, if the caller
-     * knows that the URI refers to a specific type of content, the caller can
-     * specify that content type by setting the internet media type and
-     * character encoding in the {@code downloadOptions}. The caller may also
-     * use a default instance obtained via {@link BinaryDownloadOptions#DEFAULT}
-     * in which case the caller is indicating that the default behavior of the
-     * service provider is acceptable.
+     * Using the {@code downloadOptions} parameter, some response headers of the
+     * download request can be overwritten, if supported by the storage provider.
+     * This is necessary to pass information that is only stored in the JCR in
+     * application specific structures, and not reliably available in the binary
+     * storage.
+     *
+     * {@link BinaryDownloadOptions} supports, but is not limited to:
+     * <ul>
+     *     <li>
+     *         {@link BinaryDownloadOptions.BinaryDownloadOptionsBuilder#withMediaType(String) Content-Type media type}:
+     *         typically available in a {@code jcr:mimeType} property
+     *     </li>
+     *     <li>
+     *         {@link BinaryDownloadOptions.BinaryDownloadOptionsBuilder#withCharacterEncoding(String) Content-Type charset}:
+     *         for media types defining a "charset", typically available in a {@code jcr:encoding} property
+     *     </li>
+     *     <li>
+     *         {@link BinaryDownloadOptions.BinaryDownloadOptionsBuilder#withFileName(String) Content-Disposition filename}:
+     *         download file name, typically taken from a JCR node name in the parent hierarchy, such as the nt:file node name
+     *     </li>
+     *     <li>
+     *         {@link BinaryDownloadOptions.BinaryDownloadOptionsBuilder#withDispositionTypeAttachment() Content-Disposition type}:
+     *         whether to show the content inline of a page (inline) or enforce a download/save as (attachment)
+     *     </li>
+     * </ul>
+     *
+     * Specifying {@link BinaryDownloadOptions#DEFAULT} will use mostly empty
+     * defaults, relying on the storage provider attributes for this binary
+     * (that might be empty or different from the information in the JCR).
+     *
+     * <p>
+     * <b>Security considerations:</b>
+     *
+     * <ul>
+     *     <li>
+     *         The URI cannot be shared with other users. It must only be returned to
+     *         authenticated requests corresponding to this session user or trusted system
+     *         components.
+     *     </li>
+     *     <li>
+     *         The URI must not be persisted for later use and will typically be time limited.
+     *     </li>
+     *     <li>
+     *         The URI will only grant access to this particular binary.
+     *     </li>
+     *     <li>
+     *         The client cannot infer any semantics from the URI structure and path names.
+     *         It would typically include a cryptographic signature. Any change to the URI will
+     *         likely result in a failing request.
+     *     </li>
+     *     <li>
+     *         If the client is a browser, consider use of Content-Disposition type = attachment
+     *         for executable media types such as HTML or Javascript if the content cannot be
+     *         trusted.
+     *     </li>
+     * </ul>
      *
      * @param downloadOptions
      *            A {@link BinaryDownloadOptions} instance which is used to
      *            request specific options on the binary to be downloaded.
      *            {@link BinaryDownloadOptions#DEFAULT} should be used if the
-     *            caller wishes to accept the service provider's default
+     *            caller wishes to accept the storage provider's default
      *            behavior.
      * @return A URI for downloading the binary directly, or {@code null} if the
      *         binary cannot be downloaded directly or if the underlying

@@ -25,78 +25,104 @@ import org.jetbrains.annotations.NotNull;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * This extension interface provides a mechanism whereby a client can upload a
- * binary directly to a storage location.  An object of this type can be
- * created by a call to {@link
- * JackrabbitValueFactory#initiateBinaryUpload(long, int)} which will return an
- * object of this type if the underlying implementation supports direct upload
- * functionality.  When calling this method, the client indicates the expected
- * size of the binary and the number of URIs that it is willing to accept.  The
- * implementation will attempt to create an instance of this class that is
- * suited to enabling the client to complete the upload successfully.
+ * Describes uploading a binary through HTTP requests in a single or multiple
+ * parts. This will be returned by
+ * {@link JackrabbitValueFactory#initiateBinaryUpload(long, int)}. A high-level
+ * overview of the process can be found in {@link JackrabbitValueFactory}.
+ *
  * <p>
- * Using an instance of this class, a client can then use one or more of the
- * included URIs for uploading the binary directly by calling {@link
- * #getUploadURIs()} and iterating through the URIs returned.  Multi-part
- * uploads are supported by the interface, although they may not be supported
- * by the underlying implementation.
+ * Note that although the API allows URI schemes other than "http(s)", the
+ * upload functionality is currently only defined for HTTP.
+ *
  * <p>
- * Once a client finishes uploading the binary data, the client must then call
+ * A caller usually needs to pass the information provided by this interface to
+ * a remote client that is in possession of the actual binary, who then has to
+ * upload the binary using HTTP according to the logic described below. A remote
+ * client is expected to support multi-part uploads as per the logic described
+ * below, in case multiple URIs are returned.
+ *
+ * <p>
+ * Once a remote client finishes uploading the binary data, the application must
+ * be notified and must then call
  * {@link JackrabbitValueFactory#completeBinaryUpload(String)} to complete the
- * upload.  This call requires an upload token which can be obtained from an
- * instance of this class by calling {@link #getUploadToken()}.
+ * upload. This completion requires the exact upload token obtained from
+ * {@link #getUploadToken()}.
+ *
+ * <h2 id="upload.algorithm">Upload algorithm</h2>
+ *
+ * A remote client will have to follow this algorithm to upload a binary based
+ * on the information provided by this interface.
+ *
  * <p>
- * Below is the detailed direct binary upload algorithm for the remote client.
- * <p>
- * In this example the following variables are used:
+ * Please be aware that if the size passed to
+ * {@link JackrabbitValueFactory#initiateBinaryUpload(long, int)} was an
+ * estimation, but the actual binary is larger, there is no guarantee the
+ * upload will be possible using all {@link #getUploadURIs()} and the
+ * {@link #getMaxPartSize()}. In such cases, the application should restart the
+ * transaction using the correct size.
+ *
+ * <h3>Variables used</h3>
  * <ul>
  *     <li>{@code fileSize}: the actual binary size (must be known at this
- *     point)
- *     <li>{@code minPartSize}: the value from {@link #getMinPartSize()}
- *     <li>{@code maxPartSize}: the value from {@link #getMaxPartSize()}
+ *     point)</li>
+ *     <li>{@code minPartSize}: the value from {@link #getMinPartSize()}</li>
+ *     <li>{@code maxPartSize}: the value from {@link #getMaxPartSize()}</li>
  *     <li>{@code numUploadURIs}: the number of entries in {@link
- *     #getUploadURIs()}
- *     <li>{@code uploadURIs}: the entries in {@link #getUploadURIs()}
+ *     #getUploadURIs()}</li>
+ *     <li>{@code uploadURIs}: the entries in {@link #getUploadURIs()}</li>
  *     <li>{@code partSize}: the part size to be used in the upload (to be
- *     determined in the algorithm)
+ *     determined in the algorithm)</li>
  * </ul>
  *
- * Steps:
+ * <h3>Steps</h3>
  * <ol>
- *     <li>If (fileSize divided by maxPartSize) is larger than numUploadURIs,
- *     then the client cannot proceed and will have to request a new set of URIs
- *     with the right fileSize as maxSize
- *     <li>If fileSize is smaller than minPartSize, then take the first provided
- *     upload URI to upload the entire binary, with partSize = fileSize</li>
+ *     <li>
+ *         If {@code (fileSize / maxPartSize) > numUploadURIs}, then the
+ *         client cannot proceed and will have to request a new set of URIs
+ *         with the right fileSize as {@code maxSize}
+ *     </li>
+ *     <li>
+ *         If {@code fileSize < minPartSize}, then take the first provided
+ *         upload URI to upload the entire binary, with
+ *         {@code partSize = fileSize}
+ *     </li>
  *     <li>
  *         (optional) If the client has more information to optimize, the
- *         partSize can be chosen, under the condition that all of these are
- *         true for the partSize:
+ *         {@code partSize} can be chosen, under the condition that all of these are
+ *         true:
  *         <ol>
- *             <li>larger than minPartSize
- *             <li>smaller or equal than maxPartSize (unless it is -1 =
- *             unlimited)
- *             <li>larger than fileSize divided by numUploadURIs
+ *             <li>{@code partSize >= minPartSize}</li>
+ *             <li>{@code partSize <= maxPartSize}
+ *             (unless {@code maxPartSize = -1} meaning unlimited)</li>
+ *             <li>{@code partSize > (fileSize / numUploadURIs)}</li>
  *         </ol>
  *     </li>
- *     <li>Otherwise all part URIs are to be used and the partSize = fileSize
- *     divided by numUploadURIs (integer division, discard modulo which will be
- *     the last part)
- *     <li>Upload: segment the binary into partSize, for each segment take the
- *     next URI from uploadURIs (strictly in order), proceed with a standard
- *     HTTP PUT for each (for "http(s)" URIs, otherwise currently unspecified),
- *     and for the last part use whatever segment size is left
- *     <li>If a segment fails during upload, retry (up to a certain time out)
- *     <li>After the upload has finished successfully, notify the application,
- *     for example through a complete request, passing the {@link
- *     #getUploadToken() upload token}, and the application will call {@link
- *     JackrabbitValueFactory#completeBinaryUpload(String)} with the token
+ *     <li>
+ *         Otherwise all part URIs are to be used. The {@code partSize}
+ *         to use for all parts except the last would be calculated using:
+ *         <pre>partSize = (fileSize + numUploadURIs - 1) / numUploadURIs</pre>
+ *     </li>
+ *     <li>
+ *         Upload: segment the binary into {@code partSize}, for each segment take the
+ *         next URI from {@code uploadURIs} (strictly in order), proceed with a standard
+ *         HTTP PUT for each, and for the last part use whatever segment size is left
+ *     </li>
+ *     <li>
+ *         If a segment fails during upload, retry (up to a certain timeout)
+ *     </li>
+ *     <li>
+ *         After the upload has finished successfully, notify the application,
+ *         for example through a complete request, passing the {@link
+ *         #getUploadToken() upload token}, and the application will call {@link
+ *         JackrabbitValueFactory#completeBinaryUpload(String)} with the token
+ *     </li>
  * </ol>
  *
- * <h2>JSON view</h2>
+ * <h2>Example JSON view</h2>
  *
  * A JSON representation of this interface as passed back to a remote client
  * might look like this:
+ * 
  * <pre>
  * {
  *     "uploadToken": "aaaa-bbbb-cccc-dddd-eeee-ffff-gggg-hhhh",
@@ -110,45 +136,64 @@ import org.osgi.annotation.versioning.ProviderType;
  *     ]
  * }
  * </pre>
- * */
+ */
 @ProviderType
 public interface BinaryUpload {
     /**
-     * Returns an Iterable of URIs that can be used for uploading binary data
-     * directly to a storage location.  The first URI can be used for uploading
-     * binary data as a single entity, or multiple URIs can be used if the
-     * client wishes to do multi-part uploads.
+     * Returns a list of URIs that can be used for uploading binary data
+     * directly to a storage location in one or more parts.
+     *
      * <p>
-     * Clients are not necessarily required to use all of the URIs provided.  A
-     * client may choose to use fewer, or even only one of the URIs.  However,
-     * regardless of the number of URIs used, they must be consumed in sequence.
+     * Remote clients must support multi-part uploading as per the
+     * <a href="#upload.algorithm">upload algorithm</a> described above. Clients
+     * are not necessarily required to use all of the URIs provided. A client
+     * may choose to use fewer, or even only one of the URIs. However, it must
+     * always ensure the part size is between {@link #getMinPartSize()} and
+     * {@link #getMaxPartSize()}. These can reflect strict limitations of the
+     * storage provider.
+     *
+     * <p>
+     * Regardless of the number of URIs used, they must be consumed in sequence,
+     * without skipping any, and the order of parts the original binary is split
+     * into must correspond exactly with the order of URIs.
+     *
+     * <p>
      * For example, if a client wishes to upload a binary in three parts and
      * there are five URIs returned, the client must use the first URI to
      * upload the first part, the second URI to upload the second part, and
-     * the third URI to upload the third part.  The client is not required to
-     * use the fourth and fifth URIs.  However, using the second URI to upload
+     * the third URI to upload the third part. The client is not required to
+     * use the fourth and fifth URIs. However, using the second URI to upload
      * the third part may result in either an upload failure or a corrupted
      * upload; likewise, skipping the second URI to use subsequent URIs may
      * result in either an upload failure or a corrupted upload.
-     * <p>
-     * Clients should be aware that some storage providers have limitations on
-     * the minimum and maximum size of a binary payload for a single upload, so
-     * clients should take these limitations into account when deciding how many
-     * of the URIs to use.  Underlying implementations may also choose to
-     * enforce their own limitations.
+     *
      * <p>
      * While the API supports multi-part uploading via multiple upload URIs,
-     * implementations are not required to support multi-part uploading.  If the
+     * implementations are not required to support multi-part uploading. If the
      * underlying implementation does not support multi-part uploading, a single
      * URI will be returned regardless of the size of the data being uploaded.
+     *
      * <p>
-     * Some storage providers also support multi-part uploads by reusing a
-     * single URI multiple times, in which case the implementation may also
-     * return a single URI regardless of the size of the data being uploaded.
-     * <p>
-     * You should consult both the DataStore implementation documentation and
-     * the storage service provider documentation for details on such matters as
-     * multi-part upload support, upload minimum and maximum sizes, etc.
+     * <b>Security considerations:</b>
+     *
+     * <ul>
+     *     <li>
+     *         The URIs cannot be shared with other users. They must only be returned to
+     *         authenticated requests corresponding to this session user or trusted system
+     *         components.
+     *     </li>
+     *     <li>
+     *         The URIs must not be persisted for later use and will typically be time limited.
+     *     </li>
+     *     <li>
+     *         The URIs will only grant access to this particular binary.
+     *     </li>
+     *     <li>
+     *         The client cannot infer any semantics from the URI structure and path names.
+     *         It would typically include a cryptographic signature. Any change to the URIs will
+     *         likely result in a failing request.
+     *     </li>
+     * </ul>
      *
      * @return Iterable of URIs that can be used for uploading directly to a
      *         storage location.
@@ -157,54 +202,48 @@ public interface BinaryUpload {
     Iterable<URI> getUploadURIs();
 
     /**
-     * The smallest part size a client may upload for a multi-part upload, not
-     * counting the final part.  This is usually either a service provider or
-     * implementation limitation.
-     * <p>
-     * Note that the API offers no guarantees that uploading parts of this size
-     * can successfully complete the requested upload using the URIs provided
-     * via {@link #getUploadURIs()}.  In other words, clients wishing to perform
-     * a multi-part upload must split the upload into parts of at least this
-     * size, but the sizes may need to be larger in order to successfully
-     * complete the upload.
+     * Return the smallest possible part size in bytes. If a consumer wants to
+     * choose a custom part size, it cannot be smaller than this value. This
+     * does not apply to the final part. This value will be equal or larger than
+     * zero.
      *
-     * @return The smallest size acceptable for multi-part uploads.
+     * <p>
+     * Note that the API offers no guarantees that using this minimal part size
+     * is possible with the number of available {@link #getUploadURIs()}. This
+     * might not be the case if the binary is too large. Please refer to the
+     * <a href="#upload.algorithm">upload algorithm</a> for the correct use of
+     * this value.
+     *
+     * @return The smallest part size acceptable for multi-part uploads.
      */
     long getMinPartSize();
 
     /**
-     * The largest part size a client may upload for a multi-part upload.  This
-     * is usually either a service provider or implementation limitation.
-     * <p>
-     * The API guarantees that a client can successfully complete a direct
-     * upload of the binary data of the requested size using the provided URIs
-     * by splitting the binary data into parts of the size returned by this
-     * method.
-     * <p>
-     * The client is not required to use part sizes of this size; smaller sizes
-     * may be used so long as they are at least as large as the size returned by
-     * {@link #getMinPartSize()}.
-     * <p>
-     * If the binary size specified by a client when calling {@link
-     * JackrabbitValueFactory#initiateBinaryUpload(long, int)} ends up being
-     * smaller than the actual size of the binary being uploaded, these API
-     * guarantees no longer apply, and it may not be possible to complete the
-     * upload using the URIs provided.  In such cases, the client should restart
-     * the transaction using the correct size.
+     * Return the largest possible part size in bytes. If a consumer wants to
+     * choose a custom part size, it cannot be larger than this value.
+     * If this returns -1, the maximum is unlimited.
      *
-     * @return The maximum size of an upload part for multi-part uploads.
+     * <p>
+     * The API guarantees that a client can split the binary of the requested
+     * size using this maximum part size and there will be sufficient URIs
+     * available in {@link #getUploadURIs()}. Please refer to the
+     * <a href="#upload.algorithm">upload algorithm</a> for the correct use of
+     * this value.
+     *
+     * @return The maximum part size acceptable for multi-part uploads or -1
+     *         if there is no limit.
      */
     long getMaxPartSize();
 
     /**
-     * Returns the upload token to be used in a subsequent call to {@link
-     * JackrabbitValueFactory#completeBinaryUpload(String)}.  This upload token
-     * is used by the implementation to identify this upload.  Clients should
-     * treat the upload token as an immutable string, as the underlying
-     * implementation may choose to implement techniques to detect tampering and
-     * reject the upload if the token is modified.
+     * Returns a token identifying this upload. This is required to finalize the upload
+     * at the end by calling {@link JackrabbitValueFactory#completeBinaryUpload(String)}.
      *
-     * @return This upload's unique upload token.
+     * <p>
+     * The format of this string is implementation-dependent. Implementations must ensure
+     * that clients cannot guess tokens for existing binaries.
+     *
+     * @return A unique token identifying this upload.
      */
     @NotNull
     String getUploadToken();
