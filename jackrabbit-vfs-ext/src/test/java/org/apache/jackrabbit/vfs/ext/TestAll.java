@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.vfs.ext;
 
 import org.apache.jackrabbit.vfs.ext.ds.TestVFSDataStore;
+import org.apache.jackrabbit.vfs.ext.fs.VFSFileSystemTest;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -33,6 +34,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("VFS tests");
         suite.addTestSuite(TestVFSDataStore.class);
+        suite.addTestSuite(VFSFileSystemTest.class);
         return suite;
     }
 }
