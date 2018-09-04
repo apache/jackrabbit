@@ -129,7 +129,7 @@ public class TomcatIT extends TestCase {
     }
 
     protected void tearDown() throws Exception {
-        client.closeAllWindows();
+        client.close();
 
         tomcat.stop();
     }
