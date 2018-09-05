@@ -31,6 +31,10 @@ import java.io.InputStream;
  * resource may decide to wrap the underlying resource (e.g, <code>InputStream</code>) by this interface (e.g,
  * <code>S3BackendResourceAbortableInputStream</code>) in order to abort the underlying resources (e.g, http request
  * object) without having to read data fully.
+ * <p>
+ * For example, if {@link LocalCache#store(String, InputStream)} indicates that there's already an existing file
+ * in the cache by the {@code fileName}, then it checks whether the input stream from the {@link Backend} is a
+ * {@link BackendResourceAbortable} and tries to <i>abort</i> the input stream resource without reading the data.
  */
 public interface BackendResourceAbortable {
 

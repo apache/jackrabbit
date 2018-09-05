@@ -25,7 +25,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 /**
  * S3 Backend based <code>InputStream</code> wrapper to implement {@link BackendResourceAbortable}.
  */
-public class S3BackendResourceAbortableInputStream extends ProxyInputStream implements BackendResourceAbortable {
+class S3BackendResourceAbortableInputStream extends ProxyInputStream implements BackendResourceAbortable {
 
     /**
      * Underlying backend {@link S3ObjectInputStream} instance.
@@ -33,10 +33,10 @@ public class S3BackendResourceAbortableInputStream extends ProxyInputStream impl
     private final S3ObjectInputStream s3input;
 
     /**
-     * Construct with the given backend {@link S3ObjectInputStream} instance.
+     * Construct a {@link BackendResourceAbortable} input stream with the given backend {@link S3ObjectInputStream}.
      * @param s3input
      */
-    public S3BackendResourceAbortableInputStream(final S3ObjectInputStream s3input) {
+    S3BackendResourceAbortableInputStream(final S3ObjectInputStream s3input) {
         super(s3input);
         this.s3input = s3input;
     }
