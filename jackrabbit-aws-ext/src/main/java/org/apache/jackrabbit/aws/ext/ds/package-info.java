@@ -15,5 +15,5 @@
  * limitations under the License.
  */
 /* see JCR-4060 */
-@org.osgi.annotation.versioning.Version("2.13.5")
+@org.osgi.annotation.versioning.Version("2.17.6")
 package org.apache.jackrabbit.aws.ext.ds;

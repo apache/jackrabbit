@@ -160,6 +160,9 @@ public class LocalCache {
                 f = transFile;
             }
         } else {
+            if (in instanceof BackendResourceAbortable) {
+                ((BackendResourceAbortable) in).abort();
+            }
             f.setLastModified(System.currentTimeMillis());
             LOG.debug(
                 "file [{}]  exists. adding to local cache using inputstream.",

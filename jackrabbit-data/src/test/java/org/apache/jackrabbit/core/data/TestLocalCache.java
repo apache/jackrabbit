@@ -28,13 +28,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.ProxyInputStream;
 import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junit.framework.TestCase;
 
 /**
  * Testcase to test local cache.
@@ -44,8 +45,6 @@ public class TestLocalCache extends TestCase {
     private static final String CACHE_DIR = "target/cache";
 
     private static final String TEMP_DIR = "target/temp";
-
-    private static final String TARGET_DIR = "target";
 
     protected String cacheDirPath;
 
@@ -357,6 +356,58 @@ public class TestLocalCache extends TestCase {
         }
     }
 
+    public void testBackendResourceAbortableStream() {
+        try {
+            AsyncUploadCache pendingFiles = new AsyncUploadCache();
+            pendingFiles.init(tempDirPath, cacheDirPath, 100);
+            pendingFiles.reset();
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath,
+                10000000, 0.95, 0.70, pendingFiles);
+
+            // set purge more to false explicitly to test the condition where BackendResourceAbortable check occurs.
+            cache.setPurgeMode(false);
+
+            // first, store a file with a key which is going to be used again to test the condition
+            // where there exists a file already by the same file name.
+            String key = "existing_file_1";
+            Random random = new Random(12345);
+            byte[] initialData = new byte[100];
+            byte[] emptyData = new byte[100];
+            random.nextBytes(initialData);
+
+            // store a BackendResourceAbortable stream with the key initially,
+            // so LocalCache would read the data fully to store the file with the initialData.
+            BackendResourceAbortableByteArrayInputStream in = new BackendResourceAbortableByteArrayInputStream(
+                    new ByteArrayInputStream(initialData));
+
+            assertFalse("should not have aborted set to true initially.", in.isAborted());
+            cache.store(key, in);
+            assertFalse("should not have aborted set to true still as it wasn't called on an existing file.",
+                    in.isAborted());
+
+            InputStream result = cache.getIfStored(key);
+            assertEquals(new ByteArrayInputStream(initialData), result);
+
+            // now, let's store a BackendResourceAbortable stream with the same file name,
+            // so LocalCache would simply abort the given input stream without updating data with emptyData.
+            in = new BackendResourceAbortableByteArrayInputStream(
+                    new ByteArrayInputStream(emptyData));
+
+            assertFalse("should not have aborted set to true initially.", in.isAborted());
+            cache.store(key, in);
+            assertTrue("should have aborted set to true after storing with the same key on an existing file.",
+                    in.isAborted());
+
+            result = cache.getIfStored(key);
+            assertEquals(new ByteArrayInputStream(initialData), result);
+
+            cache.close();
+        } catch (Exception e) {
+            LOG.error("error:", e);
+            fail();
+        }
+    }
+
     private class StoreWorker implements Runnable {
         Map<String, byte[]> byteMap;
 
@@ -381,6 +432,36 @@ public class TestLocalCache extends TestCase {
                 LOG.error("error:", e);
                 fail();
             }
+        }
+    }
+
+    /**
+     * Example <code>InputStream</code> implementation which also implements <code>BackendResourceAbortable</code>
+     * for <code>LocalCache</code> to be able to <i>abort</i> when it doesn't have to read the input stream resource at all.
+     */
+    private class BackendResourceAbortableByteArrayInputStream extends ProxyInputStream implements BackendResourceAbortable {
+
+        private boolean aborted;
+
+        /**
+         * Constuct a <code>BackendResourceAbortable</code> proxy <code>InputStream</code>.
+         * @param proxy proxied input stream
+         */
+        private BackendResourceAbortableByteArrayInputStream(InputStream proxy) {
+            super(proxy);
+        }
+
+        @Override
+        public void abort() {
+            aborted = true;
+        }
+
+        /**
+         * Return true if this has been aborted ever.
+         * @return true if this has been aborted ever
+         */
+        boolean isAborted() {
+            return aborted;
         }
     }
 
