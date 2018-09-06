@@ -265,17 +265,17 @@ public class BTreeManager implements TreeManager {
     /**
      * Returns a {@link SizedIterator} of the child nodes of <code>node</code>.
      */
-    @SuppressWarnings({ "deprecation", "unchecked" })
+    @SuppressWarnings("deprecation")
     protected SizedIterator<Node> getNodes(Node node) throws RepositoryException {
         NodeIterator nodes = node.getNodes();
-        return getSizedIterator(nodes, nodes.getSize());
+        return getSizedIterator(convert(nodes), nodes.getSize());
     }
 
     /**
      * Returns a {@link SizedIterator} of the properties of <code>node</code>
      * which excludes the <code>jcr.primaryType</code> property.
      */
-    @SuppressWarnings({ "deprecation", "unchecked" })
+    @SuppressWarnings("deprecation")
     protected SizedIterator<Property> getProperties(Node node) throws RepositoryException {
         final PropertyIterator properties = node.getProperties();
 
@@ -286,7 +286,7 @@ public class BTreeManager implements TreeManager {
             }
         }
 
-        return getSizedIterator(filterProperties(properties), size);
+        return getSizedIterator(filterProperties(convert(properties)), size);
     }
 
     /**
@@ -341,6 +341,16 @@ public class BTreeManager implements TreeManager {
     }
 
     // -----------------------------------------------------< internal >---
+
+    @SuppressWarnings("unchecked")
+    private static Iterator<Property> convert(PropertyIterator it) {
+        return it;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Iterator<Node> convert(NodeIterator it) {
+        return it;
+    }
 
     private <T extends Item> void split(Node node, Rank<T> ranking, ItemSequence itemSequence) throws RepositoryException {
         if (ranking.size() <= maxChildren) {
