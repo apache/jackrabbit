@@ -34,6 +34,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
@@ -532,6 +533,8 @@ public class VersionHistoryTest extends AbstractVersionTest {
             vHistory.getLock();
             fail("VersionHistory should not be lockable: VersionHistory.getLock() did not throw a LockException");
         } catch (LockException success) {
+        } catch (UnsupportedRepositoryOperationException maybe) {
+            assertFalse(isSupported(Repository.OPTION_LOCKING_SUPPORTED));
         }
     }
 
@@ -540,6 +543,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * javax.jcr.lock.LockException}
      */
     public void testGetLockJcr2() throws Exception {
+        ensureLockingSupported();
         try {
             vHistory.getSession().getWorkspace().getLockManager().getLock(vHistory.getPath());
             fail("VersionHistory should not be lockable: VersionHistory.getLock() did not throw a LockException");
@@ -750,6 +754,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * <code>false</code>
      */
     public void testHoldsLock() throws Exception {
+        ensureLockingSupported();
         assertFalse("VersionHistory.holdsLock() did not return false", vHistory.holdsLock());
     }
 
@@ -758,6 +763,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * <code>false</code>
      */
     public void testHoldsLockJcr2() throws Exception {
+        ensureLockingSupported();
         assertFalse("VersionHistory.holdsLock() did not return false", vHistory.getSession().getWorkspace().getLockManager().holdsLock(vHistory.getPath()));
     }
 
@@ -790,6 +796,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * <code>false</code>
      */
     public void testIsLockedJcr2() throws Exception {
+        ensureLockingSupported();
         assertFalse("VersionHistory.isLocked() did not return false", vHistory.getSession().getWorkspace().getLockManager().isLocked(vHistory.getPath()));
     }
 
@@ -837,6 +844,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      */
     @SuppressWarnings("deprecation")
     public void testLock() throws Exception {
+        ensureLockingSupported();
         try {
             vHistory.lock(true, true);
             fail("VersionHistory should not be lockable: VersionHistory.lock(true,true) did not throw a LockException");
@@ -864,6 +872,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * {@link javax.jcr.lock.LockException}
      */
     public void testLockJcr2() throws Exception {
+        ensureLockingSupported();
         LockManager lockManager = vHistory.getSession().getWorkspace().getLockManager();
         String path = vHistory.getPath();
         try {
@@ -1146,6 +1155,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * javax.jcr.lock.LockException}
      */
     public void testUnlock() throws Exception {
+        ensureLockingSupported();
         try {
             vHistory.unlock();
             fail("VersionHistory should not be lockable: VersionHistory.unlock() did not throw a LockException");
@@ -1158,6 +1168,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      * javax.jcr.lock.LockException}
      */
     public void testUnlockJcr2() throws Exception {
+        ensureLockingSupported();
         try {
             vHistory.getSession().getWorkspace().getLockManager().unlock(vHistory.getPath());
             fail("VersionHistory should not be lockable: VersionHistory.unlock() did not throw a LockException");
