@@ -15,5 +15,5 @@
  * limitations under the License.
  */
 /* see JCR-4060 */
-@org.osgi.annotation.versioning.Version("2.14.0")
+@org.osgi.annotation.versioning.Version("2.15.0")
 package org.apache.jackrabbit.core.data;

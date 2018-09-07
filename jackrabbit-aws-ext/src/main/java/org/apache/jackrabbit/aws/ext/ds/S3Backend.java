@@ -62,6 +62,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.TransferManager;
@@ -390,7 +391,8 @@ public class S3Backend extends AbstractBackend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
             S3Object object = s3service.getObject(bucket, key);
-            InputStream in = object.getObjectContent();
+            S3ObjectInputStream s3in = object.getObjectContent();
+            InputStream in = new S3BackendResourceAbortableInputStream(s3in);
             LOG.debug("[{}] read took [{}]ms", identifier,
                 (System.currentTimeMillis() - start));
             return in;
