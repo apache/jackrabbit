@@ -213,6 +213,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String mixLockable;
 
     /**
+     * JCR Name mix:title using the namespace resolver of the current session.
+     */
+    protected String mixTitle;
+
+    /**
      * JCR Name mix:shareable using the namespace resolver of the current session.
      */
     protected String mixShareable;
@@ -379,6 +384,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         mixSimpleVersionable = superuser.getNamespacePrefix(NS_MIX_URI) + ":simpleVersionable";
         mixLockable = superuser.getNamespacePrefix(NS_MIX_URI) + ":lockable";
         mixShareable = superuser.getNamespacePrefix(NS_MIX_URI) + ":shareable";
+        mixTitle = superuser.getNamespacePrefix(NS_MIX_URI) + ":title";
         ntQuery = superuser.getNamespacePrefix(NS_NT_URI) + ":query";
 
         // setup custom namespaces
