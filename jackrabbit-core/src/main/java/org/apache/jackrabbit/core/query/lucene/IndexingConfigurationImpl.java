@@ -28,12 +28,12 @@ import java.util.Properties;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistryListener;
 import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
@@ -215,9 +215,9 @@ public class IndexingConfigurationImpl
      *         <code>false</code> otherwise.
      */
     public boolean isIndexed(NodeState state, Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
+        IndexingRule rule = getApplicableIndexingRule(state);
         if (rule != null) {
-            return rule.isIndexed(propertyName);
+            return rule.isIndexed(state, propertyName);
         }
         // none of the configs matches -> index property
         return true;
@@ -233,7 +233,7 @@ public class IndexingConfigurationImpl
      * @return the boost value for the property.
      */
     public float getPropertyBoost(NodeState state, Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
+        IndexingRule rule = getApplicableIndexingRule(state);
         if (rule != null) {
             return rule.getBoost(propertyName);
         }
@@ -247,7 +247,7 @@ public class IndexingConfigurationImpl
      * @return the boost for the node scope fulltext index field.
      */
     public float getNodeBoost(NodeState state) {
-        IndexingRule rule = getApplicableIndexingRule(state, null);
+        IndexingRule rule = getApplicableIndexingRule(state);
         if (rule != null) {
             return rule.getNodeBoost();
         }
@@ -266,7 +266,7 @@ public class IndexingConfigurationImpl
      */
     public boolean isIncludedInNodeScopeIndex(NodeState state,
                                               Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
+        IndexingRule rule = getApplicableIndexingRule(state);
         if (rule != null) {
             return rule.isIncludedInNodeScopeIndex(propertyName);
         }
@@ -285,7 +285,7 @@ public class IndexingConfigurationImpl
      *         included in an excerpt; <code>false</code> otherwise.
      */
     public boolean useInExcerpt(NodeState state, Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
+        IndexingRule rule = getApplicableIndexingRule(state);
         if (rule != null) {
             return rule.useInExcerpt(propertyName);
         }
@@ -356,7 +356,7 @@ public class IndexingConfigurationImpl
                             nt2rules.put(ntName, perNtConfig);
                         }
                         log.debug("Registering it for name '{}'", ntName);
-                        perNtConfig.add(new IndexingRule(element, ntReg.getNodeTypeDef(ntName)));
+                        perNtConfig.add(new IndexingRule(element, ntReg.getNodeTypeDef(ntName), ntReg.getEffectiveNodeType(ntName)));
                     }
                 }
             }
@@ -370,10 +370,9 @@ public class IndexingConfigurationImpl
      * <code>state</code>.
      *
      * @param state a node state.
-     * @param propertyName the property name to check.
      * @return the indexing rule or <code>null</code> if none applies.
      */
-    private IndexingRule getApplicableIndexingRule(NodeState state, Name propertyName) {
+    private IndexingRule getApplicableIndexingRule(NodeState state) {
         List<IndexingRule> rules = null;
         List<IndexingRule> r = configElements.get(state.getNodeTypeName());
         if (r != null) {
@@ -393,7 +392,7 @@ public class IndexingConfigurationImpl
 
         if (rules != null) {
             for (IndexingRule rule : rules) {
-                if (rule.appliesTo(state, propertyName)) {
+                if (rule.appliesTo(state)) {
                     return rule;
                 }
             }
@@ -658,9 +657,19 @@ public class IndexingConfigurationImpl
     private class IndexingRule {
 
         /**
-         * The NodeTypeDefinition of this fulltext indexing rule.
+         * The node type of this fulltext indexing rule.
          */
-        private final QNodeTypeDefinition nodeTypeDefinition;
+        private final Name nodeTypeName;
+
+        /**
+         * Indicates if nodetype is a mixin
+         */
+        private boolean mixinNodeType = false;
+
+        /**
+         * The effective node type of this fulltext indexing rule.
+         */
+        private EffectiveNodeType effectiveNodeType;
 
         /**
          * Map of {@link PropertyConfig}. Key=Name of property.
@@ -687,10 +696,13 @@ public class IndexingConfigurationImpl
          * different node type name.
          *
          * @param original the existing rule.
-         * @param qNodeTypeDefinition the node type for the rule.
+         * @param nodeTypeDef the node type definition for the rule.
+         * @param effectiveNodeType the EffectiveNodeType of the rule
          */
-        IndexingRule(IndexingRule original, QNodeTypeDefinition qNodeTypeDefinition) {
-            this.nodeTypeDefinition = qNodeTypeDefinition;
+        IndexingRule(IndexingRule original, QNodeTypeDefinition nodeTypeDef, EffectiveNodeType effectiveNodeType) {
+            this.nodeTypeName = nodeTypeDef.getName();
+            this.mixinNodeType = nodeTypeDef.isMixin();
+            this.effectiveNodeType = effectiveNodeType;
             this.propConfigs = original.propConfigs;
             this.namePatterns = original.namePatterns;
             this.condition = original.condition;
@@ -703,11 +715,10 @@ public class IndexingConfigurationImpl
          * @throws MalformedPathException if the condition expression is malformed.
          * @throws IllegalNameException   if a name contains illegal characters.
          * @throws NamespaceException if a name contains an unknown prefix.
-         * @throws NoSuchNodeTypeException if the nodeType could not be evaluated
          */
         IndexingRule(Node config)
-                throws MalformedPathException, IllegalNameException, NamespaceException, NoSuchNodeTypeException {
-            this.nodeTypeDefinition = getNodeTypeDefinition(config);
+                throws MalformedPathException, IllegalNameException, NamespaceException {
+            this.nodeTypeName = getNodeTypeName(config);
             this.condition = getCondition(config);
             this.boost = getNodeBoost(config);
             this.propConfigs = new HashMap<Name, PropertyConfig>();
@@ -721,7 +732,7 @@ public class IndexingConfigurationImpl
          * @return name of the node type.
          */
         public Name getNodeTypeName() {
-            return nodeTypeDefinition.getName();
+            return nodeTypeName;
         }
 
         /**
@@ -735,12 +746,23 @@ public class IndexingConfigurationImpl
          * Returns <code>true</code> if the property with the given name is
          * indexed according to this rule.
          *
+         * @param state        the node state.
          * @param propertyName the name of a property.
          * @return <code>true</code> if the property is indexed;
          *         <code>false</code> otherwise.
          */
-        public boolean isIndexed(Name propertyName) {
-            return getConfig(propertyName) != null;
+        public boolean isIndexed(NodeState state, Name propertyName) {
+            if (mixinNodeType && effectiveNodeType != null) {
+                QPropertyDefinition[] allPropDefs = effectiveNodeType.getAllPropDefs();
+                for (QPropertyDefinition propertyDefinition : allPropDefs) {
+                    if (propertyDefinition.getName().equals(propertyName)) {
+                        return getConfig(propertyName) != null;
+                    }
+                }
+                return true;
+            } else {
+                return getConfig(propertyName) != null;
+            }
         }
 
         /**
@@ -793,19 +815,13 @@ public class IndexingConfigurationImpl
          * <code>state</code>.
          *
          * @param state the state to check.
-         * @param propertyName the property name to check.
          * @return <code>true</code> the rule applies to the given node;
          *         <code>false</code> otherwise.
          */
-        public boolean appliesTo(NodeState state, Name propertyName) {
-        	Name nodeTypeName = getNodeTypeName();
-        	if (propertyName != null) {
-	        	for (QPropertyDefinition propertyDefinition : nodeTypeDefinition.getPropertyDefs()) {
-	        		if (propertyDefinition.getName().equals(propertyName)) {
-	        			return true;
-	        		}
-	        	}
-        	}
+        public boolean appliesTo(NodeState state) {
+            if (state.getMixinTypeNames().contains(nodeTypeName)) {
+                return true;
+            }
             if (!nodeTypeName.equals(state.getNodeTypeName())) {
                 return false;
             }
@@ -845,12 +861,11 @@ public class IndexingConfigurationImpl
          *                                characters.
          * @throws NamespaceException if the node type contains an unknown
          *                                prefix.
-         * @throws NoSuchNodeTypeException if the node type could not be evaluated
          */
-        private QNodeTypeDefinition getNodeTypeDefinition(Node config)
-                throws IllegalNameException, NamespaceException, NoSuchNodeTypeException {
+        private Name getNodeTypeName(Node config)
+                throws IllegalNameException, NamespaceException {
             String ntString = config.getAttributes().getNamedItem("nodeType").getNodeValue();
-            return ntReg.getNodeTypeDef(resolver.getQName(ntString));
+            return resolver.getQName(ntString);
         }
 
         /**
