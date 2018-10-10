@@ -20,10 +20,6 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.oak.jcr.Jcr;
-import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
-import org.apache.jackrabbit.oak.plugins.segment.SegmentStore;
-import org.apache.jackrabbit.oak.plugins.segment.file.FileStore;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
@@ -139,13 +135,13 @@ import javax.servlet.http.HttpServletResponse;
  * <p>
  * <p>
  * <b>Setup Wizard Functionality</b><br>
- * When using the first time, the configuraition can miss the relevant
+ * When using the first time, the configuration can miss the relevant
  * repository parameters in the web.xml. if so, it must contain a
- * <code>bootstrap-config</code> parameter that referrs to a propertiy file.
- * This file must exsit for proper working. If not, the repository is not
+ * <code>bootstrap-config</code> parameter that refers to a property file.
+ * This file must exist for proper working. If not, the repository is not
  * started.<br>
  * If the servlet is not configured correctly and accessed via http, it will
- * provide a simple wizard for the first time configuration. It propmpts for
+ * provide a simple wizard for the first time configuration. It prompts for
  * a new (or existing) repository home and will copy the templates of the
  * repository.xml and bootstrap.properties to the respective location.
  */
@@ -170,11 +166,6 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * Ugly hack to override the bootstrap file location in the test cases
      */
     static String bootstrapOverride = null;
-
-    /**
-     * the TarMK segment store
-     */
-    private SegmentStore store;
 
     /**
      * the registered repository
@@ -410,7 +401,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                     "Repository configuration failure: " + config.getRepositoryHome(), e);
         }
         String repConfig = config.getRepositoryConfig();
-        if (repConfig != null) { // Jackrabbit Classic
+        if (repConfig != null) {
             InputStream in = getServletContext().getResourceAsStream(repConfig);
             if (in == null) {
                 try {
@@ -431,14 +422,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             } catch (RepositoryException e) {
                 throw new ServletExceptionWithCause("Error while creating repository", e);
             }
-        } else { // Jackrabbit Oak
-            try {
-                String model = System.getProperty("sun.arch.data.model", "32");
-                store = new FileStore(repHome, 256, "64".equals(model));
-                repository = new Jcr(new SegmentNodeStore(store)).createRepository();
-            } catch (IOException e) {
-                throw new ServletExceptionWithCause("Error while creating repository", e);
-            }
+        } else {
+            throw new ServletException("Missing configuration");
         }
     }
 
@@ -449,10 +434,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * <code>nulled</code>.
      */
     private void shutdownRepository() {
-        if (store != null) {
-            store.close();
-            store = null;
-        } else if (repository instanceof JackrabbitRepository) {
+        if (repository instanceof JackrabbitRepository) {
             ((JackrabbitRepository) repository).shutdown();
         }
         repository = null;

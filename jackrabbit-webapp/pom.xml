@@ -35,7 +35,6 @@
   <description>Web application that hosts and serves a Jackrabbit content repository</description>
 
   <properties>
-    <oak.version>1.0.39</oak.version>
     <tomcat.version>8.5.34</tomcat.version>
   </properties>
 
@@ -81,16 +80,6 @@
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-rmi</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>oak-jcr</artifactId>
-      <version>${oak.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>oak-upgrade</artifactId>
-      <version>${oak.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
