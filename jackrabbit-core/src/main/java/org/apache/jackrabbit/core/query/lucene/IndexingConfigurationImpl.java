@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.HierarchyManager;
@@ -46,6 +47,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
@@ -212,7 +215,7 @@ public class IndexingConfigurationImpl
      *         <code>false</code> otherwise.
      */
     public boolean isIndexed(NodeState state, Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state);
+        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
         if (rule != null) {
             return rule.isIndexed(propertyName);
         }
@@ -230,7 +233,7 @@ public class IndexingConfigurationImpl
      * @return the boost value for the property.
      */
     public float getPropertyBoost(NodeState state, Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state);
+        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
         if (rule != null) {
             return rule.getBoost(propertyName);
         }
@@ -244,7 +247,7 @@ public class IndexingConfigurationImpl
      * @return the boost for the node scope fulltext index field.
      */
     public float getNodeBoost(NodeState state) {
-        IndexingRule rule = getApplicableIndexingRule(state);
+        IndexingRule rule = getApplicableIndexingRule(state, null);
         if (rule != null) {
             return rule.getNodeBoost();
         }
@@ -263,7 +266,7 @@ public class IndexingConfigurationImpl
      */
     public boolean isIncludedInNodeScopeIndex(NodeState state,
                                               Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state);
+        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
         if (rule != null) {
             return rule.isIncludedInNodeScopeIndex(propertyName);
         }
@@ -282,7 +285,7 @@ public class IndexingConfigurationImpl
      *         included in an excerpt; <code>false</code> otherwise.
      */
     public boolean useInExcerpt(NodeState state, Name propertyName) {
-        IndexingRule rule = getApplicableIndexingRule(state);
+        IndexingRule rule = getApplicableIndexingRule(state, propertyName);
         if (rule != null) {
             return rule.useInExcerpt(propertyName);
         }
@@ -353,7 +356,7 @@ public class IndexingConfigurationImpl
                             nt2rules.put(ntName, perNtConfig);
                         }
                         log.debug("Registering it for name '{}'", ntName);
-                        perNtConfig.add(new IndexingRule(element, ntName));
+                        perNtConfig.add(new IndexingRule(element, ntReg.getNodeTypeDef(ntName)));
                     }
                 }
             }
@@ -367,9 +370,10 @@ public class IndexingConfigurationImpl
      * <code>state</code>.
      *
      * @param state a node state.
+     * @param propertyName the property name to check.
      * @return the indexing rule or <code>null</code> if none applies.
      */
-    private IndexingRule getApplicableIndexingRule(NodeState state) {
+    private IndexingRule getApplicableIndexingRule(NodeState state, Name propertyName) {
         List<IndexingRule> rules = null;
         List<IndexingRule> r = configElements.get(state.getNodeTypeName());
         if (r != null) {
@@ -389,7 +393,7 @@ public class IndexingConfigurationImpl
 
         if (rules != null) {
             for (IndexingRule rule : rules) {
-                if (rule.appliesTo(state)) {
+                if (rule.appliesTo(state, propertyName)) {
                     return rule;
                 }
             }
@@ -654,9 +658,9 @@ public class IndexingConfigurationImpl
     private class IndexingRule {
 
         /**
-         * The node type of this fulltext indexing rule.
+         * The NodeTypeDefinition of this fulltext indexing rule.
          */
-        private final Name nodeTypeName;
+        private final QNodeTypeDefinition nodeTypeDefinition;
 
         /**
          * Map of {@link PropertyConfig}. Key=Name of property.
@@ -683,10 +687,10 @@ public class IndexingConfigurationImpl
          * different node type name.
          *
          * @param original the existing rule.
-         * @param nodeTypeName the node type name for the rule.
+         * @param qNodeTypeDefinition the node type for the rule.
          */
-        IndexingRule(IndexingRule original, Name nodeTypeName) {
-            this.nodeTypeName = nodeTypeName;
+        IndexingRule(IndexingRule original, QNodeTypeDefinition qNodeTypeDefinition) {
+            this.nodeTypeDefinition = qNodeTypeDefinition;
             this.propConfigs = original.propConfigs;
             this.namePatterns = original.namePatterns;
             this.condition = original.condition;
@@ -699,10 +703,11 @@ public class IndexingConfigurationImpl
          * @throws MalformedPathException if the condition expression is malformed.
          * @throws IllegalNameException   if a name contains illegal characters.
          * @throws NamespaceException if a name contains an unknown prefix.
+         * @throws NoSuchNodeTypeException if the nodeType could not be evaluated
          */
         IndexingRule(Node config)
-                throws MalformedPathException, IllegalNameException, NamespaceException {
-            this.nodeTypeName = getNodeTypeName(config);
+                throws MalformedPathException, IllegalNameException, NamespaceException, NoSuchNodeTypeException {
+            this.nodeTypeDefinition = getNodeTypeDefinition(config);
             this.condition = getCondition(config);
             this.boost = getNodeBoost(config);
             this.propConfigs = new HashMap<Name, PropertyConfig>();
@@ -716,7 +721,7 @@ public class IndexingConfigurationImpl
          * @return name of the node type.
          */
         public Name getNodeTypeName() {
-            return nodeTypeName;
+            return nodeTypeDefinition.getName();
         }
 
         /**
@@ -788,10 +793,19 @@ public class IndexingConfigurationImpl
          * <code>state</code>.
          *
          * @param state the state to check.
+         * @param propertyName the property name to check.
          * @return <code>true</code> the rule applies to the given node;
          *         <code>false</code> otherwise.
          */
-        public boolean appliesTo(NodeState state) {
+        public boolean appliesTo(NodeState state, Name propertyName) {
+        	Name nodeTypeName = getNodeTypeName();
+        	if (propertyName != null) {
+	        	for (QPropertyDefinition propertyDefinition : nodeTypeDefinition.getPropertyDefs()) {
+	        		if (propertyDefinition.getName().equals(propertyName)) {
+	        			return true;
+	        		}
+	        	}
+        	}
             if (!nodeTypeName.equals(state.getNodeTypeName())) {
                 return false;
             }
@@ -831,11 +845,12 @@ public class IndexingConfigurationImpl
          *                                characters.
          * @throws NamespaceException if the node type contains an unknown
          *                                prefix.
+         * @throws NoSuchNodeTypeException if the node type could not be evaluated
          */
-        private Name getNodeTypeName(Node config)
-                throws IllegalNameException, NamespaceException {
+        private QNodeTypeDefinition getNodeTypeDefinition(Node config)
+                throws IllegalNameException, NamespaceException, NoSuchNodeTypeException {
             String ntString = config.getAttributes().getNamedItem("nodeType").getNodeValue();
-            return resolver.getQName(ntString);
+            return ntReg.getNodeTypeDef(resolver.getQName(ntString));
         }
 
         /**
