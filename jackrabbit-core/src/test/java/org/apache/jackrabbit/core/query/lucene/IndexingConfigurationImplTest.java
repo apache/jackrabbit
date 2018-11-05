@@ -43,12 +43,14 @@ public class IndexingConfigurationImplTest extends AbstractIndexingTest {
     private static final Name FOO = NameFactoryImpl.getInstance().create("", "foo");
 
     private NodeState nState;
+    private Node n;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        Node n = testRootNode.addNode(nodeName1, ntUnstructured);
+        n = testRootNode.addNode(nodeName1, ntUnstructured);
         n.addMixin(mixReferenceable);
+        n.addMixin(mixTitle);
         session.save();
         nState = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
                 new NodeId(n.getIdentifier()));
@@ -97,8 +99,14 @@ public class IndexingConfigurationImplTest extends AbstractIndexingTest {
         assertFalse(config.isIncludedInNodeScopeIndex(state, FOO));
     }
 
-    //----------------------------< internal >----------------------------------
+    public void testIndexRuleMixin() throws Exception{
+        IndexingConfiguration config = createConfig("config5");
+        assertTrue(config.isIndexed(nState, NameConstants.JCR_TITLE));
+        assertFalse(config.isIndexed(nState, NameConstants.JCR_DESCRIPTION));
+        assertTrue(config.isIndexed(nState, NameConstants.JCR_UUID)); // from mixReferenceable ... should be indexed
+    }
 
+    //----------------------------< internal >----------------------------------
     protected IndexingConfiguration createConfig(String name) throws Exception {
         IndexingConfiguration config = new IndexingConfigurationImpl();
         config.init(loadConfig(name), getSearchIndex().getContext(),
