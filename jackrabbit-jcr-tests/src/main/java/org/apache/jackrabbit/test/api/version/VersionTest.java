@@ -29,6 +29,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
 
@@ -300,6 +301,8 @@ public class VersionTest extends AbstractVersionTest {
             version.getLock();
             fail("Version should not be lockable: Version.getLock() did not throw a LockException");
         } catch (LockException success) {
+        } catch (UnsupportedRepositoryOperationException maybe) {
+            assertFalse(isSupported(Repository.OPTION_LOCKING_SUPPORTED));
         }
     }
 
@@ -308,6 +311,7 @@ public class VersionTest extends AbstractVersionTest {
      * javax.jcr.lock.LockException}
      */
     public void testGetLockJcr2() throws Exception {
+        ensureLockingSupported();
         try {
             version.getSession().getWorkspace().getLockManager().getLock(version.getPath());
             fail("Version should not be lockable: Version.getLock() did not throw a LockException");
@@ -486,6 +490,7 @@ public class VersionTest extends AbstractVersionTest {
      * Tests if <code>Version.holdsLock()</code> returns <code>false</code>
      */
     public void testHoldsLock() throws Exception {
+        ensureLockingSupported();
         assertFalse("Version.holdsLock() did not return false", version.holdsLock());
     }
 
@@ -493,6 +498,7 @@ public class VersionTest extends AbstractVersionTest {
      * Tests if <code>Version.holdsLock()</code> returns <code>false</code>
      */
     public void testHoldsLockJcr2() throws Exception {
+        ensureLockingSupported();
         assertFalse("Version.holdsLock() did not return false", version.getSession().getWorkspace().getLockManager().holdsLock(version.getPath()));
     }
 
@@ -521,6 +527,7 @@ public class VersionTest extends AbstractVersionTest {
      * Tests if <code>Version.isLocked()</code> returns <code>false</code>
      */
     public void testIsLockedJcr2() throws Exception {
+        ensureLockingSupported();
         assertFalse("Version.isLocked() did not return false", version.getSession().getWorkspace().getLockManager().isLocked(version.getPath()));
     }
 
@@ -574,6 +581,7 @@ public class VersionTest extends AbstractVersionTest {
      * LockException}
      */
     public void testLock() throws Exception {
+        ensureLockingSupported();
         try {
             version.lock(true, true);
             fail("Version should not be lockable: Version.lock(true,true) did not throw a LockException");
@@ -601,6 +609,7 @@ public class VersionTest extends AbstractVersionTest {
      * LockException}
      */
     public void testLockJcr2() throws Exception {
+        ensureLockingSupported();
         LockManager lockManager = version.getSession().getWorkspace().getLockManager();
         String path = version.getPath();
         try {
@@ -888,6 +897,8 @@ public class VersionTest extends AbstractVersionTest {
             version.unlock();
             fail("Version should not be lockable: Version.unlock() did not throw a LockException");
         } catch (LockException success) {
+        } catch (UnsupportedRepositoryOperationException maybe) {
+            assertFalse(isSupported(Repository.OPTION_LOCKING_SUPPORTED));
         }
     }
 
@@ -896,6 +907,7 @@ public class VersionTest extends AbstractVersionTest {
      * javax.jcr.lock.LockException}
      */
     public void testUnlockJcr2() throws Exception {
+        ensureLockingSupported();
         try {
             version.getSession().getWorkspace().getLockManager().unlock(version.getPath());
             fail("Version should not be lockable: Version.unlock() did not throw a LockException");
