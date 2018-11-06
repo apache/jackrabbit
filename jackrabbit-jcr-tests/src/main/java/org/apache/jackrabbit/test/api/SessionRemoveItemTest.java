@@ -94,6 +94,7 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
     }
 
     public void testRemoveLockedNode() throws RepositoryException, NotExecutableException {
+        ensureLockingSupported();
         ensureMixinType(removeNode, mixLockable);
         removeNode.save();
 
