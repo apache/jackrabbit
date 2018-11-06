@@ -56,7 +56,7 @@
     <java.version>1.6</java.version>
     <java.version.signature>java16</java.version.signature>
     <skip.coverage>true</skip.coverage>
-    <jacoco.version>0.7.8</jacoco.version>
+    <jacoco.version>0.8.1</jacoco.version>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
