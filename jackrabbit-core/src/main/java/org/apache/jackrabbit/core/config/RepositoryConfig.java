@@ -624,9 +624,11 @@ public class RepositoryConfig
      */
     private WorkspaceConfig loadWorkspaceConfig(File directory)
             throws ConfigurationException {
+        FileInputStream fin = null;
         try {
             File file = new File(directory, WORKSPACE_XML);
-            InputSource xml = new InputSource(new FileInputStream(file));
+            fin = new FileInputStream(file);
+            InputSource xml = new InputSource(fin);
             xml.setSystemId(file.toURI().toString());
 
             Properties variables = new Properties();
@@ -638,6 +640,8 @@ public class RepositoryConfig
             return localParser.parseWorkspaceConfig(xml);
         } catch (FileNotFoundException e) {
             return null;
+        } finally {
+            IOUtils.closeQuietly(fin);
         }
     }
 
