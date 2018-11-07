@@ -45,31 +45,34 @@ public class GetPredecessorsTest extends AbstractVersionTest {
 
         assertTrue("Version should have at minimum one predecessor version.", version.getPredecessors().length > 0);
     }
-    
+
     /**
-     * Checks ontaining the linear predecessor.
+     * Checks obtaining the linear predecessor.
      * @since JCR 2.0
      */
     public void testGetLinearPredecessorSuccessor() throws RepositoryException {
 
         String path = versionableNode.getPath();
-        
+
         VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
-        
+
         // get the previous version
         Version pred = vm.getBaseVersion(path);
 
+        // shouldn't have a predecessor
+        assertNull(pred.getLinearPredecessor());
+
         // shouldn't have a successor yet
         assertNull(pred.getLinearSuccessor());
-        
+
         // check root version
         Version root = vm.getVersionHistory(path).getRootVersion();
         assertNull(root.getLinearSuccessor());
-        
+
         // create a new version
         vm.checkout(path);
         Version version = vm.checkin(path);
-        
+
         // refresh the predecessor
         pred = (Version)versionableNode.getSession().getNode(pred.getPath());
 
