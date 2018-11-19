@@ -372,15 +372,21 @@ public class SessionImporter implements Importer {
                     // this node has already been auto-created, no need to create it
                     node = existing;
                 } else {
-                    // edge case: colliding node does have same uuid
-                    // (see http://issues.apache.org/jira/browse/JCR-1128)
-                    if (!(existing.getId().equals(id)
-                            && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
-                            || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING))) {
+                    // prevent same-name-sibling (we come here only if !def.allowsSameNameSiblings())  
+                    boolean sameId = existing.getId().equals(id);
+                    if (!sameId 
+                        // IMPORT_UUID_CREATE_NEW with same id would also result in same-name-sibling 
+                        // (no other ImportUUIDBehaviour would result in same-name-sibling)
+                        || (sameId && uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW)) {
                         throw new ItemExistsException(
-                                "Node with the same UUID exists:" + existing);
+                            "Same name sibling not allowed for " + existing + " by definition " + def.getName() + " (declaring type " + def.getDeclaringNodeType().getName() + ")");
                     }
-                    // fall through
+                    // truth table for previous if statement (we come here only if names are same):
+                    // same id | CREATE_NEW
+                    // false   | false      => Exception: same name + different id would result in sibling  
+                    // false   | true       => Exception: same name + different id would result in sibling
+                    // true    | false      => fall through: same name + same id, either replacing or removing original node or throwing exception
+                    // true    | true       => Exception: same name + same id would result in sibling due to CREATE_NEW
                 }
             }
         }
