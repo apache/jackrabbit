@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi2davex;
 
 import java.util.Map;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.ItemInfoCache;
