@@ -530,7 +530,7 @@ public class Text {
         char c = s.charAt(s.length() - 1);
         // NOTE: keep this in sync with _ESCAPED_CHAR below!
         if (c == '!' || c == '(' || c == ':' || c == '^'
-            || c == '[' || c == ']' || c == '{' || c == '}' || c == '?') {
+            || c == '[' || c == ']' || c == '{' || c == '}' || c == '?' || c == '\\' ) {
             sb.append('\\');
         }
         sb.append(c);
