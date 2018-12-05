@@ -335,10 +335,6 @@
               <goals>
                 <goal>baseline</goal>
               </goals>
-              <configuration>
-                <!-- this should refer to the latest stable release -->
-                <comparisonVersion>2.16.3</comparisonVersion>
-              </configuration>
             </execution>
           </executions>
         </plugin>
