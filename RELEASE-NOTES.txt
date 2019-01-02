@@ -1,50 +1,68 @@
-Release Notes -- Apache Jackrabbit -- Version 2.10.8
+Release Notes -- Apache Jackrabbit -- Version 2.10.9
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.10.8, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.10.9, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.10.8 is a patch release that contains fixes and
-improvements over Jackrabbit 2.10.7. Jackrabbit 2.10.x releases are considered
+Apache Jackrabbit 2.10.9 is a patch release that contains fixes and
+improvements over Jackrabbit 2.10.8. Jackrabbit 2.10.x releases are considered
 stable and targeted for production use.
 
 Note that an "end of life" date has already been planned for this branch. See
 <http://jackrabbit.apache.org/jcr/jackrabbit-roadmap.html> for details.
 
-Changes in Jackrabbit 2.10.8
+Changes in Jackrabbit 2.10.9
 ----------------------------
 
 Bug
 
-    [JCR-3929] - ConsistencyCheck may fail on empty repository
-    [JCR-4006] - TestCachingFDS.testDeleteRecord() fails occasionally
-    [JCR-4183] - Jackrabbit standalone jar isn't working under JDK 8
-    [JCR-4185] - spi2dav URIResolverImpl should check status code before attempting to parse multistatus
-    [JCR-4188] - avoid use of sun.security.acl.GroupImpl in PrincipalManagerTest
-    [JCR-4242] - Build failure: unapproved license
+    [JCR-3632] - ConnectionFactoryTest failed under Java 8
+    [JCR-4008] - Restore TestCachingFDS.testDeleteRecord() to fix it with disabling AsyncUpload in unit tests
+    [JCR-4093] - IndexRule are meant to be applied based on both primaryType and mixin type based inheritance. Currently it appears that only primaryType based inheritance is working
+    [JCR-4291] - FileInputStream for workspace.xml not closed in RepositoryConfig.loadWorkspaceConfig(File)
+    [JCR-4324] - NPE on Version.getLinearPredecessor() implementation
+    [JCR-4330] - jackrabbit-jcr-commons and jackrabbit-bundle have broken manifests
 
 Improvement
 
-    [JCR-4001] - When using Node.getProperties(String namePattern) also child nodes are processed
-    [JCR-4237] - cleanup throws clauses of private methods
+    [JCR-4253] - RepositoryConfig: add some handling for mkdir failure
+    [JCR-4292] - davex: preserve cause in exceptions and log affected URI
 
 Task
 
-    [JCR-4184] - migrate from org.mortbay.jetty to org.eclipse.jetty
-    [JCR-4186] - Use current Derby version
-    [JCR-4205] - Upgrade JTA dependency to javax.transaction-api 1.2
-    [JCR-4224] - Upgrade tomcat-servlet dependency to 7.0.82
-    [JCR-4225] - Upgrade commons-chains dependency to 1.2
-    [JCR-4228] - Update Oak dependency to latest 1.0 stable release
-    [JCR-4256] - create announcement mail template for releases
-    [JCR-4268] - Update release notes of old branches with pointer to roadmap
-    [JCR-4273] - Mention SHA512 checksums in release notes
-    [JCR-4274] - stop advertising MD5 checksums
-    [JCR-4275] - Incorrect link to KEYS in release notes
-    [JCR-4277] - stop creating MD5 checksums for releases
+    [JCR-4101] - add code coverage profile (jacoco)
+    [JCR-4128] - update maven plugins and require Maven 3.2.1
+    [JCR-4231] - Upgrade aws-java-sdk-s3 dependency to 1.11.241
+    [JCR-4233] - Update H2DB test dependency
+    [JCR-4254] - Update Logback version to >= 1.2.0, SLF4J accordingly
+    [JCR-4261] - webapp: align jsons-simple dependencies internally and with oak
+    [JCR-4262] - jcr-server: align org.apache.felix.scr.annotations with oak
+    [JCR-4263] - jcr-server, jackrabbit-bundle: align org.osgi dependencies with oak
+    [JCR-4264] - jackrabbit-standalone: align commons-cli dependency with oak
+    [JCR-4272] - Upgrade surefire and failsafe plugins to 2.21.0
+    [JCR-4293] - jackrabbit-core: observation tests should not rely on mix:lockable mixin type
+    [JCR-4294] - TCK tests should pass on repositories without locking support
+    [JCR-4302] - BTreeManager: fix Eclipse compiler error
+    [JCR-4307] - Update animal-sniffer-maven-plugin to 1.16
+    [JCR-4318] - Update failsafe and surefire plugin versions to 2.22.0
+    [JCR-4320] - Update spotbugs plugin to 3.1.5
+    [JCR-4321] - Update maven plugins from org.apache.maven.plugins
+    [JCR-4322] - Consistent use of log4j versions
+    [JCR-4326] - Update aws java sdk version to 1.11.330 (consistent with Oak)
+    [JCR-4328] - Update 7.0.* Tomcat dependencies once 7.0.90 is released
+    [JCR-4333] - Update javax.transaction dependency to 1.3
+
+Sub-task
+
+    [JCR-4190] - maven-assembly-plugin:2.6:single failing with Java 9
+    [JCR-4196] - update surefire and failsafe plugins for use with java 9
+    [JCR-4200] - javax.transaction.UserTransaction hidden by surefire plugin in with Java 9
+    [JCR-4280] - code coverage checks fail on Java 10
+    [JCR-4306] - switch to findbugs replacement that is still maintained (spotbugs)
+    [JCR-4338] - avoid use of javax.rmi.PortableRemoteObject (removed in Java 11)
 
 
 In addition to the above-mentioned changes, this release contains
