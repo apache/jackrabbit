@@ -375,8 +375,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             } catch (HttpException e) {
                 throw ExceptionConverter.generate(new DavException(method.getStatusCode(), "Unable to retrieve NodeInfo for " + uri));
             } catch (IOException e) {
-                log.error("Internal error while retrieving NodeInfo.",e);
-                throw new RepositoryException(e.getMessage());
+                log.error("Internal error while retrieving NodeInfo for " + uri + ".", e);
+                throw new RepositoryException(e.getMessage(), e);
             } finally {
                 method.releaseConnection();
             }
@@ -433,8 +433,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 return super.getPropertyInfo(sessionInfo, propertyId);
             }
         } catch (IOException e) {
-            log.error("Internal error while retrieving ItemInfo.",e);
-            throw new RepositoryException(e.getMessage());
+            log.error("Internal error while retrieving ItemInfo for " + uri + ".", e);
+            throw new RepositoryException(e.getMessage(), e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         } finally {

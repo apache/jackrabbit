@@ -105,7 +105,7 @@ class ItemInfoJsonHandler implements JsonHandler {
                 nodeInfos.push(nInfo);
                 propInfoLists.push(new ArrayList<PropertyInfoImpl>(8));
             } catch (RepositoryException e) {
-                throw new IOException(e.getMessage());
+                throw new IOException(e.getMessage(), e);
             }
         }
     }
@@ -132,7 +132,7 @@ class ItemInfoJsonHandler implements JsonHandler {
                 log.debug("Incomplete NodeInfo '"+ nInfo.getPath() + "' -> Only present as ChildInfo with its parent.");
             }
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         } finally {
             // reset all node-related handler state
             name = null;
@@ -163,7 +163,7 @@ class ItemInfoJsonHandler implements JsonHandler {
             propInfo.checkCompleted();
             getCurrentPropInfos().add(propInfo);
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         } finally {
             // reset property-related handler state
             propertyType = PropertyType.UNDEFINED;
@@ -202,7 +202,7 @@ class ItemInfoJsonHandler implements JsonHandler {
                 index = Path.INDEX_DEFAULT;
             }
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         }
     }
 
@@ -240,7 +240,7 @@ class ItemInfoJsonHandler implements JsonHandler {
             }
             value(v);
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         }
     }
 
@@ -252,7 +252,7 @@ class ItemInfoJsonHandler implements JsonHandler {
         try {
             value(vFactory.create(value));
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         }
     }
 
@@ -282,7 +282,7 @@ class ItemInfoJsonHandler implements JsonHandler {
                     int indx = (!multiValuedProperty) ? -1 : propValues.size();
                     value(vFactory.create(value, getValueURI(), indx));
                 } catch (RepositoryException e) {
-                    throw new IOException(e.getMessage());
+                    throw new IOException(e.getMessage(), e);
                 }
             }
             return;
@@ -290,7 +290,7 @@ class ItemInfoJsonHandler implements JsonHandler {
         try {
             value(vFactory.create(value));
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         }
     }
 
@@ -302,7 +302,7 @@ class ItemInfoJsonHandler implements JsonHandler {
         try {
             value(vFactory.create(value));
         } catch (RepositoryException e) {
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         }
     }
 
