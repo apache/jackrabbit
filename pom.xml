@@ -58,6 +58,7 @@
     <module>jackrabbit-jcr2dav</module>
     <module>jackrabbit-jcr-client</module>
     <module>jackrabbit-bundle</module>
+    <module>jackrabbit-standalone-components</module>
     <module>jackrabbit-standalone</module>
   </modules>
 
