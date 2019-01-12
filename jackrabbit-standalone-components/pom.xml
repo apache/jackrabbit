@@ -48,6 +48,18 @@
             <Embed-Transitive>true</Embed-Transitive>
           </instructions>
         </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>baseline</goal>
+            </goals>
+            <configuration>
+              <!-- Skip comparison as this module is introduced since 2.19.1. -->
+              <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
