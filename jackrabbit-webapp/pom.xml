@@ -222,9 +222,6 @@
                 <value>target/derby.log</value>
               </property>
             </systemProperties>
-            <excludes>
-                <exclude>**/BackwardsCompatibilityIT.java</exclude> <!-- JCR-3640 -->
-            </excludes>
           </configuration>
         </plugin>
       </plugins>
