@@ -40,15 +40,6 @@ request.setAttribute("title", "Content Repository Setup");
       <input size="40" type="text" name="repository_home" value="jackrabbit">
     </label>
   </p>
-  <p>
-    Repository type:
-    <label>
-      <input type="radio" name="repository_type" value="classic" checked> Classic
-    </label>
-    <label>
-      <input type="radio" name="repository_type" value="oak"> Oak
-    </label>
-  </p>
   <p><input type="submit" value="Create Content Repository"></p>
 </form>
 
