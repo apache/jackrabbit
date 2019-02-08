@@ -314,11 +314,10 @@
           <artifactId>maven-eclipse-plugin</artifactId>
           <version>2.10</version>
         </plugin>
-        <!--  Default configuration of OSGi bundling (JCR-1342) -->
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>4.0.0</version>
+          <version>4.1.0</version>
           <inherited>true</inherited>
           <configuration>
             <instructions>
