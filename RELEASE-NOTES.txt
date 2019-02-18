@@ -1,27 +1,38 @@
-Release Notes -- Apache Jackrabbit -- Version 2.19.0
+Release Notes -- Apache Jackrabbit -- Version 2.19.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.19.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.19.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.19.0 is an unstable release cut directly from
+Apache Jackrabbit 2.19.1 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.18.x
 release.
 
-Changes in Jackrabbit 2.19.0
+Changes in Jackrabbit 2.19.1
 ----------------------------
+
+Bug
+
+    [JCR-4408] - jackrabbit-webapp: test dependency for httpcore breaks war file
 
 Task
 
-    [JCR-4394] - switch bundle comparisonVersion for 2.18
-
+    [JCR-4400] - Update tika dependency to 1.20
+    [JCR-4403] - update spotbugs dependency to 3.1.10
+    [JCR-4404] - update maven-assembly-plugin dependency to 3.1.1
+    [JCR-4405] - update maven-jar-plugin dependency to 3.1.1
+    [JCR-4406] - update maven-bundle-plugin dependency to 4.1.0
+    [JCR-4407] - Update httpcore dependency to 4.4.11
+    [JCR-4409] - jackrabbit-webapp: embed JCR 2.0 API
+    [JCR-4410] - jackrabbit-webapp: cleanup left over Oak references
+    [JCR-4411] - Update httpclient/mime dependencies to 4.5.7
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.18.x release.
+all the changes included up to the Apache Jackrabbit 2.19.0 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
