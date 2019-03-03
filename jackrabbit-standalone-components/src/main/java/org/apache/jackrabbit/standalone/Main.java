@@ -71,7 +71,13 @@ public class Main {
 
     private final ServerConnector connector = new ServerConnector(server);
 
-    private Main(String[] args) throws ParseException {
+    /**
+     * Construct Main application instance.
+     * <P>
+     * <EM>Note:</EM> Constructor is protected because other projects such as Commons VFS can extend this for some reasons
+     *       (e.g, unit testing against Jackrabbit WebDAV).
+     */
+    protected Main(String[] args) throws ParseException {
         options.addOption("?", "help", false, "print this message");
         options.addOption("n", "notice", false, "print copyright notices");
         options.addOption("l", "license", false, "print license information");
@@ -98,6 +104,10 @@ public class Main {
         command = new GnuParser().parse(options, args);
     }
 
+    /**
+     * Run this Main application.
+     * @throws Exception if any exception occurs
+     */
     public void run() throws Exception {
         String defaultFile = "jackrabbit-standalone.jar";
         URL location =
