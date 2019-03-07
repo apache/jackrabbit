@@ -106,6 +106,8 @@ public class Main {
 
     /**
      * Run this Main application.
+     * <P>
+     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests. e.g, Commons-VFS.
      * @throws Exception if any exception occurs
      */
     public void run() throws Exception {
@@ -196,6 +198,25 @@ public class Main {
         }
     }
 
+    /**
+     * Shutdown this Main application.
+     * <P>
+     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests for graceful shutdown.
+     * e.g, Commons-VFS. If this is not invoked properly, some unexpected exceptions may occur on shutdown hook
+     * due to an unexpected, invalid state for org.apache.lucene.index.IndexFileDeleter for instance.
+     */
+    public void shutdown() {
+        try {
+            message("Shutting down the server...");
+            server.stop();
+            server.join();
+            message("-------------------------------");
+            message("Goodbye from Apache Jackrabbit!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void backup(File sourceDir) throws Exception {
         RepositoryConfig source;
         if (command.hasOption("conf")) {
@@ -282,15 +303,7 @@ public class Main {
     private void prepareShutdown() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                try {
-                    message("Shutting down the server...");
-                    server.stop();
-                    server.join();
-                    message("-------------------------------");
-                    message("Goodbye from Apache Jackrabbit!");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                shutdown();
             }
         });
     }
