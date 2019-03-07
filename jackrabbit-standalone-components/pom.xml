@@ -59,7 +59,7 @@
               <goal>baseline</goal>
             </goals>
             <configuration>
-              <!-- Skip comparison as this module is introduced since 2.19.1. -->
+              <!-- Skip comparison as this module is introduced since 2.19.x. -->
               <skip>true</skip>
             </configuration>
           </execution>
