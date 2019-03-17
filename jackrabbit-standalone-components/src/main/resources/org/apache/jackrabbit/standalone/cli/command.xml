@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<chains>
+	<catalog>
+
+		<command name="addMixin"
+			className="org.apache.jackrabbit.standalone.cli.mixin.AddMixin"/>
+
+		<command name="addNode"
+			className="org.apache.jackrabbit.standalone.cli.core.AddNode"/>
+					
+		<command name="addLockToken"
+			className="org.apache.jackrabbit.standalone.cli.lock.AddLockToken"/>
+
+		<command name="addVersionLabel"
+			className="org.apache.jackrabbit.standalone.cli.version.AddVersionLabel"/>
+
+		<command name="cat"
+			className="org.apache.jackrabbit.standalone.cli.info.Cat"/>
+
+		<command name="checkin"
+			className="org.apache.jackrabbit.standalone.cli.version.Checkin"/>
+
+		<command name="checkout"
+			className="org.apache.jackrabbit.standalone.cli.version.Checkout"/>
+
+		<command name="clearWorkspace"
+			className="org.apache.jackrabbit.standalone.cli.core.ClearWorkspace"/>
+
+		<command name="clone"
+			className="org.apache.jackrabbit.standalone.cli.core.Clone"/>
+
+		<command name="collectItems"
+			className="org.apache.jackrabbit.standalone.cli.collect.CollectItems"/>
+
+		<command name="collectNodes"
+			className="org.apache.jackrabbit.standalone.cli.collect.CollectNodes"/>
+
+		<command name="collectProperties"
+			className="org.apache.jackrabbit.standalone.cli.collect.CollectProperties"/>
+
+		<command name="connectToRmiServer"
+			className="org.apache.jackrabbit.standalone.cli.ext.ConnectToRmiServer"/>
+
+		<command name="connectToJndiServer"
+			className="org.apache.jackrabbit.standalone.cli.ext.ConnectToJNDIServer"/>
+			
+		<command name="copy"
+			className="org.apache.jackrabbit.standalone.cli.core.Copy"/>
+
+		<command name="createWorkspace"
+			className="org.apache.jackrabbit.standalone.cli.ext.CreateWorkspace"/>
+
+		<command name="currentNode"
+			className="org.apache.jackrabbit.standalone.cli.core.CurrentNode"/>
+
+		<command name="describe"
+			className="org.apache.jackrabbit.standalone.cli.info.Describe"/>
+
+		<command name="dump"
+			className="org.apache.jackrabbit.standalone.cli.info.Dump"/>
+
+		<command name="exportFileSystem"
+			className="org.apache.jackrabbit.standalone.cli.fs.ExportFileSystem"/>
+
+		<command name="exportPropertyToFile"
+			className="org.apache.jackrabbit.standalone.cli.fs.ExportPropertyToFile"/>
+
+		<command name="exportDocViewToFile"
+			className="org.apache.jackrabbit.standalone.cli.xml.ExportDocViewToFile"/>
+
+		<command name="exportSysViewToFile"
+			className="org.apache.jackrabbit.standalone.cli.xml.ExportSysViewToFile"/>
+
+		<command name="help"
+			className="org.apache.jackrabbit.standalone.cli.info.Help"/>
+
+		<command name="importFileSystem"
+			className="org.apache.jackrabbit.standalone.cli.fs.ImportFileSystem"/>
+
+		<chain name="importXmlFromFile">
+			<command name="fileToInputStream"
+				className="org.apache.jackrabbit.standalone.cli.fs.FileToInputStream"
+				destKey="inputStream"/>
+			<command name="importXmlFromInputStream"
+				className="org.apache.jackrabbit.standalone.cli.xml.ImportXmlFromInputStream"/>
+		</chain >
+
+		<command name="lock"
+			className="org.apache.jackrabbit.standalone.cli.lock.Lock"/>
+
+		<command name="login"
+			className="org.apache.jackrabbit.standalone.cli.core.Login"/>
+
+		<command name="logout"
+			className="org.apache.jackrabbit.standalone.cli.core.Logout"/>
+			
+		<chain name="lsCollect">
+			<command name="collectItems"
+				className="org.apache.jackrabbit.standalone.cli.collect.CollectItems"
+				destKey="collected"/>
+			<command name="lsCollectedItems"
+				className="org.apache.jackrabbit.standalone.cli.info.LsCollectedItems"
+				fromKey="collected"/>
+			<command name="remove"
+				className="org.apache.commons.chain.generic.RemoveCommand"
+				fromKey="collected"/>
+		</chain>
+		
+		<chain name="lsCollectNodes">
+			<command name="collectNodes"
+				className="org.apache.jackrabbit.standalone.cli.collect.CollectNodes"
+				destKey="collected"/>
+			<command name="lsCollectedNodes"
+				className="org.apache.jackrabbit.standalone.cli.info.LsCollectedNodes"
+				fromKey="collected"/>
+			<command name="remove"
+				className="org.apache.commons.chain.generic.RemoveCommand"
+				fromKey="collected"/>
+		</chain>
+		
+		<chain name="lsCollectProperties">
+			<command name="collectProperties"
+				className="org.apache.jackrabbit.standalone.cli.collect.CollectProperties"
+				destKey="collected"/>
+			<command name="lsCollectedNodes"
+				className="org.apache.jackrabbit.standalone.cli.info.LsCollectedProperties"
+				fromKey="collected"/>
+			<command name="remove"
+				className="org.apache.commons.chain.generic.RemoveCommand"
+				fromKey="collected"/>
+		</chain>
+
+		<command name="lsCollectedItems"
+			className="org.apache.jackrabbit.standalone.cli.info.LsCollectedItems"/>
+
+		<command name="lsCollectedNodes"
+			className="org.apache.jackrabbit.standalone.cli.info.LsCollectedNodes"/>
+
+		<command name="lsCollectedItems"
+			className="org.apache.jackrabbit.standalone.cli.info.LsCollectedProperties"/>
+
+		<command name="lsItems"
+			className="org.apache.jackrabbit.standalone.cli.info.LsItems"/>
+
+		<command name="lsNamespaces"
+			className="org.apache.jackrabbit.standalone.cli.info.LsNamespaces"/>
+
+		<command name="lsNodes"
+			className="org.apache.jackrabbit.standalone.cli.info.LsNodes"/>
+
+		<command name="lsProperties"
+			className="org.apache.jackrabbit.standalone.cli.info.LsProperties"/>
+
+		<command name="lsReferences"
+			className="org.apache.jackrabbit.standalone.cli.info.LsReferences"/>
+
+		<command name="lsVersions"
+			className="org.apache.jackrabbit.standalone.cli.info.LsVersions"/>
+
+		<command name="merge"
+			className="org.apache.jackrabbit.standalone.cli.version.Merge"/>
+
+		<command name="move"
+			className="org.apache.jackrabbit.standalone.cli.core.Move"/>
+
+		<command name="orderBefore"
+			className="org.apache.jackrabbit.standalone.cli.core.OrderBefore"/>
+
+		<command name="readValue"
+			className="org.apache.jackrabbit.standalone.cli.core.ReadValue"/>
+
+		<command name="refresh"
+			className="org.apache.jackrabbit.standalone.cli.core.Refresh"/>
+
+		<command name="refreshLock"
+			className="org.apache.jackrabbit.standalone.cli.lock.RefreshLock"/>
+
+		<command name="registerNamespace"
+			className="org.apache.jackrabbit.standalone.cli.namespace.RegisterNamespace"/>
+			
+		<command name="registerNodeType"
+			className="org.apache.jackrabbit.standalone.cli.nodetype.RegisterNodeType"/>
+
+		<command name="removeItem"
+			className="org.apache.jackrabbit.standalone.cli.core.RemoveItem"/>
+						
+		<command name="removeItems"
+			className="org.apache.jackrabbit.standalone.cli.core.RemoveItems"/>
+			
+		<command name="removeLock"
+			className="org.apache.jackrabbit.standalone.cli.lock.RemoveLockToken"/>
+
+		<command name="removeLockToken"
+			className="org.apache.jackrabbit.standalone.cli.lock.RemoveLockToken"/>
+
+		<command name="removeMixin"
+			className="org.apache.jackrabbit.standalone.cli.mixin.RemoveMixin"/>
+
+		<command name="removeVersion"
+			className="org.apache.jackrabbit.standalone.cli.version.RemoveVersion"/>
+
+		<command name="removeVersionByLabel"
+			className="org.apache.jackrabbit.standalone.cli.version.RemoveVersionByLabel"/>
+		
+		<command name="removeVersionLabel"
+			className="org.apache.jackrabbit.standalone.cli.version.RemoveVersionLabel"/>
+
+		<command name="rename"
+			className="org.apache.jackrabbit.standalone.cli.core.Rename"/>
+
+		<command name="restore"
+			className="org.apache.jackrabbit.standalone.cli.version.Restore"/>
+
+		<command name="restoreByLabel"
+			className="org.apache.jackrabbit.standalone.cli.version.RestoreByLabel"/>
+
+		<command name="save"
+			className="org.apache.jackrabbit.standalone.cli.core.Save"/>
+
+		<command name="setMultiValueProperty"
+			className="org.apache.jackrabbit.standalone.cli.core.SetMultivalueProperty"/>
+
+		<command name="setProperty"
+			className="org.apache.jackrabbit.standalone.cli.core.SetProperty"/>
+			
+		<chain name="setPropertyFromFile">
+			<command name="fileToInputStream"
+				className="org.apache.jackrabbit.standalone.cli.fs.FileToInputStream"
+				srcFsPathKey="value"
+				destKey="inputStream"/>
+			<command name="setBinaryProperty"
+				className="org.apache.jackrabbit.standalone.cli.core.SetBinaryProperty"
+				valueKey="inputStream"/>
+		</chain >
+
+		<command name="source"
+			className="org.apache.jackrabbit.standalone.cli.SourceCommand"/>
+
+		<chain name="sqlQuery">
+			<command name="sqlQuery"
+				className="org.apache.jackrabbit.standalone.cli.query.SQLQuery"
+				destKey="collected"/>
+			<command name="lsCollectedItems"
+				className="org.apache.jackrabbit.standalone.cli.info.LsCollectedItems"
+				fromKey="collected"/>
+			<command name="remove"
+				className="org.apache.commons.chain.generic.RemoveCommand"
+				fromKey="collected"/>
+		</chain>
+
+		<command name="setNamespacePrefix"
+			className="org.apache.jackrabbit.standalone.cli.namespace.SetNamespacePrefix"/>
+
+		<command name="unlock"
+			className="org.apache.jackrabbit.standalone.cli.lock.Unlock"/>
+
+		<command name="unregisterNamespace"
+			className="org.apache.jackrabbit.standalone.cli.namespace.UnregisterNamespace"/>
+
+		<chain name="xpathQuery">
+			<command name="xpathQuery"
+				className="org.apache.jackrabbit.standalone.cli.query.XPathQuery"
+				destKey="collected"/>
+			<command name="lsCollectedItems"
+				className="org.apache.jackrabbit.standalone.cli.info.LsCollectedItems"
+				fromKey="collected"/>
+			<command name="remove"
+				className="org.apache.commons.chain.generic.RemoveCommand"
+				fromKey="collected"/>
+		</chain>
+
+		<command name="info"
+			className="org.apache.jackrabbit.standalone.cli.info.Info"/>
+		
+	</catalog>
+</chains>

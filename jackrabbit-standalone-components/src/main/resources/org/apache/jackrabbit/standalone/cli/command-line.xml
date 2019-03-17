@@ -1,0 +1,963 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE commands [
+  <!ELEMENT commands (command+)>
+
+  <!ELEMENT command (alias*, argument*, option*, flag*)>
+  <!ATTLIST command    
+  name NMTOKEN #REQUIRED
+  description CDATA #IMPLIED
+  impl NMTOKEN #IMPLIED >
+
+  <!ELEMENT alias EMPTY>
+  <!ATTLIST alias
+    name NMTOKEN #REQUIRED>
+
+  <!ELEMENT option EMPTY>
+  <!ATTLIST option
+    name NMTOKEN #REQUIRED
+    context-key NMTOKEN #IMPLIED
+    arg-name CDATA #IMPLIED
+    required NMTOKEN #IMPLIED
+    default CDATA #IMPLIED
+    description CDATA #IMPLIED>
+
+  <!ELEMENT argument EMPTY>
+  <!ATTLIST argument
+    name NMTOKEN #REQUIRED
+    context-key NMTOKEN #IMPLIED
+    position NMTOKEN #REQUIRED
+    arg-name CDATA #IMPLIED
+    required NMTOKEN #IMPLIED
+    default CDATA #IMPLIED
+    description CDATA #IMPLIED>
+
+  <!ELEMENT flag EMPTY>
+  <!ATTLIST flag
+    name NMTOKEN #REQUIRED
+    context-key NMTOKEN #IMPLIED
+    description CDATA #IMPLIED>
+
+  ]>
+<commands>
+
+  <command name="addlocktoken" impl="addLockToken">
+    <alias name="addtoken"/>
+    <argument
+      name="token"
+      position="0"
+      required="true"/>
+  </command>
+
+  <command name="addmixin" impl="addMixin">
+    <alias name="addmix"/>
+    <argument
+      name="mixin"
+      position="0"
+      required="true"/>
+    <argument
+      name="path"
+      position="1"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="addnode" impl="addNode">
+    <alias name="add"/>
+    <argument
+      name="name"
+      position="0"
+      context-key="relPath"
+      arg-name="common.jcrname"
+      description="common.jcrname.desc"
+      required="true"/>
+    <argument
+      name="type"
+      position="1"
+      arg-name="common.nodetype"
+      description="common.nodetype.desc" />
+  </command>
+
+  <command name="addversionlabel" impl="addVersionLabel">
+    <alias name="addvlabel"/>
+    <argument name="version"
+      position="0" />
+    <argument name="label"
+      position="1" />
+    <option name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+    <flag name="moveLabel"/>
+  </command>
+
+  <command name="cat">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+    <argument
+      name="idx"
+      position="1"
+      arg-name="common.index"
+      description="common.index.desc"
+      context-key="index"/>
+  </command>
+
+  <command name="checkin">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="checkout">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="clearworkspace" impl="clearWorkspace">
+    <alias name="clear"/>
+  </command>
+
+  <command name="createworkspace" impl="createWorkspace">
+    <alias name="createw"/>
+    <argument
+      name="name"
+      position="0"
+      required="true"/>
+  </command>
+
+  <command name="clone">
+    <argument
+      name="scrWorkspace"
+      position="0"
+      required="true"
+      arg-name="word.name"
+      description="common.source"/>
+    <argument
+      name="srcAbsPath"
+      position="1"
+      required="true"/>
+    <argument
+      name="destAbsPath"
+      position="2"
+      required="true"/>
+    <flag name="removeExisting"/>
+  </command>
+
+  <command name="copy">
+    <argument
+      name="srcAbsPath"
+      position="0"
+      arg-name="common.jcrabspath"
+      required="true"/>
+    <argument
+      name="destAbsPath"
+      position="1"
+      arg-name="common.jcrabspath"
+      required="true"/>
+    <option
+      name="fromWorkspace"
+      context-key="srcWorkspace"/>
+  </command>
+
+  <command name="connect" impl="connectToRmiServer">
+    <argument
+      name="url"
+      position="0"
+      required="true"/>
+  </command>
+
+  <command name="jndi" impl="connectToJndiServer">
+    <argument
+      name="url"
+      position="0"
+      required="true"/>
+  </command>
+    
+  <command name="currentnode" impl="currentNode">
+    <alias name="cd"/>
+    <alias name="cn"/>
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="dump">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="exportdocview" impl="exportDocViewToFile">
+    <alias name="exportdoc"/>
+    <argument
+      name="srcAbsPath"
+      position="0"
+      arg-name="common.jcrabspath"
+      description="common.exportview.from"
+      required="true"/>
+    <argument
+      name="desFsPath"
+      position="1"
+      arg-name="common.fspath"
+      description="common.exportview.to"
+      required="true"/>
+    <flag
+      name="overwrite"
+      description="word.overwrite"/>
+    <flag
+      name="skipBinary"
+      description="common.exportview.skipBinary" />
+    <flag
+      name="noRecurse"
+      description="common.exportview.noRecurse"/>
+  </command>
+
+  <command name="exportfilesystem" impl="exportFileSystem">
+    <alias name="exportfs"/>
+    <argument
+      name="srcJcrPath"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+    <argument
+      name="destFsPath"
+      position="1"
+      arg-name="common.fspath"
+      description="word.destination"
+      required="true"/>
+    <flag name="overwrite"
+      description="word.overwrite"/>
+  </command>
+
+  <command name="exportproperty" impl="exportPropertyToFile">
+    <alias name="exportprop"/>
+    <alias name="exportp"/>
+    <argument
+      name="name"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+    <argument
+      name="destFsPath"
+      position="1"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+    <option
+      name="idx"
+      arg-name="common.index"
+      description="common.index.desc"
+      context-key="index"/>
+    <flag
+      name="overwrite"
+      description="word.overwrite"/>
+  </command>
+
+  <command name="exportsysview" impl="exportSysViewToFile">
+    <alias name="exportsys"/>
+    <argument
+      name="srcAbsPath"
+      position="0"
+      arg-name="common.jcrabspath"
+      description="common.exportview.from"
+      required="true"/>
+    <argument
+      name="desFsPath"
+      position="1"
+      arg-name="common.fspath"
+      description="common.exportview.to"
+      required="true"/>
+    <flag
+      name="overwrite"
+      description="word.overwrite"/>
+    <flag
+      name="skipBinary"
+      description="common.exportview.skipBinary"/>
+    <flag
+      name="noRecurse"
+      description="common.exportview.noRecurse"/>
+  </command>
+
+  <command name="help">
+    <argument
+      name="command"
+      position="0"
+      required="false" />
+  </command>
+
+  <command name="importfilesystem" impl="importFileSystem">
+    <alias name="importfs"/>
+    <argument
+      name="srcFsPath"
+      position="0"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+  </command>
+
+  <command name="importxml" impl="importXmlFromFile">
+    <alias name="import"/>
+    <argument
+      name="srcFsPath"
+      position="0"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+    <argument
+      name="destJcrPath"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      position="1"/>
+    <option
+      name="uuidBehaviour"
+      arg-name="common.uuidBehaviour"
+      description="common.uuidBehaviour.desc"
+      default="0"/>
+  </command>
+
+  <command name="lock">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+    <flag name="deep"/>
+    <flag name="session" context-key="sessionScoped"/>
+  </command>
+
+  <command name="login">
+    <argument
+      name="user"
+      position="0"
+      arg-name="word.user"
+      default="anonymous"/>
+    <argument
+      name="password"
+      position="1"
+      arg-name="word.password"
+      default="anonymous"/>
+    <option
+      name="workspace"
+      arg-name="word.name"/>
+  </command>
+
+  <command name="logout"/>
+
+  <command name="lscollect" impl="lsCollect">
+    <alias name="collect"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"
+      required="true"/>
+    <option
+      name="path"
+      context-key="srcPath"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+    <option
+      name="depth"
+      arg-name="word.int"
+      description="word.int"
+      default="1"/>
+    <option
+      name="maxItems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+  </command>
+
+  <command name="lscollectnodes" impl="lsCollectNodes">
+    <alias name="lscollectn"/>
+    <alias name="collectn"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"
+      required="true"/>
+    <option
+      name="depth"
+      arg-name="word.int"
+      description="word.int"
+      default="1"/>
+    <option
+      name="maxItems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+    <flag name="uuid" description="cmd.lsnodes.uuid"/>
+    <flag name="nsize" description="cmd.lsnodes.nsize"/>
+    <flag name="psize" description="cmd.lsnodes.psize"/>
+    <flag name="rsize" description="cmd.lsnodes.rsize"/>
+    <flag name="m" description="cmd.lsnodes.m"/>
+    <flag name="v" description="cmd.lsnodes.v"/>
+    <flag name="l" description="cmd.lsnodes.l"/>
+    <flag name="r" description="cmd.lsnodes.r"/>
+    <flag name="locked" description="cmd.lsnodes.locked"/>
+    <flag name="hasLock" description="cmd.lsnodes.hasLock"/>
+    <flag name="locktoken"
+      context-key="lockToken"
+      description="cmd.lsnodes.locktoken"/>
+    <flag name="new" description="cmd.lsnodes.new"/>
+    <flag name="mod" description="cmd.lsnodes.mod"/>
+    <flag name="path" description="cmd.lsnodes.path"/>
+  </command>
+
+  <command name="lscollectproperties" impl="lsCollectProperties">
+    <alias name="collectp"/>
+    <alias name="collectprop"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"
+      required="true"/>
+    <option
+      name="depth"
+      arg-name="word.depth"
+      description="word.depth"
+      default="1"/>
+    <option
+      name="maxitems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+  </command>
+
+  <command name="lsitems" impl="lsItems">
+    <alias name="ls"/>
+    <alias name="dir"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"/>
+    <option
+      name="maxItems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+  </command>
+
+  <command name="lsproperties" impl="lsProperties">
+    <alias name="lsp"/>
+    <alias name="lsprop"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"/>
+    <option
+      name="maxItems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+  </command>
+
+  <command name="lsnodes" impl="lsNodes">
+    <alias name="lsn"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"/>
+    <option
+      name="maxItems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+    <flag name="path" description="cmd.lsnodes.path"/>
+    <flag name="uuid" description="cmd.lsnodes.uuid"/>
+    <flag name="m" context-key="mixin" description="cmd.lsnodes.m"/>
+    <flag name="nsize" context-key="nodeSize" description="cmd.lsnodes.nsize"/>
+    <flag name="psize" context-key="propertiesSize" description="cmd.lsnodes.psize"/>
+    <flag name="rsize" context-key="referencesSize" description="cmd.lsnodes.rsize"/>
+    <flag name="v" context-key="versionable" description="cmd.lsnodes.v"/>
+    <flag name="l" context-key="lockable" description="cmd.lsnodes.l"/>
+    <flag name="r" context-key="referenceable" description="cmd.lsnodes.r"/>
+    <flag name="locked" description="cmd.lsnodes.locked"/>
+    <flag name="haslock" context-key="hasLock" description="cmd.lsnodes.hasLock"/>
+    <flag name="locktoken" context-key="lockToken"/>
+    <flag name="new" description="cmd.lsnodes.new"/>
+    <flag name="mod" context-key="modified" description="cmd.lsnodes.mod"/>
+  </command>
+
+  <command name="lsreferences" impl="lsReferences">
+    <alias name="lsr"/>
+    <alias name="lsref"/>
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="lsversions" impl="lsVersions">
+    <alias name="lsv"/>
+    <alias name="lsver"/>
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="merge">
+    <argument
+      name="srcWorkspace"
+      arg-name="word.source"
+      description="word.source"
+      position="0" />
+    <argument name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      position="1" />
+    <flag name="bestEffort"/>
+  </command>
+
+  <command name="move">
+    <argument
+      name="srcAbsPath"
+      position="0"
+      arg-name="common.jcrabspath"
+      description="common.jcrabspath.desc"
+      required="true"/>
+    <argument
+      name="destAbsPath"
+      position="1"
+      arg-name="common.jcrabspath"
+      description="common.jcrabspath.desc"
+      required="true"/>
+  </command>
+
+  <command name="orderbefore" impl="orderBefore">
+    <alias name="order"/>
+    <argument
+      name="srcChild"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+    <argument
+      name="destChild"
+      position="1"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+    <option
+      name="parent"
+      context-key="parentPath"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="refresh">
+    <argument
+      name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      position="0"/>
+    <flag name="keepChanges" description="phrase.keepchanges"/>
+  </command>
+
+  <command name="refreshlock" impl="refreshLock">
+    <alias name="refreshl"/>
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="registernamespace" impl="registerNamespace">
+    <alias name="registerns"/>  
+    <alias name="regns"/>  
+    <argument
+      name="prefix"
+      position="0"
+      arg-name="word.prefix"
+      description="word.prefix"/>
+    <argument
+      name="uri"
+      position="1"
+      arg-name="word.uri"
+      description="word.uri"/>
+  </command>
+
+  <command name="registernodetype" impl="registerNodeType">
+    <alias name="registernt"/>  
+    <alias name="regnt"/>  
+    <argument
+      name="srcFsPath"
+      position="0"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+    <argument
+      name="encoding"
+      position="1"
+      arg-name="common.encoding"
+      description="common.encoding.desc"
+      required="false"/>
+  </command>
+
+  <command name="removeitem" impl="removeItem">
+    <alias name="remove"/>
+    <alias name="delete"/>
+    <alias name="rm"/>
+    <alias name="del"/>
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath"/>
+  </command>
+
+  <command name="removeitems" impl="removeItems">
+    <alias name="rmitems"/>
+    <alias name="delitems"/>
+    <alias name="deleteitems"/>
+    <argument
+      name="pattern"
+      position="0"
+      arg-name="common.namepattern"
+      description="common.namepattern.desc"
+      required="true"/>
+    <option
+      name="root"
+      context-key="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="removelocktoken" impl="removeLockToken">
+    <alias name="removetoken"/>
+    <argument
+      name="token"
+      position="0"
+      arg-name="phrase.locktoken"
+      description="phrase.locktoken"
+      required="true"/>
+  </command>
+
+  <command name="removemixin" impl="removeMixin">
+    <alias name="removemix"/>
+    <alias name="deletemix"/>
+    <alias name="delmix"/>
+    <argument
+      name="mixin"
+      position="0"
+      arg-name="word.mixin"
+      description="word.mixin"
+      required="true"/>
+    <argument
+      name="path"
+      position="1"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="removeversion" impl="removeVersion">
+    <alias name="removev"/>
+    <argument name="name"
+      position="0"
+      arg-name="word.name"
+      description="word.name"/>
+    <option name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="removeversionlabel" impl="removeVersionLabel">
+    <alias name="removevlabel"/>
+    <alias name="delvlabel"/>
+    <argument name="label"
+      arg-name="word.label"
+      description="word.label"
+      position="0" />
+    <option name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="removeversionbylabel" impl="removeVersionByLabel">
+    <alias name="removevbylabel"/>
+    <alias name="delvbylabel"/>
+    <alias name="removevbyl"/>
+    <alias name="delvbyl"/>
+    <argument name="label"
+      arg-name="word.label"
+      description="word.label"
+      position="0" />
+    <option name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="rename">
+    <argument
+      name="srcPath"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+    <argument
+      name="destPath"
+      position="1"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"
+      required="true"/>
+  </command>
+
+  <command name="restore">
+    <argument name="version"
+      position="0"
+      arg-name="word.version"
+      description="word.version"/>
+    <option name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+    <flag name="removeexisting"
+      context-key="removeExisting"
+      description="phrase.removeExisting"/>
+  </command>
+
+  <command name="restorebylabel" impl="restoreByLabel">
+    <alias name="restorebyl"/>
+    <argument name="label"
+      arg-name="word.label"
+      description="word.label"
+      position="0" />
+    <option name="path"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+    <flag name="removeexisting"
+      context-key="removeExisting"
+      description="phrase.removeExisting"/>
+  </command>
+
+  <command name="save">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="setmultivalueproperty" impl="setMultiValueProperty">
+    <alias name="setmultiprop"/>
+    <argument
+      name="name"
+      position="0"
+      arg-name="word.name"
+      description="word.name"
+      required="true"/>
+    <argument
+      name="value"
+      position="1"
+      arg-name="word.value"
+      description="word.value"
+      required="true"/>
+    <option
+      name="type"
+      arg-name="common.nodetype"
+      description="common.nodetype.desc" />
+    <option
+      name="regexp"
+      context-key="regExp"
+      arg-name="phrase.regexp"
+      description="phrase.regexp"
+      default=","/>
+  </command>
+
+  <command name="setnamespaceprefix" impl="setNamespacePrefix">
+    <alias name="setnsprefix"/>  
+    <argument
+      name="prefix"
+      position="0"
+      arg-name="word.prefix"
+      description="word.prefix"/>
+    <argument
+      name="uri"
+      position="1"
+      arg-name="word.uri"
+      description="word.uri"/>
+  </command>
+  
+  <command name="setproperty" impl="setProperty">
+    <alias name="setprop"/>
+    <alias name="setp"/>
+    <argument
+      name="name"
+      position="0"
+      arg-name="word.name"
+      description="word.name"
+      required="true"/>
+    <argument
+      name="value"
+      position="1"
+      arg-name="word.value"
+      description="word.value"
+      required="true"/>
+    <option
+      name="type"
+      arg-name="common.nodetype"
+      description="common.nodetype.desc" />
+    <option
+      name="parent"
+      context-key="parentPath"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc" />
+  </command>
+
+  <command name="setpropertyfromfile" impl="setPropertyFromFile">
+    <alias name="setpropfromfile"/>
+    <alias name="setfsprop"/>
+    <argument
+      name="name"
+      position="0"
+      arg-name="word.name"
+      description="word.name"
+      required="true"/>
+    <argument
+      name="fsPath"
+      position="1"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      context-key="value"
+      required="true"/>
+    <option
+      name="type"
+      arg-name="common.nodetype"
+      description="common.nodetype"/>
+    <option
+      name="parentPath"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="source">
+    <argument
+      name="file"
+      position="0"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+  </command>
+
+  <command name="sqlquery" impl="sqlQuery">
+    <alias name="sql"/>
+    <argument
+      name="statement"
+      position="0"
+      arg-name="word.stmt"
+      description="word.stmt"
+      required="true"/>
+    <option
+      name="maxitems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+    <flag name="uuid" description="cmd.lsnodes.uuid"/>
+    <flag name="nsize" description="cmd.lsnodes.nsize"/>
+    <flag name="psize" description="cmd.lsnodes.psize"/>
+    <flag name="rsize" description="cmd.lsnodes.rsize"/>
+    <flag name="m" description="cmd.lsnodes.m"/>
+    <flag name="v" description="cmd.lsnodes.v"/>
+    <flag name="l" description="cmd.lsnodes.l"/>
+    <flag name="r" description="cmd.lsnodes.r"/>
+    <flag name="locked" description="cmd.lsnodes.locked"/>
+    <flag name="hasLock" description="cmd.lsnodes.hasLock"/>
+    <flag name="new" description="cmd.lsnodes.new"/>
+    <flag name="mod" description="cmd.lsnodes.mod"/>
+    <flag name="path" description="cmd.lsnodes.path"/>
+    <flag name="locktocken" description="cmd.lsnodes.locktoken"/>
+  </command>
+
+  <command name="startjackrabbit" impl="startJackrabbit">
+    <alias name="startjr"/>
+    <alias name="start"/>
+    <argument
+      name="config"
+      position="0"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+    <argument
+      name="home"
+      position="1"
+      arg-name="common.fspath"
+      description="common.fspath.desc"
+      required="true"/>
+  </command>
+
+  <command name="stopjackrabbit" impl="stopJackrabbit">
+    <alias name="stopjr"/>
+    <alias name="stop"/>
+  </command>
+
+  <command name="unlock">
+    <argument
+      name="path"
+      position="0"
+      arg-name="common.jcrpath"
+      description="common.jcrpath.desc"/>
+  </command>
+
+  <command name="xpathquery" impl="xpathQuery">
+    <alias name="xpath"/>
+    <argument
+      name="statement"
+      position="0"
+      arg-name="word.stmt"
+      description="word.stmt"
+      required="true"/>
+    <option
+      name="maxitems"
+      arg-name="word.int"
+      description="phrase.maxitems"/>
+    <flag name="uuid" description="cmd.lsnodes.uuid"/>
+    <flag name="nsize" description="cmd.lsnodes.nsize"/>
+    <flag name="psize" description="cmd.lsnodes.psize"/>
+    <flag name="rsize" description="cmd.lsnodes.rsize"/>
+    <flag name="m" description="cmd.lsnodes.m"/>
+    <flag name="v" description="cmd.lsnodes.v"/>
+    <flag name="l" description="cmd.lsnodes.l"/>
+    <flag name="r" description="cmd.lsnodes.r"/>
+    <flag name="locked" description="cmd.lsnodes.locked"/>
+    <flag name="hasLock" description="cmd.lsnodes.hasLock"/>
+    <flag name="new" description="cmd.lsnodes.new"/>
+    <flag name="mod" description="cmd.lsnodes.mod"/>
+    <flag name="path" description="cmd.lsnodes.path"/>
+    <flag name="locktoken" description="cmd.lsnodes.locktoken"/>
+  </command>
+
+  <command name="info">
+    <alias name="status"/>    
+  </command>
+  
+</commands>
