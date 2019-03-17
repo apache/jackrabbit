@@ -71,7 +71,13 @@ public class Main {
 
     private final ServerConnector connector = new ServerConnector(server);
 
-    private Main(String[] args) throws ParseException {
+    /**
+     * Construct Main application instance.
+     * <P>
+     * <EM>Note:</EM> Constructor is protected because other projects such as Commons VFS can extend this for some reasons
+     *       (e.g, unit testing against Jackrabbit WebDAV).
+     */
+    protected Main(String[] args) throws ParseException {
         options.addOption("?", "help", false, "print this message");
         options.addOption("n", "notice", false, "print copyright notices");
         options.addOption("l", "license", false, "print license information");
@@ -98,6 +104,12 @@ public class Main {
         command = new GnuParser().parse(options, args);
     }
 
+    /**
+     * Run this Main application.
+     * <P>
+     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests. e.g, Commons-VFS.
+     * @throws Exception if any exception occurs
+     */
     public void run() throws Exception {
         String defaultFile = "jackrabbit-standalone.jar";
         URL location =
@@ -183,6 +195,25 @@ public class Main {
                     System.exit(1);
                 }
             }
+        }
+    }
+
+    /**
+     * Shutdown this Main application.
+     * <P>
+     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests for graceful shutdown.
+     * e.g, Commons-VFS. If this is not invoked properly, some unexpected exceptions may occur on shutdown hook
+     * due to an unexpected, invalid state for org.apache.lucene.index.IndexFileDeleter for instance.
+     */
+    public void shutdown() {
+        try {
+            message("Shutting down the server...");
+            server.stop();
+            server.join();
+            message("-------------------------------");
+            message("Goodbye from Apache Jackrabbit!");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -272,15 +303,7 @@ public class Main {
     private void prepareShutdown() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                try {
-                    message("Shutting down the server...");
-                    server.stop();
-                    server.join();
-                    message("-------------------------------");
-                    message("Goodbye from Apache Jackrabbit!");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                shutdown();
             }
         });
     }
