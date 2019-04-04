@@ -27,6 +27,7 @@ Task
 
     [JCR-4415] - Update Jetty dependency to 9.2.26.v20180806
     [JCR-4416] - Update slf4j dependency to 1.7.26
+    [JCR-4422] - Update httpclient/mime dependencies to 4.5.8
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.19.1 release.
