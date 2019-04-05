@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.18.0
+Release Notes -- Apache Jackrabbit -- Version 2.18.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.18.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.18.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.18.0 is an incremental feature release based on
+Apache Jackrabbit 2.18.1 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.18.x releases are considered stable and targeted for production use.
 
@@ -18,140 +18,26 @@ The minimum Java version for this release is Java 8. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.18.0
+Changes in Jackrabbit 2.18.1
 ----------------------------
 
 Bug
 
-    [JCR-4120] - Spi2DavexRepositoryServiceImpl always hardcodes the default workspace name to "default"
-    [JCR-4241] - Jacoco plugin fails with exception
-    [JCR-4242] - Build failure: unapproved license
-    [JCR-4291] - FileInputStream for workspace.xml not closed in RepositoryConfig.loadWorkspaceConfig(File)
-    [JCR-4317] - davex remoting fails for non-ASCII characters in node names
-    [JCR-4324] - NPE on Version.getLinearPredecessor() implementation
-    [JCR-4339] - Indexing configuration condition property seems to be broken
-    [JCR-4370] - Remove extraneously set config from TestS3Ds
-    [JCR-4387] - Incorrect exception message when same-name-sibling is prevented on import
-
-New Feature
-
-    [JCR-4335] - API for direct binary access
-
-Improvement
-
-    [JCR-3211] - Support HTTP proxy in SPI2DAV
-    [JCR-4001] - When using Node.getProperties(String namePattern) also child nodes are processed
-    [JCR-4237] - cleanup throws clauses of private methods
-    [JCR-4238] - use StandardCharsets to avoid having to handle UnsupportedEncodingException
-    [JCR-4239] - Suppress Tika startup warnings
-    [JCR-4249] - Introduce replacement for java.security.acl.Group
-    [JCR-4253] - RepositoryConfig: add some handling for mkdir failure
-    [JCR-4287] - Improve Debug-Log in SearchIndex and MultiIndex
-    [JCR-4292] - davex: preserve cause in exceptions and log affected URI
-    [JCR-4354] - VFS (commons-vfs) based FileSystem for VFS backend based Persistence Manager
-    [JCR-4355] - Javadoc fixes and improvements for new direct binary access API
-    [JCR-4369] - Avoid S3 Incomplete Read Warning
+    [JCR-4408] - jackrabbit-webapp: test dependency for httpcore breaks war file
+    [JCR-4420] - Release Notes: term "SHA1" no longer allowed
 
 Task
 
-    [JCR-4215] - Use Tika version 1.17
-    [JCR-4218] - switch bundle comparisonVersion
-    [JCR-4221] - Upgrade Apache HttpComponents to 4.5.4
-    [JCR-4222] - Document reduced RMI interop with older servers after java-9 related changes
-    [JCR-4223] - Upgrade commons-fileupload dependency to 1.3.3
-    [JCR-4224] - Upgrade tomcat-servlet dependency to 7.0.82
-    [JCR-4225] - Upgrade commons-chains dependency to 1.2
-    [JCR-4226] - Upgrade tika-parsers dependency to 1.16
-    [JCR-4228] - Update Oak dependency to latest 1.0 stable release
-    [JCR-4229] - Remove Oak dependency in webapp
-    [JCR-4231] - Upgrade aws-java-sdk-s3 dependency to 1.11.241
-    [JCR-4233] - Update H2DB test dependency
-    [JCR-4236] - remove obsolete textFilterClasses config parameters
-    [JCR-4240] - IndexingQueueTest relies on Tika behavior that is changed in Tika 1.17
-    [JCR-4244] - Upgrade tomcat dependency to 8.5.24
-    [JCR-4246] - java.security.acl deprecated in Java 10, marked for removal in Java 12
-    [JCR-4247] - Update commons-io dependency
-    [JCR-4248] - Upgrade httpcore dependency to 4.4.9
-    [JCR-4250] - remove guava dependency
-    [JCR-4252] - Upgrade httpclient dependency to 4.5.5
-    [JCR-4254] - Update Logback version to >= 1.2.0, SLF4J accordingly
-    [JCR-4256] - create announcement mail template for releases
-    [JCR-4261] - webapp: align jsons-simple dependencies internally and with oak
-    [JCR-4262] - jcr-server: align org.apache.felix.scr.annotations with oak
-    [JCR-4263] - jcr-server, jackrabbit-bundle: align org.osgi dependencies with oak
-    [JCR-4264] - jackrabbit-standalone: align commons-cli dependency with oak
-    [JCR-4266] - Update servlet-api to 2.5
-    [JCR-4271] - Remove redundant JavaDoc link to Java 7 API
-    [JCR-4272] - Upgrade surefire and failsafe plugins to 2.21.0
-    [JCR-4273] - Mention SHA512 checksums in release notes
-    [JCR-4274] - stop advertising MD5 checksums
-    [JCR-4275] - Incorrect link to KEYS in release notes
-    [JCR-4277] - stop creating MD5 checksums for releases
-    [JCR-4288] - Upgrade tika-parsers dependency to 1.18
-    [JCR-4290] - remove unused commons-codec dependency
-    [JCR-4293] - jackrabbit-core: observation tests should not rely on mix:lockable mixin type
-    [JCR-4294] - TCK tests should pass on repositories without locking support
-    [JCR-4296] - Upgrade httpmime dependency to 4.5.5
-    [JCR-4299] - Update derby dependency to 10.14.2.0
-    [JCR-4301] - get rid of JSR 305 dependency
-    [JCR-4302] - BTreeManager: fix Eclipse compiler error
-    [JCR-4304] - update Jetty to supported version 9.2.*
-    [JCR-4307] - Update animal-sniffer-maven-plugin to 1.16
-    [JCR-4312] - set baseline comparisonVersion to latest stable (2.16.1)
-    [JCR-4316] - set baseline comparisonVersion to latest stable (2.16.2)
-    [JCR-4318] - Update failsafe and surefire plugin versions to 2.22.0
-    [JCR-4320] - Update spotbugs plugin to 3.1.5
-    [JCR-4321] - Update maven plugins from org.apache.maven.plugins
-    [JCR-4322] - Consistent use of log4j versions
-    [JCR-4323] - webapp: update Tomcat dependency to 8.5.32
-    [JCR-4326] - Update aws java sdk version to 1.11.330 (consistent with Oak)
-    [JCR-4327] - Update httpcore dependency to 4.4.10
-    [JCR-4331] - Update httpclient dependency to 4.5.6
-    [JCR-4332] - Update httpmime dependency to 4.5.6
-    [JCR-4333] - Update javax.transaction dependency to 1.3
-    [JCR-4336] - Upgrade commons-dbcp dependencies
-    [JCR-4337] - Jackrabbit should compile & test on Java 11
-    [JCR-4342] - remove unused JSR 305 dependency from pom
-    [JCR-4343] - Update commons-vfs2 version to 2.2
-    [JCR-4344] - Update h2db version to latest stable 1.4.196
-    [JCR-4345] - Update mockito dependency to 2.20.0
-    [JCR-4346] - Update easymock dependency to 3.6
-    [JCR-4347] - Update com.jcraft.jsch dependency to 0.1.54
-    [JCR-4348] - Update osgi (compendium, core) dependencies
-    [JCR-4349] - Update plexus-utils dependency to 3.1.0
-    [JCR-4350] - jackrabbit-jcr-servlet: remove special-cased servlet-api dependency
-    [JCR-4353] - set baseline comparisonVersion to latest stable (2.16.3)
-    [JCR-4359] - update maven-bundle-plugin to 3.5.0
-    [JCR-4360] - update maven-scr-plugin to 1.26.0
-    [JCR-4361] - Update spotbugs plugin to 3.1.6
-    [JCR-4362] - Update tomcat dependency to 8.5.33
-    [JCR-4363] - Update mockito dependency to 2.21.0
-    [JCR-4364] - update org.apache.felix.scr.annotations dependency to 1.12.0
-    [JCR-4365] - Update cglib dependency to 3.2.8
-    [JCR-4367] - Update htmlunit test dependency to 2.32
-    [JCR-4368] - Update commons-cli dependency to 1.4
-    [JCR-4371] - Update tika dependency to 1.19
-    [JCR-4372] - Update mockito dependency to 2.22.0
-    [JCR-4373] - webapp: update Tomcat dependency to 8.5.34
-    [JCR-4374] - webapp: update htmlunit dependency to 2.33
-    [JCR-4375] - Update jetbrains dependency to 16.0.3
-    [JCR-4379] - Update tika dependency to 1.19.1
-    [JCR-4381] - Update failsafe and surefire plugin versions to 2.22.1
-    [JCR-4382] - Update spotbugs plugin to 3.1.7
-    [JCR-4383] - Update animal-sniffer-maven-plugin to 1.17
-    [JCR-4384] - Update maven-bundle-plugin to 4.0.0
-    [JCR-4385] - Update maven-war-plugin to 3.2.2
-    [JCR-4386] - remove unused jxr dependency
-    [JCR-4388] - Update mockito dependency to 2.23.0
-
-Sub-task
-
-    [JCR-4258] - Remove SimpleJBossAccessManager in preparation of upcoming acl changes
-    [JCR-4280] - code coverage checks fail on Java 10
-    [JCR-4306] - switch to findbugs replacement that is still maintained (spotbugs)
-    [JCR-4338] - avoid use of javax.rmi.PortableRemoteObject (removed in Java 11)
-    [JCR-4357] - upgrade to Jacoco version compatible with Java 11
-
+    [JCR-4394] - switch bundle comparisonVersion for 2.18
+    [JCR-4400] - Update tika dependency to 1.20
+    [JCR-4403] - update spotbugs dependency to 3.1.10
+    [JCR-4404] - update maven-assembly-plugin dependency to 3.1.1
+    [JCR-4405] - update maven-jar-plugin dependency to 3.1.1
+    [JCR-4406] - update maven-bundle-plugin dependency to 4.1.0
+    [JCR-4407] - Update httpcore dependency to 4.4.11
+    [JCR-4409] - jackrabbit-webapp: embed JCR 2.0 API
+    [JCR-4410] - jackrabbit-webapp: cleanup left over Oak references
+    [JCR-4411] - Update httpclient/mime dependencies to 4.5.7
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
