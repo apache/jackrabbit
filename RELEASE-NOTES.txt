@@ -38,6 +38,9 @@ Task
     [JCR-4409] - jackrabbit-webapp: embed JCR 2.0 API
     [JCR-4410] - jackrabbit-webapp: cleanup left over Oak references
     [JCR-4411] - Update httpclient/mime dependencies to 4.5.7
+    [JCR-4415] - Update Jetty dependency to 9.2.26.v20180806
+    [JCR-4416] - Update slf4j dependency to 1.7.26
+    [JCR-4422] - Update httpclient/mime dependencies to 4.5.8
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
