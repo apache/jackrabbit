@@ -228,6 +228,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String ntQuery;
 
     /**
+     * JCR Name nt:activity using the namespace resolver of the current session.
+     */
+    protected String ntActivity;
+
+    /**
      * Relative path to the test root node.
      */
     protected String testPath;
@@ -386,6 +391,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         mixShareable = superuser.getNamespacePrefix(NS_MIX_URI) + ":shareable";
         mixTitle = superuser.getNamespacePrefix(NS_MIX_URI) + ":title";
         ntQuery = superuser.getNamespacePrefix(NS_NT_URI) + ":query";
+        ntActivity = superuser.getNamespacePrefix(NS_NT_URI) + ":activity";
 
         // setup custom namespaces
         if (isSupported(Repository.LEVEL_2_SUPPORTED)) {
