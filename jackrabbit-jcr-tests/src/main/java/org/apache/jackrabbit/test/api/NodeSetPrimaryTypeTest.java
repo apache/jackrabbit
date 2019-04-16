@@ -58,7 +58,9 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
         while (nts.hasNext()) {
             NodeType nt = nts.nextNodeType();
             String ntName = nt.getName();
-            if (!nt.isAbstract() && !ntFrozenNode.equals(ntName)) {
+            if (!nt.isAbstract()
+                    && !ntFrozenNode.equals(ntName)
+                    && !ntActivity.equals(ntName)) {
                 try {
                     node.setPrimaryType(ntName);
                     // property value must be adjusted immediately
