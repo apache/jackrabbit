@@ -22,7 +22,7 @@ package org.apache.jackrabbit.spi;
  * table shows each of the allowed combinations where an <b>X</b> in
  * the column indicates that a value is set and a <b>-</b> indicates
  * that the value is <code>null</code>:
- * <table summary="allowed combinations of unique ID and path">
+ * <table><caption>allowed combinations of unique ID and path</caption>
  * <tr><th>UniqueID</th><th>Path</th><th>Usage</th></tr>
  * <tr valign="top"><td align="center"><b>X</b></td><td align="center"><b>-</b></td>
  *   <td>The item can be identified with a unique ID. In most cases such an item

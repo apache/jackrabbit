@@ -54,7 +54,7 @@ import org.apache.jackrabbit.util.ISO8601;
  * <code>InternalValue</code> represents the internal format of a property value.
  * <p>
  * The following table specifies the internal format for every property type:
- * <table summary="Internal format of property types">
+ * <table><caption>Internal format of property types</caption>
  * <tr><td><b>PropertyType</b></td><td><b>Internal Format</b></td></tr>
  * <tr><td>STRING</td><td>String</td></tr>
  * <tr><td>LONG</td><td>Long</td></tr>

@@ -42,7 +42,7 @@ import org.apache.jackrabbit.spi.SessionInfo;
  * configuration mechanism of the logging framework which is in place.
  * <p>
  * There are log wrappers for the following SPI entities:
- * <table summary="Log Wrappers">
+ * <table><caption>Log Wrappers</caption>
  * <tr><th>SPI entity</th><th>log wrapper</th></tr>
  * <tr><td>{@link RepositoryService}</td><td>{@link RepositoryServiceLogger}</td></tr>
  * <tr><td>{@link NameFactory}</td><td>{@link NameFactoryLogger}</td></tr>
