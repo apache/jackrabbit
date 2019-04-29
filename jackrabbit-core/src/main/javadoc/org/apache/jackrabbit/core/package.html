@@ -20,6 +20,7 @@ Contains the core classes that provide the implementation of the JCR API.
 The following table lists the core JCR interfaces and the corresponding
 Jackrabbit implementation classes found in this package.
 <table>
+  <caption>JCR interfaces and Jackrabbit implementations</caption>
   <thead>
     <tr>
       <th>JCR interface</th>
@@ -56,9 +57,7 @@ Jackrabbit implementation classes found in this package.
 <p>
 A Jackrabbit repository instance can be created using the static
 {@link org.apache.jackrabbit.core.RepositoryImpl#create(org.apache.jackrabbit.core.config.RepositoryConfig) RepositoryImpl.create(RepositoryConfig)}
-method. The
-{@link org.apache.jackrabbit.core.jndi.RepositoryHelper RepositoryHelper}
-and other classes in the
+method. Classes in the
 {@link org.apache.jackrabbit.core.jndi org.apache.jackrabbit.core.jndi}
 package provide a mechanism for binding a Jackrabbit repository in a
 JNDI directory context.
