@@ -474,7 +474,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
 
         /**
          * {@inheritDoc}
-         * <p/>
+         * <p>
          * If the "sizeEstimate" options is enabled:
          * This value may shrink when the query result encounters non-existing
          * nodes or the session does not have access to a node.
