@@ -445,10 +445,9 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     /**
      * Validates and registers a new custom privilege definition with the
      * specified characteristics. Upon successful registration the new custom
-     * definition is persisted in the corresponding file system resource.<p/>
-     *
-     * <p>The validation includes the following steps:</p>
-     *
+     * definition is persisted in the corresponding file system resource.
+     * <p>
+     * The validation includes the following steps:
      * <ul>
      * <li>assert uniqueness of the specified privilegeName</li>
      * <li>make sure the name doesn't use a reserved namespace</li>

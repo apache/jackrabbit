@@ -182,7 +182,8 @@ public class PathParser {
      * built path before it is returned. If the specified <code>jcrPath</code>
      * is an identifier based absolute path beginning with an identifier segment
      * the given <code>identifierResolver</code> will be used to resolve it to an
-     * absolute path.<p/>
+     * absolute path.
+     * <p>
      * If <code>nameResolver</code> is <code>null</code> or if <code>identifierResolver</code>
      * is <code>null</code> and the path starts with an identifier segment, this
      * method only checks the format of the string and returns <code>null</code>.

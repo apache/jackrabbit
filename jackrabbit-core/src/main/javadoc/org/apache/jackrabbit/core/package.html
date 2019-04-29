@@ -65,7 +65,7 @@ JNDI directory context.
 <p>
 A <code>SessionImpl</code> instance is created upon successfully login to the
 <code>Repository</code> (see <code>Repository#login(Credentials, String)</code>).
-<p/>
+<p>
 A <code>Session</code> is always tied to the <code>Workspace</code>
 specified in the <code>Repository#login(Credentials, String)</code> call. A
 workspace represents a persistent tree of repository items (i.e. <code>Node</code>s
@@ -73,7 +73,7 @@ and <code>Property</code>s). The items in a workspace are 'visible' to all
 sessions accessing it (subject to their access rights, of course).
 A <code>WorkspaceImpl</code> instance represents a specifc workspace as
 seen by the session that accesses it.
-<p/>
+<p>
 Every repository item is uniquely identified by its <code>ItemId</code>. The id
 of a node (<code>NodeId</code>) consists of the node's uuid. The id of a property
 (<code>PropertyId</code>) consists of the parent node's uuid and the
