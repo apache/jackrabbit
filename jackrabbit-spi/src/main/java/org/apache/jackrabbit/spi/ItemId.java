@@ -24,18 +24,18 @@ package org.apache.jackrabbit.spi;
  * that the value is <code>null</code>:
  * <table><caption>allowed combinations of unique ID and path</caption>
  * <tr><th>UniqueID</th><th>Path</th><th>Usage</th></tr>
- * <tr valign="top"><td align="center"><b>X</b></td><td align="center"><b>-</b></td>
+ * <tr valign="top"><td style="text-align:center"><b>X</b></td><td style="text-align:center"><b>-</b></td>
  *   <td>The item can be identified with a unique ID. In most cases such an item
  *   is also mix:referenceable but there is no restriction in that respect. An
  *   SPI implementation may also use a unique ID to identify non-referenceable nodes.
  *   Whether a node is referenceable is purely governed by its node type or
  *   the assigned mixin types. Note, that the format of the ID it is left to the
  *   implementation.</td></tr>
- * <tr valign="top"><td align="center"><b>-</b></td><td align="center"><b>X</b></td>
+ * <tr valign="top"><td style="text-align:center"><b>-</b></td><td style="text-align:center"><b>X</b></td>
  *   <td>The item can not be identified with a unique ID and none of its ancestors
  *   can be identified with a unique ID. The item is identified by an absolute path.
  *   </td></tr>
- * <tr valign="top"><td align="center"><b>X</b></td><td align="center"><b>X</b></td>
+ * <tr valign="top"><td style="text-align:center"><b>X</b></td><td style="text-align:center"><b>X</b></td>
  *   <td>The item can not be identified with a unique ID but one of its ancestors
  *   can. {@link #getUniqueID} returns the unique ID of the nearest ancestor, which
  *   can be identified with a unique ID. The relative path provides a navigation
