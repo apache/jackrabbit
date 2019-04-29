@@ -39,13 +39,13 @@ import java.io.ByteArrayOutputStream;
  * log contains a header with the following physical layout:
  *
  * <blockquote>
- *   <table border="1" cellpadding="4">
+ *   <table>
  *     <caption>Physical Record Layout</caption>
- *     <tr style="text-align:center" valign="bottom" bgcolor="silver">
- *       <td>{@code Byte 1}</td>
- *       <td>{@code Byte 2}</td>
- *       <td>{@code Byte 3}</td>
- *       <td>{@code Byte 4}</td>
+ *     <tr style="text-align:center">
+ *       <th>{@code Byte 1}</th>
+ *       <th>{@code Byte 2}</th>
+ *       <th>{@code Byte 3}</th>
+ *       <th>{@code Byte 4}</th>
  *     </tr>
  *     <tr>
  *       <td style="text-align:center">{@code 'J'}</td>
