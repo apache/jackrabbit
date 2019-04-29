@@ -33,7 +33,8 @@ class UserManagerConfig {
     private final String adminId;
     /**
      * Authorizable actions that will all be executed upon creation and removal
-     * of authorizables in the order they are contained in the array.<p/>
+     * of authorizables in the order they are contained in the array.
+     * <p>
      * Note, that if {@link #isAutoSave() autosave} is turned on, the configured
      * actions are executed before persisting the creation or removal.
      */

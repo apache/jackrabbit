@@ -79,7 +79,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
     public abstract ISMLocking createISMLocking();
 
     /**
-     * Checks the following requirement: <p/> <i>While a read lock is held for a given item with id
+     * Checks the following requirement: <p> <i>While a read lock is held for a given item with id
      * <code>I</code> an implementation must ensure that no write lock is issued for a change log that
      * contains a reference to an item with id <code>I</code>. </i>
      *
@@ -94,9 +94,9 @@ public abstract class AbstractISMLockingTest extends TestCase {
     }
 
     /**
-     * Checks the following requirement: <p/> <i>While a write lock is held for a given change log
+     * Checks the following requirement: <p> <i>While a write lock is held for a given change log
      * <code>C</code> an implementation must ensure that no read lock is issued for an item that is contained
-     * in <code>C</code>, unless the current thread is the owner of the write lock!</i> <p/> The "unless"
+     * in <code>C</code>, unless the current thread is the owner of the write lock!</i> <p> The "unless"
      * clause is tested by {@link #testWriteBlocksRead_notIfSameThread()} test.
      *
      * @throws InterruptedException on interruption; this will err the test
@@ -127,7 +127,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
     }
 
     /**
-     * Checks the following requirement: <p/> While a write lock is held for a given change log <code>C</code>
+     * Checks the following requirement: <p> While a write lock is held for a given change log <code>C</code>
      * an implementation must ensure that no write lock is issued for a change log <code>C'</code> that intersects
      * with <code>C</code>. That is both change logs contain a reference to the same item. Please note that an
      * implementation is free to block requests entirely for additional write lock while a write lock is

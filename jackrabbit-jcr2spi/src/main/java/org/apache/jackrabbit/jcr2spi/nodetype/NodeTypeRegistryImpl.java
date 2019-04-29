@@ -615,7 +615,8 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
 
         /**
          * Returns the names of those registered node types that have
-         * dependencies on the given node type.<p/>
+         * dependencies on the given node type.
+         * <p>
          * Note, that the returned Set may not be complete with respect
          * to all node types registered within the repository. Instead it
          * will only contain those node type definitions that are known so far.
