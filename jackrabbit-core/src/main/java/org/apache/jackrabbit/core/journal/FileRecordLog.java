@@ -41,24 +41,24 @@ import java.io.ByteArrayOutputStream;
  * <blockquote>
  *   <table border="2" cellpadding="4">
  *     <caption>Physical Record Layout</caption>
- *     <tr align="center" valign="bottom" bgcolor="silver">
+ *     <tr style="text-align:center" valign="bottom" bgcolor="silver">
  *       <td>{@code Byte 1}</td>
  *       <td>{@code Byte 2}</td>
  *       <td>{@code Byte 3}</td>
  *       <td>{@code Byte 4}</td>
  *     </tr>
  *     <tr>
- *       <td align="center">{@code 'J'}</td>
- *       <td align="center">{@code 'L'}</td>
- *       <td align="center">{@code 'O'}</td>
- *       <td align="center">{@code 'G'}</td>
+ *       <td style="text-align:center">{@code 'J'}</td>
+ *       <td style="text-align:center">{@code 'L'}</td>
+ *       <td style="text-align:center">{@code 'O'}</td>
+ *       <td style="text-align:center">{@code 'G'}</td>
  *     </tr>
  *     <tr>
- *       <td align="center" colspan="2">{@code MAJOR}</td>
- *       <td align="center" colspan="2">{@code MINOR}</td>
+ *       <td style="text-align:center" colspan="2">{@code MAJOR}</td>
+ *       <td style="text-align:center" colspan="2">{@code MINOR}</td>
  *     </tr>
  *     <tr>
- *       <td align="center" colspan="4">{@code START REVISION}</td>
+ *       <td style="text-align:center" colspan="4">{@code START REVISION}</td>
  *     </tr>
  *  </table>
  * </blockquote>
