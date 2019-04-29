@@ -78,7 +78,7 @@ public class DavPropertyNameSet extends PropContainer
      * set if it is not already present.
      *
      * @param propertyName element to be added to this set.
-     * @return <tt>true</tt> if the set did not already contain the specified
+     * @return {@code true} if the set did not already contain the specified
      * element.
      */
     public boolean add(DavPropertyName propertyName) {
@@ -90,7 +90,7 @@ public class DavPropertyNameSet extends PropContainer
      *
      * @param localName
      * @param namespace
-     * @return <tt>true</tt> if the set did not already contain the specified
+     * @return {@code true} if the set did not already contain the specified
      * property name.
      */
     public boolean add(String localName, Namespace namespace) {
