@@ -39,7 +39,7 @@ import java.io.ByteArrayOutputStream;
  * log contains a header with the following physical layout:
  *
  * <blockquote>
- *   <table border="2" cellpadding="4">
+ *   <table border="1" cellpadding="4">
  *     <caption>Physical Record Layout</caption>
  *     <tr style="text-align:center" valign="bottom" bgcolor="silver">
  *       <td>{@code Byte 1}</td>
