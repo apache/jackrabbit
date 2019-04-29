@@ -50,12 +50,12 @@ import org.apache.lucene.index.TermVectorOffsetInfo;
 public class DefaultHighlighter {
 
     /**
-     * A default value of <tt>3</tt>
+     * A default value of {@code 3}
      */
     public static final int DEFAULT_MAXFRAGMENTS = 3;
 
     /**
-     * A default value of <tt>75</tt>
+     * A default value of {@code 75}
      */
     public static final int DEFAULT_SURROUND = 75;
 
@@ -85,9 +85,9 @@ public class DefaultHighlighter {
      * @param fragmentEnd   this string is appended to the end of every
      *                      fragement.
      * @param hlStart       the string used to prepend a highlighted token, for
-     *                      example <tt>&quot;&lt;b&gt;&quot;</tt>
+     *                      example {@code &quot;&lt;b&gt;&quot;}
      * @param hlEnd         the string used to append a highlighted token, for
-     *                      example <tt>&quot;&lt;/b&gt;&quot;</tt>
+     *                      example {@code &quot;&lt;/b&gt;&quot;}
      * @param maxFragments  the maximum number of fragments
      * @param surround      the maximum number of chars surrounding a
      *                      highlighted token

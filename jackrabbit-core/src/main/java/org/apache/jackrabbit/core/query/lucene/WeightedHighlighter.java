@@ -67,9 +67,9 @@ public class WeightedHighlighter extends DefaultHighlighter {
      * @param fragmentEnd   this string is appended to the end of every
      *                      fragment.
      * @param hlStart       the string used to prepend a highlighted token, for
-     *                      example <tt>&quot;&lt;b&gt;&quot;</tt>
+     *                      example {@code &quot;&lt;b&gt;&quot;}
      * @param hlEnd         the string used to append a highlighted token, for
-     *                      example <tt>&quot;&lt;/b&gt;&quot;</tt>
+     *                      example {@code &quot;&lt;/b&gt;&quot;}
      * @param maxFragments  the maximum number of fragments
      * @param surround      the maximum number of chars surrounding a
      *                      highlighted token

@@ -1517,7 +1517,7 @@ public class SharedItemStateManager
 
     /**
      * Store modifications registered in a <code>ChangeLog</code>. The items
-     * contained in the <tt>ChangeLog</tt> are not states returned by this
+     * contained in the {@code ChangeLog} are not states returned by this
      * item state manager but rather must be reconnected to items provided
      * by this state manager.
      * <p>

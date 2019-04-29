@@ -77,8 +77,8 @@ public class Timer {
      * @param task   task to be scheduled.
      * @param delay  delay in milliseconds before task is to be executed.
      * @param period time in milliseconds between successive task executions.
-     * @throws IllegalArgumentException if <tt>delay</tt> is negative, or
-     *         <tt>delay + System.currentTimeMillis()</tt> is negative.
+     * @throws IllegalArgumentException if {@code delay} is negative, or
+     *         {@code delay + System.currentTimeMillis()} is negative.
      * @throws IllegalStateException if task was already scheduled or
      *         cancelled, timer was cancelled, or timer thread terminated.
      * @see java.util.Timer#schedule(java.util.TimerTask, long, long)
