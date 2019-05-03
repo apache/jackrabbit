@@ -21,6 +21,7 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.osgi.annotation.versioning.ProviderType;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -60,6 +61,7 @@ import java.util.Set;
  * This access controlled node may or may not be associated with an (optional) representation of the associated
  * {@code Principal} inside the repository.
  */
+@ProviderType
 public interface PrincipalAccessControlList extends JackrabbitAccessControlList {
 
     /**
