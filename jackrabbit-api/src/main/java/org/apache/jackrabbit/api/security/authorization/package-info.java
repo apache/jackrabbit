@@ -18,5 +18,5 @@
 /**
  * Jackrabbit extensions for authorization.
  */
-@org.osgi.annotation.versioning.Version("2.3.1")
+@org.osgi.annotation.versioning.Version("2.4.0")
 package org.apache.jackrabbit.api.security.authorization;
