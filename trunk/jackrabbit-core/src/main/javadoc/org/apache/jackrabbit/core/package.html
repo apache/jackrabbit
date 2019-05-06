@@ -1,0 +1,114 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<body>
+Contains the core classes that provide the implementation of the JCR API.
+<p>
+The following table lists the core JCR interfaces and the corresponding
+Jackrabbit implementation classes found in this package.
+<table>
+  <caption>JCR interfaces and Jackrabbit implementations</caption>
+  <thead>
+    <tr>
+      <th>JCR interface</th>
+      <th>Implementation class</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{@link javax.jcr.Repository Repository}</td>
+      <td>{@link org.apache.jackrabbit.core.RepositoryImpl RepositoryImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Session Session}</td>
+      <td>{@link org.apache.jackrabbit.core.SessionImpl SessionImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Workspace Workspace}</td>
+      <td>{@link org.apache.jackrabbit.core.WorkspaceImpl WorkspaceImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Item Item}</td>
+      <td>{@link org.apache.jackrabbit.core.ItemImpl ItemImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Property Property}</td>
+      <td>{@link org.apache.jackrabbit.core.PropertyImpl PropertyImpl}</td>
+    </tr>
+    <tr>
+      <td>{@link javax.jcr.Node Node}</td>
+      <td>{@link org.apache.jackrabbit.core.NodeImpl NodeImpl}</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+A Jackrabbit repository instance can be created using the static
+{@link org.apache.jackrabbit.core.RepositoryImpl#create(org.apache.jackrabbit.core.config.RepositoryConfig) RepositoryImpl.create(RepositoryConfig)}
+method. Classes in the
+{@link org.apache.jackrabbit.core.jndi org.apache.jackrabbit.core.jndi}
+package provide a mechanism for binding a Jackrabbit repository in a
+JNDI directory context.
+<p>
+A <code>SessionImpl</code> instance is created upon successfully login to the
+<code>Repository</code> (see <code>Repository#login(Credentials, String)</code>).
+<p>
+A <code>Session</code> is always tied to the <code>Workspace</code>
+specified in the <code>Repository#login(Credentials, String)</code> call. A
+workspace represents a persistent tree of repository items (i.e. <code>Node</code>s
+and <code>Property</code>s). The items in a workspace are 'visible' to all
+sessions accessing it (subject to their access rights, of course).
+A <code>WorkspaceImpl</code> instance represents a specifc workspace as
+seen by the session that accesses it.
+<p>
+Every repository item is uniquely identified by its <code>ItemId</code>. The id
+of a node (<code>NodeId</code>) consists of the node's uuid. The id of a property
+(<code>PropertyId</code>) consists of the parent node's uuid and the
+name of the property.
+
+<h2>Item managers</h2>
+<p>
+Every <code>SessionImpl</code> instance has its own <code>ItemManager</code>.
+The per-session instance of <code>ItemManager</code> acts as item factory (i.e.
+it creates <code>NodeImpl</code> and <code>PropertyImpl</code> instances) and
+provides item access by item id and item caching.
+<p>
+The data (or state) of an item is represented by the following classes in the
+subpackage <code>state</code>:
+<ul>
+  <li>{@link org.apache.jackrabbit.core.state.ItemState ItemState}</li>
+  <li>{@link org.apache.jackrabbit.core.state.PropertyState PropertyState}</li>
+  <li>{@link org.apache.jackrabbit.core.state.NodeState NodeState}</li>
+</ul>
+<p>
+There's one <code>SharedItemStateManager</code> for every workspace.
+It provides item state caching and it guarantees that there's only one
+(persistent) item state instance for any distinct item id in that workspace.
+<p>
+Every session has its own <code>SessionItemStateManager</code> that consists
+of the session's <code>TransientItemStateManager</code> and the workspace's
+<code>SharedItemStateManager</code>.
+<p>
+Each item (i.e. <code>NodeImpl</code> and <code>PropertyImpl</code>) instance
+is holding an <code>ItemState</code> instance. When e.g. a session is modifying
+a property by changing the property's value, a new transient item state
+is created by the session's <code>TransientItemStateManager</code>. This
+transient state is actually wrapping the (old) shared state (<i>copy on write</i>).
+The <code>PropertyImpl</code>'s state is then replaced by the new transient state.
+<p>
+Transient (i.e. unsaved) modifications are 'session-local',  i.e. they are not
+visible to other sessions. When the modifications are saved they become instantly
+visible to all sessions accessing the same workspace.
+</body>

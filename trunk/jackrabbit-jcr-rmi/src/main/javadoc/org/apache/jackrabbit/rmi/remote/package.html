@@ -1,0 +1,35 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<body>
+Remote interfaces of the transparent JCR-RMI layer.
+<p>
+This package contains all the interfaces and classes used by both
+the client and server sides of the transparent JCR-RMI layer.
+The compiled contents of this package should thus be included
+in both client and server installations. Note also that RMI stubs and
+skeletons need to be generated for all the remote interfaces when using
+old JDK versions (stubs for JDK &lt; 1.5, skeletons for JDK &lt; 1.2).
+<p>
+The interfaces in this package are remote versions of the
+corresponding interfaces in the javax.jcr packages. They are used by
+the adapter classes in the .rmi.client and .rmi.server packages. The server
+classes adapt local JCR objects to the remote interfaces, and the client
+classes adapt the resulting remote references back to the JCR interfaces.
+<p>
+The SerialValue class is a decorator utility used by both the client and
+server classes to safely pass Value objects over the network.
+</body>

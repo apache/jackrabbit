@@ -1,0 +1,22 @@
+NodeTypeName
+  mix:mimeType
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:encoding
+  RequiredType STRING
+  DefaultValues null
+  Mandatory false
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:mimeType
+  RequiredType STRING
+  DefaultValues null
+  Mandatory false
+  Protected false
+  Multiple false

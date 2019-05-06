@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+  <!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements. See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version
+    2.0 (the "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed under
+    the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+    OR CONDITIONS OF ANY KIND, either express or implied. See the
+    License for the specific language governing permissions and
+    limitations under the License.
+  -->
+<Workspace name="default">
+
+  <FileSystem class="@config.db.fsclass@">
+    <param name="dataSourceName" value="ds1"/>
+    <param name="schemaObjectPrefix" value="@repo.id@_${wsp.name}_" />
+  </FileSystem>
+
+  <PersistenceManager class="@config.db.pmclass@">
+    <param name="dataSourceName" value="ds1"/>
+    <param name="schemaObjectPrefix" value="@repo.id@_${wsp.name}_" />
+  </PersistenceManager>
+
+  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
+    <param name="path" value="${wsp.home}/index" />
+    <param name="respectDocumentOrder" value="true" />
+    <param name="synonymProviderClass"
+      value="org.apache.jackrabbit.core.query.lucene.PropertiesSynonymProvider" />
+    <param name="synonymProviderConfigPath" value="../synonyms.properties" />
+    <param name="supportHighlighting" value="true" />
+    <param name="excerptProviderClass"
+      value="org.apache.jackrabbit.core.query.lucene.WeightedHTMLExcerpt" />
+    <param name="indexingConfiguration" value="${wsp.home}/indexing-configuration.xml" />
+  </SearchIndex>
+
+</Workspace>

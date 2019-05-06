@@ -1,0 +1,230 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+<ex = "http://example.org/jackrabbit/example">
+<jcr='http://www.jcp.org/jcr/1.0'>
+<nt='http://www.jcp.org/jcr/nt/1.0'>
+
+// test remapping
+<REP='internal'>
+
+// omit this namespace to test auto-registering
+// <mix='http://www.jcp.org/jcr/mix/1.0'>
+
+//------------------------------------------------------------------------------
+// E X A M P L E  T Y P E S
+//------------------------------------------------------------------------------
+
+[ex:NodeType] > ex:ParentNodeType1, ex:ParentNodeType2
+  orderable mixin
+  - ex:property (long) = '1', '2' primary mandatory autocreated protected multiple version < '[1,10]'
+  + ex:node (ex:RequiredNodeType1, ex:RequiredNodeType2) = ex:RequiredNodeType1 mandatory autocreated protected multiple version
+
+[ex:AnotherNodeType] > ex:NodeType
+  - * (string) = 'a residual property' multiple
+  + * (ex:RequiredNodeType1) multiple
+  
+[ex:Empty]
+
+[NoPrefix]
+
+[ex:Reference]
+  - ex:ref (reference) mandatory protected < 'ex:ref'
+  
+[ex:Name]
+  - ex:name (name) < 'ex:name'
+  
+[ex:Path]
+  - ex:path (path) < 'ex:a/ex:b'  
+
+[ex:Full] > ex:NodeType
+  orderable mixin abstract primaryitem ex:p1 noquery
+  - ex:p1 (STRING) mandatory protected autocreated multiple
+  - ex:p2 (BINARY) queryops '=, <>, <, <=, >, >=, LIKE'
+  - ex:p3 (LONG) nofulltext noqueryorder
+  - ex:p4 (DOUBLE)
+  - ex:p5 (BOOLEAN)
+  - ex:p6 (NAME)
+  - ex:p8 (PATH)
+  - ex:p9 (REFERENCE)
+  - ex:pa (WEAKREFERENCE)
+  - ex:pb (DECIMAL)
+  - ex:pc (URI)
+  - ex:pd (UNDEFINED)
+  - ex:pf (*)
+  + ex:n1 (ex:NodeType) COPY
+  + ex:n2 (ex:NodeType) VERSION
+  + ex:n3 (ex:NodeType) INITIALIZE
+  + ex:n4 (ex:NodeType) COMPUTE
+  + ex:n5 (ex:NodeType) IGNORE
+  + ex:n6 (ex:NodeType) ABORT
+
+[ex:Full1] > ex:NodeType
+  orderable mixin abstract primaryitem ex:p1 query
+  - ex:p1
+
+//------------------------------------------------------------------------------
+// B A S E  T Y P E S
+//------------------------------------------------------------------------------
+
+[nt:base]
+  - jcr:primaryType (name) mandatory autocreated protected compute
+  - jcr:mixinTypes (name) protected multiple compute
+
+[nt:unstructured]
+  orderable
+  - * (undefined) multiple
+  - * (undefined)
+  + * (nt:base) = nt:unstructured multiple version
+
+[mix:referenceable]
+  mixin
+  - jcr:uuid (string) mandatory autocreated protected initialize
+
+[mix:lockable]
+  mixin
+  - jcr:lockOwner (string) protected ignore
+  - jcr:lockIsDeep (boolean) protected ignore
+
+//------------------------------------------------------------------------------
+// V E R S I O N I N G
+//------------------------------------------------------------------------------
+
+[mix:versionable] > mix:referenceable
+  mixin
+  - jcr:versionHistory (reference) mandatory protected
+    < 'nt:versionHistory'
+  - jcr:baseVersion (reference) mandatory protected ignore
+    < 'nt:version'
+  - jcr:isCheckedOut (boolean) = 'true' mandatory autocreated protected ignore
+  - jcr:predecessors (reference) mandatory protected multiple
+    < 'nt:version'
+  - jcr:mergeFailed (reference) protected multiple abort
+
+[nt:versionHistory] > mix:referenceable
+  - jcr:versionableUuid (string) mandatory autocreated protected abort
+  + jcr:rootVersion (nt:version) = nt:version mandatory autocreated protected abort
+  + jcr:versionLabels (nt:versionLabels) = nt:versionLabels mandatory autocreated protected abort
+  + * (nt:version) = nt:version protected abort
+
+[nt:versionLabels]
+  - * (reference) protected abort
+    < 'nt:version'
+
+[nt:version] > mix:referenceable
+  - jcr:created (date) mandatory autocreated protected abort
+  - jcr:predecessors (reference) protected multiple abort
+    < 'nt:version'
+  - jcr:successors (reference) protected multiple abort
+    < 'nt:version'
+  + jcr:frozenNode (nt:frozenNode) protected abort
+
+[nt:frozenNode] > mix:referenceable
+  orderable
+  - jcr:frozenPrimaryType (name) mandatory autocreated protected abort
+  - jcr:frozenMixinTypes (name) protected multiple abort
+  - jcr:frozenUuid (string) mandatory autocreated protected abort
+  - * (undefined) protected abort
+  - * (undefined) protected multiple abort
+  + * (nt:base) protected multiple abort
+
+[nt:versionedChild]
+  - jcr:childVersionHistory (reference) mandatory autocreated protected abort
+    < 'nt:versionHistory'
+
+//------------------------------------------------------------------------------
+// N O D E T Y P E S
+//------------------------------------------------------------------------------
+
+[nt:nodeType]
+  - jcr:nodeTypeName (name) mandatory
+  - jcr:supertypes (name) multiple
+  - jcr:isMixin (boolean) mandatory
+  - jcr:hasOrderableChildNodes (boolean) mandatory
+  - jcr:primaryItemName (name)
+  + jcr:propertyDefinition (nt:propertyDefinition) = nt:propertyDefinition multiple version
+  + jcr:childNodeDefinition (nt:childNodeDefinition) = nt:childNodeDefinition multiple version
+
+[nt:propertyDefinition]
+  - jcr:name (name)
+  - jcr:autoCreated (boolean) mandatory
+  - jcr:mandatory (boolean) mandatory
+  - jcr:onParentVersion (string) mandatory
+    < 'COPY', 'VERSION', 'INITIALIZE', 'COMPUTE', 'IGNORE', 'ABORT'
+  - jcr:protected (boolean) mandatory
+  - jcr:requiredType (string) mandatory
+    < 'STRING', 'BINARY', 'LONG', 'DOUBLE', 'BOOLEAN', 'DATE', 'NAME', 'PATH', 'REFERENCE', 'UNDEFINED'
+  - jcr:valueConstraints (string) multiple
+  - jcr:defaultValues (undefined) multiple
+  - jcr:multiple (boolean) mandatory
+
+[nt:childNodeDefinition]
+  - jcr:name (name)
+  - jcr:autoCreated (boolean) mandatory
+  - jcr:mandatory (boolean) mandatory
+  - jcr:onParentVersion (string) mandatory
+    < 'COPY', 'VERSION', 'INITIALIZE', 'COMPUTE', 'IGNORE', 'ABORT'
+  - jcr:protected (boolean) mandatory
+  - jcr:requiredPrimaryTypes (name) = 'nt:base' mandatory multiple
+  - jcr:defaultPrimaryType (name)
+  - jcr:sameNameSiblings (boolean) mandatory
+
+//------------------------------------------------------------------------------
+// M I S C
+//------------------------------------------------------------------------------
+
+[nt:hierarchyNode]
+  - jcr:created (date) autocreated protected initialize
+
+[nt:folder] > nt:hierarchyNode
+  + * (nt:hierarchyNode) version
+
+[nt:file] > nt:hierarchyNode
+  + jcr:content (nt:base) primary mandatory
+
+[nt:linkedFile] > nt:hierarchyNode
+  - jcr:content (reference) primary mandatory
+
+[nt:resource] > mix:referenceable
+  - jcr:encoding (string)
+  - jcr:mimeType (string) mandatory
+  - jcr:data (binary) primary mandatory
+  - jcr:lastModified (date) mandatory ignore
+
+[nt:query]
+  - jcr:statement (string)
+  - jcr:language (string)
+
+//------------------------------------------------------------------------------
+// J A C K R A B B I T   I N T E R N A L S
+//------------------------------------------------------------------------------
+
+[REP:nodeTypes]
+  + * (nt:nodeType) = nt:nodeType protected abort
+
+[REP:root] > nt:unstructured
+  orderable
+  + jcr:system (REP:system) = REP:system mandatory ignore
+
+[REP:system]
+  orderable
+  + jcr:versionStorage (REP:versionStorage) = REP:versionStorage mandatory protected abort
+  + jcr:nodeTypes (REP:nodeTypes) = REP:nodeTypes mandatory protected abort
+  + * (nt:base) = nt:unstructured multiple ignore
+
+[REP:versionStorage]
+  + * (nt:versionHistory) = nt:versionHistory protected multiple abort
+  + * (REP:versionStorage) = REP:versionStorage protected multiple abort

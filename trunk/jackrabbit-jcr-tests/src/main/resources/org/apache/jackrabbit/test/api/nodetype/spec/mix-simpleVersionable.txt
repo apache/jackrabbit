@@ -1,0 +1,17 @@
+NodeTypeName
+  mix:simpleVersionable
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:isCheckedOut
+  RequiredType BOOLEAN
+  DefaultValues [true]
+  AutoCreated true
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false

@@ -1,0 +1,8 @@
+NodeTypeName
+  mix:shareable
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null

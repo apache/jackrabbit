@@ -1,0 +1,26 @@
+NodeTypeName
+  mix:lifecycle
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:currentLifecycleState
+  RequiredType STRING
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion INITIALIZE
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:lifecyclePolicy
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion INITIALIZE
+  Protected true
+  Multiple false

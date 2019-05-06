@@ -1,0 +1,90 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+ <modelVersion>4.0.0</modelVersion>
+
+ <groupId>org.apache.jackrabbit</groupId>
+ <artifactId>jackrabbit-firsthops</artifactId>
+ <version>0.1-SNAPSHOT</version>
+ <name>First Hops</name>
+ <description>First Hops Example Page</description>
+ <url>http://jackrabbit.apache.org/first-hops.html</url>
+
+ <dependencies>
+
+  <!-- The JCR API -->
+  <dependency>
+   <groupId>javax.jcr</groupId>
+   <artifactId>jcr</artifactId>
+   <version>2.0</version>
+  </dependency>
+
+  <!-- Jackrabbit content repository -->
+  <dependency>
+   <groupId>org.apache.jackrabbit</groupId>
+   <artifactId>jackrabbit-core</artifactId>
+   <version>2.12.1</version>
+  </dependency>
+
+  <!-- Jackrabbit Oak content repository -->
+  <!--
+    Comment out above jackrabbit-core and uncomment
+    below oak-jcr dependency if you want to run the
+    examples with Jackrabbit Oak.
+  -->
+  <!--
+  <dependency>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>oak-jcr</artifactId>
+    <version>1.4.1</version>
+  </dependency>
+  -->
+
+  <!-- Use Log4J for logging -->
+  <dependency>
+   <groupId>org.slf4j</groupId>
+   <artifactId>slf4j-log4j12</artifactId>
+  </dependency>
+
+ </dependencies>
+
+ <build>
+  <plugins>
+
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>2.3.2</version>
+    <configuration>
+     <compilerVersion>1.5</compilerVersion>
+     <source>1.5</source>
+     <target>1.5</target>
+     <debug>true</debug>
+     <showDeprecation>false</showDeprecation>
+     <showWarnings>true</showWarnings>
+     <optimize>false</optimize>
+    </configuration>
+   </plugin>
+  </plugins>
+ </build>
+
+</project>
+
+
+   

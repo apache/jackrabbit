@@ -1,0 +1,17 @@
+NodeTypeName
+  nt:resource
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  jcr:data
+PropertyDefinition
+  Name jcr:data
+  RequiredType BINARY
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false

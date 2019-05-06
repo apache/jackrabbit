@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE configuration SYSTEM "http://jackrabbit.apache.org/dtd/indexing-configuration-1.2.dtd">
+<configuration xmlns:jcr="http://www.jcp.org/jcr/1.0"
+               xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='boost1'">
+        <!-- default boost: 1.0 -->
+        <property>text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='boost2'">
+        <!-- boost: 2.0 -->
+        <property boost="2.0">text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='boost3'">
+        <!-- boost: 3.0 -->
+        <property boost="3.0">text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='nsiTrue'">
+        <!-- default value for nodeScopeIndex is true -->
+        <property>text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='nsiFalse'">
+        <!-- do not include text in node scope index -->
+        <property nodeScopeIndex="false">text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='regexp'">
+        <property isRegexp="true">.*Text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='excerpt'">
+        <property useInExcerpt="false">title</property>
+        <property>foo</property><!-- needed to test JCR-3610 -->
+        <property>text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured"
+                condition="ancestor::*/@rule = 'ancestor-axis'">
+      <property>Text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:hierarchyNode">
+        <!-- do not index any properties -->
+    </index-rule>
+
+    <aggregate primaryType="nt:folder" recursive="true" recursiveLimit="10">
+        <include primaryType="nt:folder">*</include>
+        <include primaryType="nt:file">*</include>
+    </aggregate>
+
+    <aggregate primaryType="nt:file">
+        <include>jcr:content</include>
+        <include>jcr:content/*</include>
+        <include-property>jcr:content/jcr:lastModified</include-property>
+    </aggregate>
+
+    <aggregate primaryType="nt:unstructured">
+        <include>aggregated-node</include>
+        <include-property>child/property</include-property>
+    </aggregate>
+
+</configuration>

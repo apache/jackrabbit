@@ -1,0 +1,240 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at 
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+
+<!ENTITY % jackrabbit-repository-elements
+         "DataSources|Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex|RepositoryLockMechanism">
+
+<!--
+    The DataSources element configures the data sources of the repository.
+-->
+<!ELEMENT DataSources (DataSource*)>
+<!ELEMENT DataSource (param*)>
+<!ATTLIST DataSource name CDATA #REQUIRED>
+
+<!--
+    a virtual file system
+-->
+<!ELEMENT FileSystem (param*)>
+<!ATTLIST FileSystem class CDATA #REQUIRED>
+
+<!--
+    the Security element specifies the name (appName attribute)
+    of the JAAS configuration app-entry for this repository. 
+
+    it also specifies various security related managers to be used.
+-->
+<!ELEMENT Security (SecurityManager?, AccessManager?, LoginModule?)>
+<!ATTLIST Security appName CDATA #REQUIRED>
+
+<!--
+    the SecurityManager element configures the general security manager to be
+    used by this repository instance; the class attribute specifies the FQN of the
+    class implementing the JackrabbitSecurityManager interface
+-->
+<!ELEMENT SecurityManager (WorkspaceAccessManager?,UserManager?,UserIdClass?, param*)>
+<!ATTLIST SecurityManager class CDATA #REQUIRED
+                          workspaceName CDATA #IMPLIED>
+
+<!--
+    the AccessManager element configures the access manager to be used by
+    this repository instance; the class attribute specifies the FQN of the
+    class implementing the AccessManager interface
+-->
+<!ELEMENT AccessManager (param*)>
+<!ATTLIST AccessManager class CDATA #REQUIRED>
+
+<!--
+    generic parameter (name/value pair)
+-->
+<!ELEMENT param EMPTY>
+<!ATTLIST param name  CDATA #REQUIRED
+                value CDATA #REQUIRED>
+
+<!--
+    the LoginModule element optionally specifies a JAAS login module to
+    authenticate users. This feature allows the use of Jackrabbit in a
+    non-JAAS environment.
+-->
+<!ELEMENT LoginModule (param*)>
+<!ATTLIST LoginModule class CDATA #REQUIRED>
+
+<!--
+    the WorkspaceAccessManager element optionally configures the manager
+    to be used by this repository instance to determine if access to a specific
+    workspace is granted for a specific subject;
+    the class attribute specifies the FQN of the class implementing the
+    WorkspaceAccessManager interface
+-->
+<!ELEMENT WorkspaceAccessManager EMPTY>
+<!ATTLIST WorkspaceAccessManager class CDATA #REQUIRED>
+
+<!--
+    the Workspaces element specifies the physical workspaces root directory
+    (rootPath attribute), the name of the default workspace (defaultWorkspace 
+    attribute), the (optional) maximum amount of time in seconds before an idle 
+    workspace is automatically shutdown (maxIdleTime attribute) and the 
+    (optional) workspace configuration root directory within the virtual 
+    repository file system (configRootPath attribute).
+
+    individual workspaces are configured through individual workspace.xml files 
+    located in a subfolder each of either
+
+    a) the physical workspaces root directory
+
+    or, if configRootPath had been specified,
+
+    b) the configuration root directory within the virtual repository file 
+    system.
+-->
+<!ELEMENT Workspaces EMPTY>
+<!ATTLIST Workspaces rootPath         CDATA #REQUIRED
+                     defaultWorkspace CDATA #REQUIRED
+                     configRootPath   CDATA #IMPLIED
+                     maxIdleTime      CDATA #IMPLIED>
+
+<!--
+    the Workspace element serves as a workspace configuration template;
+    it is used to create the initial workspace if there's no workspace yet
+    and for creating additional workspaces through the api
+-->
+<!ELEMENT Workspace (FileSystem,PersistenceManager,SearchIndex?,ISMLocking?,WorkspaceSecurity?,Import?)>
+<!ATTLIST Workspace name CDATA #REQUIRED>
+
+<!--
+    the PersistenceManager element configures the persistence manager
+    to be used for the workspace; the class attribute specifies the
+    FQN of the class implementing the PersistenceManager interface
+-->
+<!ELEMENT PersistenceManager (param*)>
+<!ATTLIST PersistenceManager class CDATA #REQUIRED>
+
+<!--
+    the SearchIndex element specifies the locaction of the search index
+    (used by the QueryHandler); the class attribute specifies the
+    FQN of the class implementing the QueryHandler interface.
+-->
+<!ELEMENT SearchIndex (param*,FileSystem?)>
+<!ATTLIST SearchIndex class CDATA #REQUIRED>
+
+
+<!--
+    the WorkspaceSecurity element specifies the workspace specific security
+    configuration.
+-->
+<!ELEMENT WorkspaceSecurity (AccessControlProvider?)>
+
+<!--
+    the AccessControlProvider element defines a class attribute specifying the
+    FQN of the class implementing the AccessControlProvider interface.
+    The param(s) define implementation specific parameters.
+-->
+<!ELEMENT AccessControlProvider (param*)>
+<!ATTLIST AccessControlProvider class CDATA #REQUIRED>
+
+<!--
+    the Versioning element configures the persistence manager
+    to be used for persisting version state
+-->
+<!ELEMENT Versioning (FileSystem, PersistenceManager, ISMLocking?)>
+<!ATTLIST Versioning rootPath CDATA #REQUIRED>
+
+<!--
+    the Cluster element configures the optional participation of this
+    repository in a clustered environment. a literal id may be
+    specified that uniquely identifies this node in a cluster, as well
+    as the delay in milliseconds before changes to the journal are
+    automatically detected.
+-->
+<!ELEMENT Cluster (Journal)>
+<!ATTLIST Cluster id        CDATA #IMPLIED
+                  syncDelay CDATA #IMPLIED>
+
+<!--
+    the Journal element configures the journal used in clustering; the
+    class attribute specifies the FQN of the class implementing the
+    Journal interface.
+-->
+<!ELEMENT Journal (param*)>
+<!ATTLIST Journal class CDATA #REQUIRED>
+
+<!--
+    the ISMLocking element configures the locking implementation
+    to be used for the workspace and version storage; the class
+    attribute specifies the FQN of the class implementing the
+    ISMLocking interface.
+-->
+<!ELEMENT ISMLocking (param*)>
+<!ATTLIST ISMLocking class CDATA #REQUIRED>
+
+<!--
+    the RepositoryLockMechanism element configures the mechanism
+    that is used to ensure only one process writes to the 
+    backend (file system or database) at any time; the class
+    attribute specifies the FQN of the class implementing the
+    RepositoryLockMechanism interface.
+-->
+<!ELEMENT RepositoryLockMechanism (param*)>
+<!ATTLIST RepositoryLockMechanism class CDATA #REQUIRED>
+
+<!--
+    the DataStore element configures the data store
+    to be used for the workspace; the class attribute specifies the
+    FQN of the class implementing the DataStore interface
+-->
+<!ELEMENT DataStore (param*)>
+<!ATTLIST DataStore class CDATA #REQUIRED>
+
+<!--
+    The Import element configures how protected items are imported into a
+    workspace.
+-->
+<!ELEMENT Import (ProtectedNodeImporter|ProtectedPropertyImporter)*>
+
+<!--
+    The ProtectedNodeImporter element configures an importer for protected
+    nodes. The class attribute specifies the FQN of the class implementing the
+    ProtectedNodeImporter interface.
+    The param(s) define implementation specific parameters.
+-->
+<!ELEMENT ProtectedNodeImporter (param*)>
+<!ATTLIST ProtectedNodeImporter class CDATA #REQUIRED>
+
+<!--
+    The ProtectedPropertyImporter element configures an importer for protected
+    properties. The class attribute specifies the FQN of the class implementing
+    the ProtectedPropertyImporter interface.
+    The param(s) define implementation specific parameters.
+-->
+<!ELEMENT ProtectedPropertyImporter (param*)>
+<!ATTLIST ProtectedPropertyImporter class CDATA #REQUIRED>
+
+<!--
+    The UserManager element configures the user manager implementation that is
+    used in Jackrabbit. The class attribute specifies the FQN of the class
+    implementing the UserManager interface.
+    The param(s) define implementation specific parameters.
+-->
+<!ELEMENT UserManager (param*)>
+<!ATTLIST UserManager class CDATA #REQUIRED>
+
+<!--
+    The UserIdClass element specifies the class of principals used to retrieve
+    the userID out of a Subject. The class attribute specifies the FQN of a
+    class implementing the java.security.Principal interface.
+-->
+<!ELEMENT UserIdClass EMPTY>
+<!ATTLIST UserIdClass class CDATA #REQUIRED>

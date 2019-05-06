@@ -1,0 +1,33 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<body>
+This package contains the class <code>{@link DbFileSystem}</code>,
+a simple generic JDBC-based <code>FileSystem</code> implementation
+for Jackrabbit.
+<p>
+It also contains [schemaName].ddl files which are read by
+<code>{@link DbFileSystem}</code>  in order to automatically
+create the required schema objects on the target database. Every line in a
+[schemaName].ddl file is executed separatly by calling
+<code>java.sql.Statement.execute(String)</code> where every occurence of the
+the string <code>"${schemaObjectPrefix}"</code> has been replaced with the
+value of the property <code>schemaObjectPrefix</code> (see
+ <code>{@link DbFileSystem#setSchemaObjectPrefix(String)}</code>).
+The schema name is either set programmtically by calling
+<code>{@link DbFileSystem#setSchema(String)}</code> or configured
+through the <code>schema</code> bean property.
+</body>

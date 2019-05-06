@@ -1,0 +1,72 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<body>
+Jackrabbit configuration handling.
+<p>
+This package contains functionality for reading and manipulating the
+Jackrabbit configuration. The configuration functionality can be
+divided in two parts: parsing and representing configuration.
+
+<h2>Parsing configuration</h2>
+<p>
+The configuration parsing functionality is located in the
+{@link org.apache.jackrabbit.core.config.ConfigurationParser ConfigurationParser}
+class. The parser class reads repository and workspace configuration
+files and builds corresponding configuration object structures.
+<p>
+<p>
+The static <code>create()</code> factory methods of the
+{@link org.apache.jackrabbit.core.config.RepositoryConfig RepositoryConfig}
+class are the standard ways of invoking the configuration parser.
+</p>
+
+<h2>Representating configuration</h2>
+<p>
+The parsed configuration information is represented using Config object
+structures. The
+{@link org.apache.jackrabbit.core.config.RepositoryConfig RepositoryConfig}
+and
+{@link org.apache.jackrabbit.core.config.WorkspaceConfig WorkspaceConfig}
+classes are used for the top-level configuration. Other configuration classes
+are used according to the class diagram shown below.
+<img src="doc-files/class.jpg" alt="Class Diagram for Repository Configuration">
+<p>
+In addition to the static configuration information, some Config classes
+contain references to configured implementation objects. These implementation
+objects are not instantiated in the Config constructors to simplify
+configuration parsing. Instead the Config classes provide an
+<code>init()</code> method that instantiates and initializes all
+contained implementation objects.
+<p>
+The
+{@link org.apache.jackrabbit.core.config.RepositoryConfig RepositoryConfig}
+class contains also a set of static and instance methods for manipulating
+the repository configuration, especially creating and loading workspace
+configurations.
+
+<h2>Modifying configuration</h2>
+<p>
+The configuration classes in this package are immutable to enforce the
+contract that the configuration should not be modified once it has been
+intstantiated. It is possible to subclass the configuration classes as long
+as the immutability contract is not broken. The public constructors allow
+a limited form of dynamic configurability for Jackrabbit, but note that the
+only officially supported Jackrabbit configuration interface are the XML
+configuration files.
+</p>
+
+</body>
