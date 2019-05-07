@@ -42,7 +42,6 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-      <version>2.3</version> <!-- first version with filters -->
       <scope>provided</scope>
     </dependency>
     <dependency>
