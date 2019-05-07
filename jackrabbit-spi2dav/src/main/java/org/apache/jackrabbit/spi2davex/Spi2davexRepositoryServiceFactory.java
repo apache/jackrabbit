@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi2davex;
 
 import java.util.Map;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.ItemInfoCache;
@@ -64,10 +65,14 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      */
     public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2davex.MaxConnections";
 
-
+    /** 
+     * For connecting to JCR servers older than version 1.5, the default workspace needs to be passed 
+     * (if not explicitly given in each {@link Repository#login()} call)
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-4120">JCR-4120</a>
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1842">JCR-1842</a>
+     */
     public static final String PARAM_WORKSPACE_NAME_DEFAULT =  "org.apache.jackrabbit.spi2davex.WorkspaceNameDefault";
-
-    public static final String DEFAULT_WORKSPACE_NAME_DEFAULT = "default";
 
     public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
         // retrieve the repository uri
@@ -87,7 +92,9 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
         int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
         int maximumHttpConnections = 0;
 
-        String workspaceNameDefault = DEFAULT_WORKSPACE_NAME_DEFAULT;
+        // since JCR-4120 the default workspace name is no longer set to 'default'
+        // note: if running with JCR Server < 1.5 a default workspace name must therefore be configured
+        String workspaceNameDefault = null;
 
         if (parameters != null) {
             // batchRead config
