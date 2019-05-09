@@ -125,7 +125,6 @@ public class Installer {
     public int installRepository(HttpServletRequest req)
             throws ServletException, IOException {
         String repHome = req.getParameter("repository_home");
-        String repType = req.getParameter("repository_type");
         String repXml = req.getParameter("repository_xml");
         String mode = req.getParameter("mode");
 
@@ -135,10 +134,7 @@ public class Installer {
         File home = new File(repHome);
 
         File config;
-        if ("oak".equals(repType)) {
-            config = null;
-            repXml = null;
-        } else if (repXml == null || repXml.length() == 0) {
+        if (repXml == null || repXml.length() == 0) {
             config = new File(home, "repository.xml");
             repXml = config.getPath();
         } else {
