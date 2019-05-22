@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.18.1
+Release Notes -- Apache Jackrabbit -- Version 2.18.2
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.18.1, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.18.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.18.1 is an incremental feature release based on
+Apache Jackrabbit 2.18.2 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.18.x releases are considered stable and targeted for production use.
 
@@ -18,29 +18,22 @@ The minimum Java version for this release is Java 8. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.18.1
+Changes in Jackrabbit 2.18.2
 ----------------------------
 
 Bug
 
-    [JCR-4408] - jackrabbit-webapp: test dependency for httpcore breaks war file
-    [JCR-4420] - Release Notes: term "SHA1" no longer allowed
+    [JCR-4425] - NodeSetPrimaryTypeTest.testSetPrimaryType() must not use nt:activity
+
+New Feature
+
+    [JCR-4429] - Add extension of JackrabbitAccessControlList bound to a principal
 
 Task
 
-    [JCR-4394] - switch bundle comparisonVersion for 2.18
-    [JCR-4400] - Update tika dependency to 1.20
-    [JCR-4403] - update spotbugs dependency to 3.1.10
-    [JCR-4404] - update maven-assembly-plugin dependency to 3.1.1
-    [JCR-4405] - update maven-jar-plugin dependency to 3.1.1
-    [JCR-4406] - update maven-bundle-plugin dependency to 4.1.0
-    [JCR-4407] - Update httpcore dependency to 4.4.11
-    [JCR-4409] - jackrabbit-webapp: embed JCR 2.0 API
-    [JCR-4410] - jackrabbit-webapp: cleanup left over Oak references
-    [JCR-4411] - Update httpclient/mime dependencies to 4.5.7
-    [JCR-4415] - Update Jetty dependency to 9.2.26.v20180806
-    [JCR-4416] - Update slf4j dependency to 1.7.26
-    [JCR-4422] - Update httpclient/mime dependencies to 4.5.8
+    [JCR-4428] - update Apache parent pom to version 21
+    [JCR-4439] - disable baseline check for jackrabbit-bundle
+
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
