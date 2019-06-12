@@ -159,7 +159,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @throws RepositoryException If an exception occurs.
      */
     public RepositoryServiceImpl(String jcrServerURI, BatchReadConfig batchReadConfig) throws RepositoryException {
-        this(jcrServerURI, null, batchReadConfig, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
+        this(jcrServerURI, null, batchReadConfig, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE, false);
     }
 
     /**
@@ -174,8 +174,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @throws RepositoryException If an exception occurs.
      */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
-                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize) throws RepositoryException {
-        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT);
+                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize, Boolean allowInsecureHttps) throws RepositoryException {
+        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, allowInsecureHttps);
     }
 
     /**
@@ -192,10 +192,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
                                  BatchReadConfig batchReadConfig, int itemInfoCacheSize,
-                                 int maximumHttpConnections) throws RepositoryException {
+                                 int maximumHttpConnections, boolean allowInsecureHttps) throws RepositoryException {
 
         super(jcrServerURI, IdFactoryImpl.getInstance(), NameFactoryImpl.getInstance(),
-                PathFactoryImpl.getInstance(), new QValueFactoryImpl(), itemInfoCacheSize, maximumHttpConnections);
+                PathFactoryImpl.getInstance(), new QValueFactoryImpl(), itemInfoCacheSize, maximumHttpConnections, allowInsecureHttps);
 
         try {
             URI repositoryUri = computeRepositoryUri(jcrServerURI);

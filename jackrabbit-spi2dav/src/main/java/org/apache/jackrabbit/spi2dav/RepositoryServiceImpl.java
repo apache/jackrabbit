@@ -23,6 +23,9 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,8 +53,11 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.lock.LockException;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -65,6 +71,9 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
@@ -75,6 +84,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.jackrabbit.commons.webdav.AtomFeedConstants;
 import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
@@ -243,6 +253,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final HttpHost httpHost;
     private final ConcurrentMap<Object, HttpClient> clients;
     private final HttpClientBuilder httpClientBuilder;
+    private boolean allowInsecureHttps = false;
 
     private final Map<Name, QNodeTypeDefinition> nodeTypeDefinitions = new HashMap<Name, QNodeTypeDefinition>();
 
@@ -292,7 +303,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize) throws RepositoryException {
-        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT);
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, false);
+    }
+
+    public RepositoryServiceImpl(String uri, IdFactory idFactory,
+                                 NameFactory nameFactory, PathFactory pathFactory,
+                                 QValueFactory qValueFactory, int itemInfoCacheSize, boolean allowInsecureHttps) throws RepositoryException {
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, allowInsecureHttps);
+    }
+
+    public RepositoryServiceImpl(String uri, IdFactory idFactory,
+                                 NameFactory nameFactory, PathFactory pathFactory,
+                                 QValueFactory qValueFactory, int itemInfoCacheSize, int maximumHttpConnections ) throws RepositoryException {
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, maximumHttpConnections, false);
     }
 
     /**
@@ -312,7 +335,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize,
-                                 int maximumHttpConnections ) throws RepositoryException {
+                                 int maximumHttpConnections, boolean allowInsecureHttps ) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
             throw new RepositoryException("Invalid repository uri '" + uri + "'.");
         }
@@ -325,10 +348,15 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         this.pathFactory = pathFactory;
         this.qValueFactory = qValueFactory;
         this.itemInfoCacheSize = itemInfoCacheSize;
+        this.allowInsecureHttps = allowInsecureHttps;
 
         try {
             URI repositoryUri = computeRepositoryUri(uri);
-            httpHost = new HttpHost(repositoryUri.getHost(), repositoryUri.getPort());
+            if (allowInsecureHttps) {
+                httpHost = new HttpHost(repositoryUri.getHost(), repositoryUri.getPort(), "https");
+            } else {
+                httpHost = new HttpHost(repositoryUri.getHost(), repositoryUri.getPort());
+            }
 
             nsCache = new NamespaceCache();
             uriResolver = new URIResolverImpl(repositoryUri, this, DomUtil.createDocument());
@@ -529,16 +557,49 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     protected HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
+        return this.getClient(sessionInfo, this.allowInsecureHttps);
+    }
+
+    protected HttpClient getClient(SessionInfo sessionInfo, boolean allowInsecureHttps) throws RepositoryException {
         Object clientKey = getClientKey(sessionInfo);
         HttpClient client = clients.get(clientKey);
         if (client == null) {
-            client = httpClientBuilder.build();
-            if (sessionInfo != null) {
-                checkSessionInfo(sessionInfo);
-                clients.put(clientKey, client);
-                log.debug("Created Client " + client + " for SessionInfo " + sessionInfo);
+            try {
+                if (allowInsecureHttps) {
+                    // use the TrustSelfSignedStrategy to allow Self Signed Certificates
+                    log.info("allowInsecureHttps flag is true, enabling self signed strategy");
+                    SSLContext sslContext = SSLContextBuilder
+                            .create()
+                            .loadTrustMaterial(new TrustSelfSignedStrategy())
+                            .build();
+
+                    // we can optionally disable hostname verification.
+                    HostnameVerifier allowAllHosts = new NoopHostnameVerifier();
+
+                    // create an SSL Socket Factory to use the SSLContext with the trust self signed certificate strategy
+                    // and allow all hosts verifier.
+                    SSLConnectionSocketFactory connectionFactory = new SSLConnectionSocketFactory(sslContext, allowAllHosts);
+
+                    client = HttpClients.custom().setSSLSocketFactory(connectionFactory).build();
+                } else {
+                    client = httpClientBuilder.build();
+                }
+
+                if (sessionInfo != null) {
+                    checkSessionInfo(sessionInfo);
+                    clients.put(clientKey, client);
+                    log.debug("Created Client " + client + " for SessionInfo " + sessionInfo);
+                }
+
+                } catch (KeyManagementException mke) {
+                    //todo: do the right thing here
+                } catch (NoSuchAlgorithmException nsae) {
+                    //todo: do the right thing here
+                } catch (KeyStoreException kse) {
+                    //todo: do the right thing here
+                }
             }
-        }
+
         return client;
     }
 

@@ -41,6 +41,12 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
     public static final String PARAM_REPOSITORY_URI = "org.apache.jackrabbit.spi2davex.uri";
 
     /**
+     * Optional configuration parameter to allow access to servers with invalid ssl certs.
+     * Similar to curls --insecure option.
+     */
+    public static final String PARAM_REPOSITORY_URI_INSECURE = "org.apache.jackrabbit.spi2davex.uri.insecure";
+
+    /**
      * Default URI for the {@link #PARAM_REPOSITORY_URI} configuration
      * parameter.
      */
@@ -95,6 +101,7 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
         // since JCR-4120 the default workspace name is no longer set to 'default'
         // note: if running with JCR Server < 1.5 a default workspace name must therefore be configured
         String workspaceNameDefault = null;
+        boolean allowInsecureHttps = false; //default to false
 
         if (parameters != null) {
             // batchRead config
@@ -127,12 +134,17 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
             if (param != null) {
                 workspaceNameDefault = param.toString();
             }
+
+            param = parameters.get(PARAM_REPOSITORY_URI_INSECURE);
+            if (param != null) {
+                allowInsecureHttps = Boolean.valueOf(param.toString());
+            }
         }
 
         if (maximumHttpConnections > 0) {
-            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, maximumHttpConnections);
+            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, maximumHttpConnections, allowInsecureHttps);
         } else {
-            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize);
+            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, allowInsecureHttps);
         }
     }
 
