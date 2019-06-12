@@ -667,10 +667,10 @@
   <!-- =================================================================== -->
   <developers>
     <developer>
-      <name>Alexander Klimetschek</name>
-      <id>alexkli</id>
+      <name>Alex Deparvu</name>
+      <id>stillalex</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -678,21 +678,41 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <name>Alex Parvulescu</name>
-      <id>alexparvulescu</id>
+      <name>Alexander Klimetschek</name>
+      <id>alexkli</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
       <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Amit Jain</name>
+      <id>amitj</id>
+      <organization>Adobe</organization>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Andrei Dulceanu</name>
+      <id>adulceanu</id>
+      <organization>Adobe</organization>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
     <developer>
       <name>Angela Schreiber</name>
       <id>angela</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -709,6 +729,46 @@
         <role>PMC member</role>
       </roles>
       <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Bart van der Schans</name>
+      <id>schans</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Berry van Halderen</name>
+      <id>halderen</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Cédric Damioli</name>
+      <id>cdamioli</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Chetan Mehrotra</name>
+      <id>chetanm</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Christian Stocker</name>
+      <id>chregu</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
     <developer>
       <name>Christoph Kiehl</name>
@@ -736,21 +796,44 @@
       </roles>
     </developer>
     <developer>
-      <name>David Nuescheler</name>
-      <id>uncled</id>
-      <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <name>Dave Brosius</name>
+      <id>dbrosius</id>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
-      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>David Nuescheler</name>
+      <id>uncled</id>
+      <organization>Adobe</organization>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Davide Giannella</name>
+      <id>davide</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Dominique Jäggi</name>
+      <id>dj</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
     <developer>
       <name>Dominique Pfister</name>
       <id>dpfister</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -777,7 +860,7 @@
       <name>Felix Meschberger</name>
       <id>fmeschbe</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -785,15 +868,20 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <name>Francesco Mari</name>
+      <id>frm</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
       <name>Jukka Zitting</name>
       <id>jukka</id>
-      <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC chair</role>
       </roles>
-      <timezone>+1</timezone>
     </developer>
     <developer>
       <name>Julian Reschke</name>
@@ -807,10 +895,34 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <name>Julian Sedding</name>
+      <id>jsedding</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Justin Edelson</name>
+      <id>justin</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Manfred Baedke</name>
+      <id>baedke</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
       <name>Marcel Reutegger</name>
       <id>mreutegg</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -829,26 +941,44 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <name>Michael Dürig</name>
-      <id>mduerig</id>
-      <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <name>Matt Ryan</name>
+      <id>mattryan</id>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
-      <timezone>+0</timezone>
+    </developer>
+    <developer>
+      <name>Mete Atamel</name>
+      <id>meteatamel</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Michael Dürig</name>
+      <id>mduerig</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
     <developer>
       <name>Peeter Piegaze</name>
       <id>ppiegaze</id>
-      <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
-      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <name>Philipp Marx</name>
+      <id>pmarx</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
     <developer>
       <name>Przemo Pakulski</name>
@@ -862,15 +992,20 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
-      <name>Roy T. Fielding</name>
-      <id>fielding</id>
-      <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <name>Randall Hauch</name>
+      <id>rhauch</id>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
-      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <name>Robert Munteanu</name>
+      <id>rombert</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
     <developer>
       <name>Sébastien Launay</name>
@@ -893,10 +1028,18 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <name>Shashank Gupta</name>
+      <id>shashank</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
       <name>Stefan Guggisberg</name>
       <id>stefan</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -913,10 +1056,18 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <name>Thomas Draier</name>
+      <id>draier</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
       <name>Thomas Müller</name>
       <id>thomasm</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
@@ -927,12 +1078,52 @@
       <name>Tobias Bocanegra</name>
       <id>tripod</id>
       <organization>Adobe</organization>
-      <organizationUrl>http://www.day.com/</organizationUrl>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
       <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Tomek Rękawek</name>
+      <id>tomekr</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Tommaso Teofili</name>
+      <id>tommaso</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Unico Hommes</name>
+      <id>unico</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Vikas Saurabh</name>
+      <id>catholicon</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Woonsan Ko</name>
+      <id>woonsan</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
     </developer>
 
     <!-- EMERITUS MEMBERS -->
@@ -969,6 +1160,16 @@
         <role>emeritus</role>
       </roles>
       <timezone>+0</timezone>
+    </developer>
+    <developer>
+      <name>Roy T. Fielding</name>
+      <id>fielding</id>
+      <organization>Adobe</organization>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>-8</timezone>
     </developer>
     <developer>
       <name>Stefano Mazzocchi</name>
