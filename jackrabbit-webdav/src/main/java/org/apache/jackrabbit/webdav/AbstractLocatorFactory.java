@@ -21,9 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>AbstractLocatorFactory</code> is an implementation of the DavLocatorFactory
- * interface that defines how a given uri is split to workspace path an
- * resource path and how it's implementation of <code>DavResourceLocator</code>
+ * {@code AbstractLocatorFactory} is an implementation of the DavLocatorFactory
+ * interface that defines how a given URI is split to workspace path and
+ * resource path and how it's implementation of {@code DavResourceLocator}
  * builds the href. In contrast, the conversion from repository path to
  * resource path and vice versa is left to subclasses.
  */
@@ -37,7 +37,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
      * Create a new factory
      *
      * @param pathPrefix Prefix, that needs to be removed in order to retrieve
-     * the path of the repository item from a given <code>DavResourceLocator</code>.
+     * the path of the repository item from a given {@code DavResourceLocator}.
      */
     public AbstractLocatorFactory(String pathPrefix) {
         this.pathPrefix = pathPrefix;
@@ -45,12 +45,12 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
 
     //--------------------------------------------------< DavLocatorFactory >---
     /**
-     * Create a new <code>DavResourceLocator</code>. Any leading prefix and
+     * Create a new {@code DavResourceLocator}. Any leading prefix and
      * path-prefix (as defined with the constructor) are removed from the
      * given request handle. The same applies for trailing '/'. The remaining
      * String is called the 'resource handle' and it's first segment is treated
-     * as workspace name. If resource handle (and therefore workspace name
-     * are missing, both values are set to <code>null</code>.
+     * as workspace name. If resource handle (and therefore workspace name)
+     * are missing, both values are set to {@code null}.
      * <p>
      * Examples:
      *
@@ -76,13 +76,13 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
      * -&gt; href           = http://www.foo.bar/pathPrefix/wspName/anypath
      * </pre>
      *
-     * NOTE: If the given href is an absolute uri it must start with the
+     * NOTE: If the given href is an absolute URI it must start with the
      * specified prefix.
      *
      * @param prefix
      * @param href
-     * @return a new <code>DavResourceLocator</code>
-     * @throws IllegalArgumentException if the given href is <code>null</code>
+     * @return a new {@code DavResourceLocator}
+     * @throws IllegalArgumentException if the given href is {@code null}
      */
     public DavResourceLocator createResourceLocator(String prefix, String href) {
         if (href == null) {
@@ -132,6 +132,8 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             }
         }
 
+        log.trace("createResourceLocator: prefix='" + prefix + "' href='" + href + "' -> prefix='" + b.toString()
+                + "' workspacePath='" + workspacePath + "' resourcePath='" + resourcePath + "'");
         return new DavResourceLocatorImpl(b.toString(), workspacePath, resourcePath, this);
     }
 
@@ -145,17 +147,17 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
     }
 
    /**
-     * Create a new <code>DavResourceLocator</code> from the specified prefix,
+     * Create a new {@code DavResourceLocator} from the specified prefix,
      * workspace path and resource path, without modifying the specified Strings.
      * Note, that it is expected that the resource path starts with the
-     * given workspace path unless both values are <code>null</code>.
+     * given workspace path unless both values are {@code null}.
      *
      * @param prefix
      * @param workspacePath path or the workspace containing this resource or
-     * <code>null</code>.
-     * @param resourcePath Path of the resource or <code>null</code>. Any non
+     * {@code null}.
+     * @param resourcePath Path of the resource or {@code null}. Any non
      * null value must start with the specified workspace path.
-     * @return a new <code>DavResourceLocator</code>
+     * @return a new {@code DavResourceLocator}
      * @see DavLocatorFactory#createResourceLocator(String, String, String)
      */
     public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String resourcePath) {
@@ -163,9 +165,9 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
     }
 
     /**
-     * Create a new <code>DavResourceLocator</code> from the specified prefix,
-     * workspace path and resource path. If <code>isResourcePath</code> is set
-     * to <code>false</code>, the given 'resourcePath' is converted by calling
+     * Create a new {@code DavResourceLocator} from the specified prefix,
+     * workspace path and resource path. If {@code isResourcePath} is set
+     * to {@code false}, the given 'resourcePath' is converted by calling
      * {@link #getResourcePath(String, String)}. Otherwise the same restriction
      * applies as for {@link #createResourceLocator(String, String, String)}.
      *
@@ -204,8 +206,8 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
 
     //--------------------------------------------------------< DavResource >---
     /**
-     * Private inner class <code>DavResourceLocatorImpl</code> implementing
-     * the <code>DavResourceLocator</code> interface.
+     * Private inner class {@code DavResourceLocatorImpl} implementing
+     * the {@code DavResourceLocator} interface.
      */
     private class DavResourceLocatorImpl implements DavResourceLocator {
 
@@ -217,7 +219,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         private final String href;
 
         /**
-         * Create a new <code>DavResourceLocatorImpl</code>.
+         * Create a new {@code DavResourceLocatorImpl}.
          *
          * @param prefix
          * @param workspacePath
@@ -260,9 +262,9 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         /**
          * Returns the resource path which always starts with the workspace
          * path, if a workspace resource exists. For the top most resource
-         * (request handle '/'), <code>null</code> is returned.
+         * (request handle '/'), {@code null} is returned.
          *
-         * @return resource path or <code>null</code>
+         * @return resource path or {@code null}
          * @see org.apache.jackrabbit.webdav.DavResourceLocator#getResourcePath()
          */
         public String getResourcePath() {
@@ -270,10 +272,10 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         }
 
         /**
-         * Return the workspace path or <code>null</code> if this locator object
+         * Return the workspace path or {@code null} if this locator object
          * represents the '/' request handle.
          *
-         * @return workspace path or <code>null</code>
+         * @return workspace path or {@code null}
          * @see org.apache.jackrabbit.webdav.DavResourceLocator#getWorkspacePath()
          */
         public String getWorkspacePath() {
@@ -281,11 +283,11 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         }
 
         /**
-         * Return the workspace name or <code>null</code> if this locator object
+         * Return the workspace name or {@code null} if this locator object
          * represents the '/' request handle, which does not contain a workspace
          * path.
          *
-         * @return workspace name or <code>null</code>
+         * @return workspace name or {@code null}
          * @see org.apache.jackrabbit.webdav.DavResourceLocator#getWorkspaceName()
          */
         public String getWorkspaceName() {
@@ -337,9 +339,9 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         }
 
         /**
-         * Returns true if the 'workspacePath' field is <code>null</code>.
+         * Returns true if the 'workspacePath' field is {@code null}.
          *
-         * @return true if the 'workspacePath' field is <code>null</code>.
+         * @return true if the 'workspacePath' field is {@code null}.
          * @see org.apache.jackrabbit.webdav.DavResourceLocator#isRootLocation()
          */
         public boolean isRootLocation() {
@@ -379,12 +381,12 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         }
 
         /**
-         * Returns true, if the given object is a <code>DavResourceLocatorImpl</code>
+         * Returns true, if the given object is a {@code DavResourceLocatorImpl}
          * with the same hash code.
          *
          * @param obj the object to compare to
-         * @return <code>true</code> if the 2 objects are equal;
-         *         <code>false</code> otherwise
+         * @return {@code true} if the 2 objects are equal;
+         *         {@code false} otherwise
          */
         @Override
         public boolean equals(Object obj) {

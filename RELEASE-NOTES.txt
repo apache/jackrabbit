@@ -1,36 +1,36 @@
-Release Notes -- Apache Jackrabbit -- Version 2.19.2
+Release Notes -- Apache Jackrabbit -- Version 2.19.3
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.19.2, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.19.3, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.19.2 is an unstable release cut directly from
+Apache Jackrabbit 2.19.3 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.18.x
 release.
 
-Changes in Jackrabbit 2.19.2
+Changes in Jackrabbit 2.19.3
 ----------------------------
 
 Bug
 
-    [JCR-4420] - Release Notes: term "SHA1" no longer allowed
+    [JCR-4425] - NodeSetPrimaryTypeTest.testSetPrimaryType() must not use nt:activity
 
-Improvement
+New Feature
 
-    [JCR-4401] - Split jackrabbit-standalone to jackrabbit-standalone-components and the rest
+    [JCR-4429] - Add extension of JackrabbitAccessControlList bound to a principal
 
 Task
 
-    [JCR-4415] - Update Jetty dependency to 9.2.26.v20180806
-    [JCR-4416] - Update slf4j dependency to 1.7.26
-    [JCR-4422] - Update httpclient/mime dependencies to 4.5.8
+    [JCR-4427] - set baseline comparisonVersion to latest stable (2.18.1)
+    [JCR-4428] - update Apache parent pom to version 21
+
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.19.1 release.
+all the changes included up to the Apache Jackrabbit 2.19.2 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
