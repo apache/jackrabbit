@@ -174,6 +174,24 @@ public interface UserManager {
     User createUser(String userID, String password) throws AuthorizableExistsException, RepositoryException;
 
     /**
+     * Creates an User for the given userID / password pair; neither of the
+     * specified parameters can be <code>null</code>.<br>
+     * Same as {@link #createUser(String,String,Principal,String)} where
+     * the specified userID is equal to the principal name and the intermediate
+     * path is <code>null</code>.
+     *
+     * @param userID The ID of the new user.
+     * @param password The initial password of this user.
+     * @param forceHash Always hash the password provided, otherwise
+     * only hash the password if the password appears to be plain-text
+     * @return The new <code>User</code>.
+     * @throws AuthorizableExistsException in case the given userID is already
+     * in use or another Authorizable with the same principal name exists.
+     * @throws RepositoryException If another error occurs.
+     */
+    User createUser(String userID, String password, boolean forceHash) throws AuthorizableExistsException, RepositoryException;
+
+    /**
      * Creates an User for the given parameters. If the implementation is not
      * able to deal with the <code>intermediatePath</code> that parameter should
      * be ignored.
@@ -195,6 +213,29 @@ public interface UserManager {
     User createUser(String userID, String password, Principal principal,
                     String intermediatePath) throws AuthorizableExistsException, RepositoryException;
 
+    /**
+     * Creates an User for the given parameters. If the implementation is not
+     * able to deal with the <code>intermediatePath</code> that parameter should
+     * be ignored.
+     * Except for the <code>intermediatePath</code>, neither of the specified
+     * parameters can be <code>null</code>.
+     *
+     * @param userID The ID of the new user.
+     * @param password The initial password of the new user.
+     * @param forceHash Always hash the password provided, otherwise
+     * only hash the password if the password appears to be plain-text
+     * @param principal The principal of the new user.
+     * @param intermediatePath An optional intermediate path used to create the
+     * new user. If the intermediate path is <code>null</code> an internal,
+     * implementation specific structure will be used.
+     * @return The new <code>User</code>.
+     * @throws AuthorizableExistsException in case the given userID is already
+     * in use or another Authorizable with the same principal name exists.
+     * @throws RepositoryException If the current Session is
+     * not allowed to create users or some another error occurs.
+     */
+    User createUser(String userID, String password, boolean forceHash, Principal principal, String intermediatePath)
+            throws AuthorizableExistsException, RepositoryException;
 
     /**
      * Create a new system user for the specified {@code userID}. The new authorizable

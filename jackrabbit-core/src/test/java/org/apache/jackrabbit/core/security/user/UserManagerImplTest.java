@@ -16,6 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.jcr.Credentials;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
@@ -27,20 +42,6 @@ import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.Credentials;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.Value;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * <code>UserManagerImplTest</code>...
@@ -692,6 +693,30 @@ public class UserManagerImplTest extends AbstractUserTest {
             }
         }
     }
+
+    public void testNewUserCanLoginWithExistingPasswordHash() throws RepositoryException, NotExecutableException, NoSuchAlgorithmException, UnsupportedEncodingException {
+        String uid = getTestPrincipal().getName();
+        String pw = buildPassword(uid, true);
+
+        User user = null;
+        Session session = null;
+        try {
+            user = userMgr.createUser(uid, pw, false);
+            save(superuser);
+
+            Credentials creds = new SimpleCredentials(uid, buildPassword(uid).toCharArray());
+            session = superuser.getRepository().login(creds);
+        } finally {
+            if (user != null) {
+                user.remove();
+                save(superuser);
+            }
+            if (session != null) {
+                session.logout();
+            }
+        }
+    }
+
 
     public void testUnknownUserLogin() throws RepositoryException {
         String uid = getTestPrincipal().getName();

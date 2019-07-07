@@ -1626,7 +1626,15 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
+                public User createUser(String userID, String password, boolean forceHash) throws AuthorizableExistsException, RepositoryException {
+                    return null;
+                }
+
                 public User createUser(String userID, String password, Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
+                    return null;
+                }
+
+                public User createUser(String userID, String password, boolean forceHash, Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
                     return null;
                 }
 
