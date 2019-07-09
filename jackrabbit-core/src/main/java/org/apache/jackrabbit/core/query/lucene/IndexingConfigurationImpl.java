@@ -389,17 +389,20 @@ public class IndexingConfigurationImpl
                 rules.addAll(r);
             }
         }
-
+        IndexingRule matchingNodeTypeRule = null;
         if (rules != null) {
             for (IndexingRule rule : rules) {
-                if (rule.appliesTo(state)) {
-                    return rule;
+                if (rule.appliesToNodeType(state)) {
+                    if (!rule.containsCondition()) {
+                        matchingNodeTypeRule = rule;
+                    } else if (rule.appliesToCondition(state)) {
+                        return rule; 
+                    }
                 }
             }
         }
 
-        // no applicable rule
-        return null;
+        return matchingNodeTypeRule;
     }
 
     /**
@@ -811,21 +814,43 @@ public class IndexingConfigurationImpl
         }
 
         /**
-         * Returns <code>true</code> if this rule applies to the given node
-         * <code>state</code>.
+         * Returns <code>true</code> if the nodetype of this rule 
+         * applies to the given node <code>state</code>.
          *
          * @param state the state to check.
          * @return <code>true</code> the rule applies to the given node;
          *         <code>false</code> otherwise.
          */
-        public boolean appliesTo(NodeState state) {
+        public boolean appliesToNodeType(NodeState state) {
             if (state.getMixinTypeNames().contains(nodeTypeName)) {
                 return true;
             }
             if (!nodeTypeName.equals(state.getNodeTypeName())) {
                 return false;
             }
-            return condition == null || condition.evaluate(state);
+            return true;
+        }
+        
+        /**
+         * Returns <code>true</code> if the condition of this rule 
+         * applies to the given node <code>state</code>.
+         *
+         * @param state the state to check.
+         * @return <code>true</code> the rule applies to the given node;
+         *         <code>false</code> otherwise.
+         */
+        public boolean appliesToCondition(NodeState state) {
+            return condition != null && condition.evaluate(state);
+        }
+
+        /**
+         * Returns <code>true</code> this rule contains a condition. 
+         *
+         * @return <code>true</code> the rule contains a condition;
+         *         <code>false</code> otherwise.
+         */
+        public boolean containsCondition() {
+            return condition != null;
         }
 
         //-------------------------< internal >---------------------------------
