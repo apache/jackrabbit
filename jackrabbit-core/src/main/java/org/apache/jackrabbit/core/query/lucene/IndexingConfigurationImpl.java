@@ -393,7 +393,7 @@ public class IndexingConfigurationImpl
         if (rules != null) {
             for (IndexingRule rule : rules) {
                 if (rule.appliesToNodeType(state)) {
-                    if (!rule.containsCondition()) {
+                    if (!rule.containsCondition() && matchingNodeTypeRule == null) {
                         matchingNodeTypeRule = rule;
                     } else if (rule.appliesToCondition(state)) {
                         return rule; 

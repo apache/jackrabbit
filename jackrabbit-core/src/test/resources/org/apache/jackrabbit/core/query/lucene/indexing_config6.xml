@@ -23,6 +23,10 @@
 		<property>other</property>
 	</index-rule>
 
+ 	<index-rule nodeType="nt:unstructured">
+		<property>other_</property>
+	</index-rule>
+
 	<index-rule nodeType="nt:unstructured" condition="@foo = 'high'">
 		<property>foo</property>
 	</index-rule>
