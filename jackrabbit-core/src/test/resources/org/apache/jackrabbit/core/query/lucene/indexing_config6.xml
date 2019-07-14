@@ -19,7 +19,16 @@
 <configuration xmlns:jcr="http://www.jcp.org/jcr/1.0"
                xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
+ 	<index-rule nodeType="nt:unstructured">
+		<property>other</property>
+	</index-rule>
+
+ 	<index-rule nodeType="nt:unstructured">
+		<property>other_</property>
+	</index-rule>
+
 	<index-rule nodeType="nt:unstructured" condition="@foo = 'high'">
+		<property>foo</property>
 	</index-rule>
 
 </configuration>
