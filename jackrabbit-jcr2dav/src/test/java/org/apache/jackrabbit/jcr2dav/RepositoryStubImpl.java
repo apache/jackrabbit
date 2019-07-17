@@ -54,6 +54,8 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     private final String protectedRemoveImplClass;
 
+    private static final String WEBDAV_SERVLET_CONTEXT = System.getProperty("WebDAVServletContext", "/");
+
     public RepositoryStubImpl(Properties env) {
         super(env);
         acProviderImplClass = env.getProperty(PROP_ACCESSCONTROL_PROVIDER_CLASS);
@@ -78,7 +80,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING, "");
             holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedRemoveImplClass);
 
-            ServletContextHandler schandler = new ServletContextHandler(server, "/");
+            ServletContextHandler schandler = new ServletContextHandler(server, WEBDAV_SERVLET_CONTEXT);
             schandler.addServlet(holder, "/*");
         }
 
@@ -101,7 +103,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             try {
                 Map<String, String> parameters = new HashMap<String, String>();
 
-                String uri = "http://localhost:" + connector.getLocalPort() + "/";
+                String uri = "http://localhost:" + connector.getLocalPort() + WEBDAV_SERVLET_CONTEXT;
 
                 String parmName = System.getProperty(this.getClass().getName() + ".REPURIPARM", JcrUtils.REPOSITORY_URI);
                 parameters.put(parmName, uri);
