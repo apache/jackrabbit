@@ -76,7 +76,11 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                     return repository;
                 }
             });
-            holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_RESOURCE_PATH_PREFIX, "");
+            String pathPrefix = WEBDAV_SERVLET_CONTEXT;
+            if (pathPrefix.endsWith("/")) {
+                pathPrefix = pathPrefix.substring(0,  pathPrefix.length() - 1);
+            }
+            holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_RESOURCE_PATH_PREFIX, pathPrefix);
             holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING, "");
             holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedRemoveImplClass);
 
