@@ -145,7 +145,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         ms.addResponse(resp);
     }
 
-    private static String obtainAbsolutePathFromUri(DavResourceLocator resourceLoc, String href) {
+    private static String obtainAbsolutePathFromUri(final DavResourceLocator resourceLoc, final String href) {
         try {
             URI resourceUri = URI.create(href);
 
@@ -156,13 +156,12 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
                 final URI prefixUri = URI.create(resourceLoc.getPrefix());
                 final String prefixUriPath = prefixUri.getRawPath();
 
-                if (href.startsWith(prefixUriPath)) {
-                    href = href.substring(prefixUriPath.length());
-                    resourceUri = URI.create(href);
+                if (prefixUriPath != null && !prefixUriPath.isEmpty() && href.startsWith(prefixUriPath)) {
+                    resourceUri = URI.create(href.substring(prefixUriPath.length()));
                 }
             }
 
-            StringBuilder sb = new StringBuilder();
+            final StringBuilder sb = new StringBuilder();
             sb.append(resourceUri.getRawPath());
 
             if (resourceUri.getRawQuery() != null) {
