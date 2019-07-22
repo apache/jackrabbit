@@ -37,6 +37,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
 import javax.jcr.RepositoryException;
+import java.net.URI;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -105,10 +106,10 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "dcr:privileges element must at least contain a single DAV:href child.");
         }
         // immediately build the final multistatus element
+        DavResourceLocator resourceLoc = resource.getLocator();
         Element hrefElem = info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE);
         String href = DomUtil.getTextTrim(hrefElem);
-        href = obtainAbsolutePathFromUri(href); // TODO: we should check whether the authority component matches
-        DavResourceLocator resourceLoc = resource.getLocator();
+        href = obtainAbsolutePathFromUri(resourceLoc, href); // TODO: we should check whether the authority component matches
         DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), href);
         // immediately build the final multistatus element
         addResponses(loc);
@@ -144,19 +145,35 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         ms.addResponse(resp);
     }
 
-    private static String obtainAbsolutePathFromUri(String uri) {
+    private static String obtainAbsolutePathFromUri(DavResourceLocator resourceLoc, String href) {
         try {
-            java.net.URI u = new java.net.URI(uri);
-            StringBuilder sb = new StringBuilder();
-            sb.append(u.getRawPath());
-            if (u.getRawQuery() != null) {
-                sb.append("?").append(u.getRawQuery());
+            URI resourceUri = URI.create(href);
+
+            // If href is a relative path, such as '/cms/server/default/jcr%3aroot', starting with the base path
+            // (e.g, '/cms/server') of the prefix (e.g, 'http://localhost:9080/cms/server'), then let's take out
+            // the base path from the href parameter in order to leave only the resource path.
+            if (resourceUri.getScheme() == null && resourceUri.getHost() == null) {
+                final URI prefixUri = URI.create(resourceLoc.getPrefix());
+                final String prefixUriPath = prefixUri.getRawPath();
+
+                if (href.startsWith(prefixUriPath)) {
+                    href = href.substring(prefixUriPath.length());
+                    resourceUri = URI.create(href);
+                }
             }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(resourceUri.getRawPath());
+
+            if (resourceUri.getRawQuery() != null) {
+                sb.append("?").append(resourceUri.getRawQuery());
+            }
+
             return sb.toString();
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid URI: {}.", href, ex);
         }
-        catch (java.net.URISyntaxException ex) {
-            log.warn("parsing " + uri, ex);
-            return uri;
-        }
+
+        return href;
     }
 }
