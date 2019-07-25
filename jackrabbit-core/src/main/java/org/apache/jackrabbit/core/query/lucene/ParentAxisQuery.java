@@ -30,16 +30,13 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <code>ParentAxisQuery</code> selects the parent nodes of a context query.
  */
 @SuppressWarnings("serial")
-class ParentAxisQuery extends Query {
+class ParentAxisQuery extends Query implements HasInnerQueriesForExcerpt {
 
     /**
      * The context query
@@ -100,6 +97,10 @@ class ParentAxisQuery extends Query {
      */
     public void extractTerms(Set<Term> terms) {
         contextQuery.extractTerms(terms);
+    }
+
+    public Set<Query> getAllInnerQueriesForExcerpt() {
+        return Collections.singleton(contextQuery);
     }
 
     /**

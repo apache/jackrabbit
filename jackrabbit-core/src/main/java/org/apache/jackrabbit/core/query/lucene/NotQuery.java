@@ -26,6 +26,7 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -35,7 +36,7 @@ import java.util.Set;
  * <code>NotQuery</code>.
  */
 @SuppressWarnings("serial")
-class NotQuery extends Query {
+class NotQuery extends Query implements HasInnerQueriesForExcerpt {
 
     /**
      * The context query to invert.
@@ -74,6 +75,10 @@ class NotQuery extends Query {
      */
     public void extractTerms(Set<Term> terms) {
         context.extractTerms(terms);
+    }
+
+    public Set<Query> getAllInnerQueriesForExcerpt() {
+        return Collections.singleton(context);
     }
 
     /**

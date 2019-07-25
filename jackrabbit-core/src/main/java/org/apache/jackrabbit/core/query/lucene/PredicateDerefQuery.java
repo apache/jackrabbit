@@ -33,7 +33,7 @@ import java.util.BitSet;
 import java.util.Set;
 
 /**
- * Implements a Lucene <code>Query</code> which returns the nodes which have a 
+ * Implements a Lucene <code>Query</code> which returns the nodes which have a
  * reference property which matches the nodes of the subquery.
  */
 @SuppressWarnings("serial")

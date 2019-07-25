@@ -35,11 +35,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
@@ -47,7 +43,7 @@ import java.util.TreeMap;
  * nodes selected by a context query.
  */
 @SuppressWarnings("serial")
-class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
+class DescendantSelfAxisQuery extends Query implements JackrabbitQuery, HasInnerQueriesForExcerpt {
 
     /**
      * The logger instance for this class.
@@ -200,6 +196,13 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
     public void extractTerms(Set<Term> terms) {
         contextQuery.extractTerms(terms);
         subQuery.extractTerms(terms);
+    }
+
+    public Set<Query> getAllInnerQueriesForExcerpt() {
+        Set<Query> allQueries = new HashSet<Query>();
+        allQueries.add(contextQuery);
+        allQueries.add(subQuery);
+        return allQueries;
     }
 
     /**

@@ -164,12 +164,20 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
      * @return the extracted terms from the query.
      */
     protected final Set<Term[]> getQueryTerms() {
-        Set<Term[]> relevantTerms = new HashSet<Term[]>();
+            Set<Term[]> relevantTerms = new HashSet<Term[]>();
         getQueryTerms(query, relevantTerms);
         return relevantTerms;
     }
 
     private static void getQueryTerms(Query q, Set<Term[]> relevantTerms) {
+
+        if (q instanceof HasInnerQueriesForExcerpt) {
+            for (Query innerQuery : ((HasInnerQueriesForExcerpt) q).getAllInnerQueriesForExcerpt()) {
+                getQueryTerms(innerQuery,relevantTerms);
+            }
+            return;
+        }
+
         if (q instanceof BooleanQuery) {
             final BooleanQuery bq = (BooleanQuery) q;
             for (BooleanClause clause : bq.getClauses()) {

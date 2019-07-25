@@ -35,10 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implements a wildcard query on a lucene field with an embedded property name
@@ -51,7 +48,7 @@ import java.util.Set;
  * </ul>
  */
 @SuppressWarnings("serial")
-public class WildcardQuery extends Query implements Transformable {
+public class WildcardQuery extends Query implements HasInnerQueriesForExcerpt, Transformable {
 
     /**
      * Logger instance for this class.
@@ -183,6 +180,13 @@ public class WildcardQuery extends Query implements Transformable {
         if (multiTermQuery != null) {
             multiTermQuery.extractTerms(terms);
         }
+    }
+
+    public Set<Query> getAllInnerQueriesForExcerpt() {
+        if (multiTermQuery != null) {
+            return Collections.singleton(multiTermQuery);
+        }
+        return Collections.emptySet();
     }
 
     private static class StdWildcardQuery extends MultiTermQuery {

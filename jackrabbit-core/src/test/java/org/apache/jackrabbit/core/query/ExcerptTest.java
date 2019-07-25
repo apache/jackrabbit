@@ -104,6 +104,12 @@ public class ExcerptTest extends AbstractQueryTest {
                 "apache jackrabbit");
     }
 
+    public void testHighlightExactPhrase() throws RepositoryException {
+        checkExcerpt("bla bla bla apache jackrabbit bla bla bla apache bla jackrabbit bla",
+                "bla bla bla <strong>apache jackrabbit</strong> bla bla bla apache bla jackrabbit bla",
+                "\"apache jackrabbit\"");
+    }
+
     /**
      * Verifies character encoding on a node property that does not contain any
      * excerpt info
@@ -111,7 +117,7 @@ public class ExcerptTest extends AbstractQueryTest {
     public void testEncodeIllegalCharsNoHighlights() throws RepositoryException {
         String text = "bla <strong>bla</strong> bla";
         String excerpt = createExcerpt("bla &lt;strong&gt;bla&lt;/strong&gt; bla");
-        Node n = testRootNode.addNode(nodeName1);
+        Node n = testRootNode.addNode(nodeName1).addNode(nodeName2);
         n.setProperty("text", text);
         n.setProperty("other", "foo");
         superuser.save();
@@ -135,10 +141,10 @@ public class ExcerptTest extends AbstractQueryTest {
 
     /**
      * test for https://issues.apache.org/jira/browse/JCR-3077
-     * 
+     *
      * when given a quoted phrase, the excerpt should evaluate it whole as a
      * token (not break is down)
-     * 
+     *
      */
     public void testQuotedPhrase() throws RepositoryException {
         checkExcerpt("one two three four",
@@ -154,7 +160,7 @@ public class ExcerptTest extends AbstractQueryTest {
         String excerpt = createExcerpt("one two three four");
         String terms = "\"five six\"";
 
-        Node n = testRootNode.addNode(nodeName1);
+        Node n = testRootNode.addNode(nodeName1).addNode(nodeName2);
         n.setProperty("text", text);
         n.setProperty("other", terms);
         superuser.save();
@@ -168,10 +174,10 @@ public class ExcerptTest extends AbstractQueryTest {
     }
 
     /**
-     * 
+     *
      * Verifies excerpt generation on a node property that contains the exact
      * quoted phrase but with scrambled words.
-     * 
+     *
      * More clearly it actually checks that the order of tokens is respected for
      * a quoted phrase.
      */
@@ -180,7 +186,7 @@ public class ExcerptTest extends AbstractQueryTest {
         String excerpt = createExcerpt("one two three four");
         String terms = "\"three two\"";
 
-        Node n = testRootNode.addNode(nodeName1);
+        Node n = testRootNode.addNode(nodeName1).addNode(nodeName2);
         n.setProperty("text", text);
         n.setProperty("other", terms);
         superuser.save();
@@ -192,18 +198,18 @@ public class ExcerptTest extends AbstractQueryTest {
         String ex = rows.nextRow().getValue("rep:excerpt(text)").getString();
         assertEquals("Expected " + excerpt + ", but got ", excerpt, ex);
     }
-    
+
     /**
      * Verifies excerpt generation on a node property that does not contain the
      * exact quoted phrase, but contains fragments of it.
-     * 
+     *
      */
     public void testQuotedPhraseNoMatchGap() throws RepositoryException {
         String text = "one two three four";
         String excerpt = createExcerpt("one two three four");
         String terms = "\"two four\"";
 
-        Node n = testRootNode.addNode(nodeName1);
+        Node n = testRootNode.addNode(nodeName1).addNode(nodeName2);
         n.setProperty("text", text);
         n.setProperty("other", terms);
         superuser.save();
@@ -215,13 +221,13 @@ public class ExcerptTest extends AbstractQueryTest {
         String ex = rows.nextRow().getValue("rep:excerpt(text)").getString();
         assertEquals("Expected " + excerpt + ", but got ", excerpt, ex);
     }
-    
+
     /**
      * test for https://issues.apache.org/jira/browse/JCR-3077
-     * 
+     *
      * JA search acts as a PhraseQuery, thanks to LUCENE-2458. so it should be
      * covered by the QuotedTest search.
-     * 
+     *
      */
     public void testHighlightJa() throws RepositoryException {
 
@@ -241,10 +247,10 @@ public class ExcerptTest extends AbstractQueryTest {
 
     /**
      * test for https://issues.apache.org/jira/browse/JCR-3428
-     * 
+     *
      * when given an incomplete fulltext search token, the excerpt should
      * highlight the entire matching token
-     * 
+     *
      */
     public void testEagerMatch() throws RepositoryException {
         checkExcerpt("lorem ipsum dolor sit amet",
@@ -280,11 +286,12 @@ public class ExcerptTest extends AbstractQueryTest {
     }
 
     private String getStatement(String terms) {
-        return testPath + "/*[jcr:contains(., '"+ terms + "')]/rep:excerpt(.)";
+        return testPath + "/*[fn:name() = '" + nodeName1 + "']//*[jcr:contains(., '"+ terms + "')]/rep:excerpt(.)";
     }
 
     private void createTestData(String text) throws RepositoryException {
-        Node n = testRootNode.addNode(nodeName1);
+        Node n = testRootNode.addNode(nodeName1).addNode(nodeName2);
+
         n.setProperty("text", text);
         superuser.save();
     }
@@ -308,7 +315,7 @@ public class ExcerptTest extends AbstractQueryTest {
      * will generate multiple lucene terms for the highlighter to use) in the
      * repository but not all of them are present in the current property.
      * </p>
-     * 
+     *
      */
     public void testMatchMultipleNonMatchingTokens() throws RepositoryException {
         String text = "lorem ipsum";

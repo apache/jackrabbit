@@ -43,19 +43,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.HashSet;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Implements a lucene <code>Query</code> which returns the child nodes of the
  * nodes selected by another <code>Query</code>.
  */
 @SuppressWarnings("serial")
-class ChildAxisQuery extends Query implements JackrabbitQuery {
+class ChildAxisQuery extends Query implements JackrabbitQuery, HasInnerQueriesForExcerpt {
 
     /**
      * The logger instance for this class.
@@ -92,7 +87,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
 
     /**
      * The index format version.
-     */ 
+     */
     private final IndexFormatVersion version;
 
     /**
@@ -202,6 +197,13 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
      */
     public void extractTerms(Set<Term> terms) {
         contextQuery.extractTerms(terms);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Set<Query> getAllInnerQueriesForExcerpt() {
+        return Collections.singleton(contextQuery);
     }
 
     /**
@@ -419,7 +421,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             if (nextDoc == NO_MORE_DOCS) {
                 return nextDoc;
             }
-            
+
             // optimize in the case of an advance to finish.
             // see https://issues.apache.org/jira/browse/JCR-3091
             if (target == NO_MORE_DOCS) {

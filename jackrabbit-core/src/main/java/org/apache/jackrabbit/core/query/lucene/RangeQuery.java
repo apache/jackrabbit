@@ -33,12 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implements a variant of the lucene class {@code org.apache.lucene.search.RangeQuery}.
@@ -47,7 +42,7 @@ import java.util.Set;
  * <code>TooManyClauses</code> can be avoided.
  */
 @SuppressWarnings("serial")
-public class RangeQuery extends Query implements Transformable {
+public class RangeQuery extends Query implements HasInnerQueriesForExcerpt, Transformable {
 
     /**
      * Logger instance for this class.
@@ -209,6 +204,13 @@ public class RangeQuery extends Query implements Transformable {
         if (stdRangeQuery != null) {
             stdRangeQuery.extractTerms(terms);
         }
+    }
+
+    public Set<Query> getAllInnerQueriesForExcerpt() {
+        if (stdRangeQuery != null) {
+            return Collections.singleton(stdRangeQuery);
+        }
+        return Collections.emptySet();
     }
 
     /**

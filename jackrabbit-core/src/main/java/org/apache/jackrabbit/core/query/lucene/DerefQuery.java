@@ -310,7 +310,7 @@ class DerefQuery extends Query {
          * 3. find reference property UUIDs
          * 4. Use UUIDs to find document number
          * 5. Use the name test to filter the documents
-         * 
+         *
          * @throws IOException if an exception occurs while reading from the
          *                     index.
          */
