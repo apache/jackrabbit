@@ -107,7 +107,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         // immediately build the final multistatus element
         Element hrefElem = info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE);
         String href = DomUtil.getTextTrim(hrefElem);
-        href = obtainAbsolutePathFromUri(href); // TODO: we should check whether the authority component matches
+        href = removeContextPathPrefix(obtainAbsolutePathFromUri(href)); // TODO: we should check whether the authority component matches
         DavResourceLocator resourceLoc = resource.getLocator();
         DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), href);
         // immediately build the final multistatus element

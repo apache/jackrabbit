@@ -14,5 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@org.osgi.annotation.versioning.Version("1.3.0")
 package org.apache.jackrabbit.webdav;
+
+/**
+ * Interface providing the minimum WebDAV request information associated with the current thread of execution.
+ */
+public interface WebdavRequestContext {
+
+    /**
+     * Return the current {@link WebdavRequest} instance associcated with the current thread of execution.
+     * @return
+     */
+    public WebdavRequest getRequest();
+
+}
