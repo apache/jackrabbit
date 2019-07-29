@@ -37,7 +37,6 @@
 
   <modules>
     <module>jackrabbit-parent</module>
-    <module>jackrabbit-api</module>
     <module>jackrabbit-jcr-commons</module>
     <module>jackrabbit-jcr-tests</module>
     <module>jackrabbit-data</module>
