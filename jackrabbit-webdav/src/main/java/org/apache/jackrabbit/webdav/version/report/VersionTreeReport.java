@@ -36,7 +36,7 @@ import org.w3c.dom.Element;
  * history of a version. The DAV:version-tree report must be supported by all
  * version resources and all version-controlled resources.
  */
-public class VersionTreeReport implements Report, DeltaVConstants {
+public class VersionTreeReport extends AbstractReport implements DeltaVConstants {
 
     private static Logger log = LoggerFactory.getLogger(VersionTreeReport.class);
 

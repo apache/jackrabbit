@@ -54,7 +54,11 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     private final String protectedRemoveImplClass;
 
-    private static final String WEBDAV_SERVLET_CONTEXT = System.getProperty("WebDAVServletContext", "/");
+    private static final String WEBDAV_SERVLET_CONTEXT_PATH = System.getProperty("WebDAVServletContext", "");
+
+    private static final String WEBDAV_SERVLET_PATH_PREFIX = System.getProperty("WebDAVServletPrefix", "/server");
+
+    private static final String WEBDAV_SERVLET_PATH_MAPPING = WEBDAV_SERVLET_PATH_PREFIX + "/*";
 
     public RepositoryStubImpl(Properties env) {
         super(env);
@@ -76,7 +80,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                     return repository;
                 }
             });
-            String pathPrefix = WEBDAV_SERVLET_CONTEXT;
+            String pathPrefix = WEBDAV_SERVLET_PATH_PREFIX;
             if (pathPrefix.endsWith("/")) {
                 pathPrefix = pathPrefix.substring(0,  pathPrefix.length() - 1);
             }
@@ -84,8 +88,8 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING, "");
             holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedRemoveImplClass);
 
-            ServletContextHandler schandler = new ServletContextHandler(server, WEBDAV_SERVLET_CONTEXT);
-            schandler.addServlet(holder, "/*");
+            ServletContextHandler schandler = new ServletContextHandler(server, WEBDAV_SERVLET_CONTEXT_PATH);
+            schandler.addServlet(holder, WEBDAV_SERVLET_PATH_MAPPING);
         }
 
         if (connector == null) {
@@ -107,7 +111,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             try {
                 Map<String, String> parameters = new HashMap<String, String>();
 
-                String uri = "http://localhost:" + connector.getLocalPort() + WEBDAV_SERVLET_CONTEXT;
+                String uri = "http://localhost:" + connector.getLocalPort() + WEBDAV_SERVLET_CONTEXT_PATH + WEBDAV_SERVLET_PATH_PREFIX;
 
                 String parmName = System.getProperty(this.getClass().getName() + ".REPURIPARM", JcrUtils.REPOSITORY_URI);
                 parameters.put(parmName, uri);

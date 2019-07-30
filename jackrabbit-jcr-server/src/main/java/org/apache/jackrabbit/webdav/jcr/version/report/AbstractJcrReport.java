@@ -23,21 +23,15 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.WebdavRequest;
-import org.apache.jackrabbit.webdav.WebdavRequestContext;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
-import org.apache.jackrabbit.webdav.server.WebdavRequestContextHolder;
+import org.apache.jackrabbit.webdav.version.report.AbstractReport;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>AbstractJcrReport</code>...
  */
-public abstract class AbstractJcrReport implements Report {
-
-    private static Logger log = LoggerFactory.getLogger(AbstractJcrReport.class);
+public abstract class AbstractJcrReport extends AbstractReport {
 
     private Session session;
     private ReportInfo reportInfo;
@@ -70,29 +64,6 @@ public abstract class AbstractJcrReport implements Report {
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal error: Unable to access repository session.");
         }
         reportInfo = info;
-    }
-
-    /**
-     * Remove the context path prefix from the given {@code href} if found; return {@code href} otherwise.
-     * @param href resource URI
-     * @return the context path prefix from the given {@code href} if found; return {@code href} otherwise
-     */
-    protected String removeContextPathPrefix(final String href) {
-        final WebdavRequestContext requestContext = WebdavRequestContextHolder.getContext();
-        final WebdavRequest request = (requestContext != null) ? requestContext.getRequest() : null;
-
-        if (request == null) {
-            log.error("WebdavRequest is unavailable in the current execution context.");
-            return href;
-        }
-
-        final String contextPath = request.getContextPath();
-
-        if (!contextPath.isEmpty() && href.startsWith(contextPath)) {
-            return href.substring(contextPath.length());
-        }
-
-        return href;
     }
 
     //-----------------------------------------------------< implementation >---
