@@ -22,8 +22,8 @@ package org.apache.jackrabbit.webdav;
 public interface WebdavRequestContext {
 
     /**
-     * Return the current {@link WebdavRequest} instance associcated with the current thread of execution.
-     * @return
+     * Return the current {@link WebdavRequest} instance associated with the current thread of execution.
+     * @return the current {@link WebdavRequest} instance associated with the current thread of execution
      */
     public WebdavRequest getRequest();
 
