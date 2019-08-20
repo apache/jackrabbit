@@ -1,32 +1,47 @@
-Release Notes -- Apache Jackrabbit -- Version 2.19.3
+Release Notes -- Apache Jackrabbit -- Version 2.19.4
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.19.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.19.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.19.3 is an unstable release cut directly from
+Apache Jackrabbit 2.19.4 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.18.x
 release.
 
-Changes in Jackrabbit 2.19.3
+Changes in Jackrabbit 2.19.4
 ----------------------------
 
 Bug
 
-    [JCR-4425] - NodeSetPrimaryTypeTest.testSetPrimaryType() must not use nt:activity
+    [JCR-4459] - Basic Authentication for HTTPS URIs does not work
 
-New Feature
+Improvement
 
-    [JCR-4429] - Add extension of JackrabbitAccessControlList bound to a principal
+    [JCR-4448] - Update committer list in jackrabbit-parent/pom.xml
 
 Task
 
-    [JCR-4427] - set baseline comparisonVersion to latest stable (2.18.1)
-    [JCR-4428] - update Apache parent pom to version 21
+    [JCR-4437] - Update Tika dependency to 1.21
+    [JCR-4438] - jcr-webdav: AbstractLocatorFactory - fix Javadoc and add trace logging
+    [JCR-4439] - disable baseline check for jackrabbit-bundle
+    [JCR-4440] - remove jackrabbit-bundle
+    [JCR-4441] - Update surefire/failsafe dependencies to 2.22.2
+    [JCR-4442] - Update animal-sniffer dependency to 1.18
+    [JCR-4443] - set baseline comparisonVersion to latest stable (2.18.2)
+    [JCR-4447] - jackrabbit-jcr-commons: update cglib dependency
+    [JCR-4449] - remove jackrabbit-api and use oak-jackrabbit-api instead
+    [JCR-4450] - update checkstyle-plugin dependency to 3.1.0
+    [JCR-4451] - update jar-plugin dependency to 3.1.2
+    [JCR-4452] - update war-plugin dependency to 3.2.3
+    [JCR-4453] - update pmd-plugin dependency to 3.12.0
+    [JCR-4454] - update surefire-report-plugin dependency to 2.22.2
+    [JCR-4457] - Update httpclient/mime dependencies to 4.5.9
+    [JCR-4460] - allow to run remoted conformance tests with a custom servlet context path
+    [JCR-4464] - Update Tika dependency to 1.22
 
 
 In addition to the above-mentioned changes, this release contains
