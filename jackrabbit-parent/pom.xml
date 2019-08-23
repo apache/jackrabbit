@@ -182,6 +182,7 @@
           <aggregate>true</aggregate>
           <links>
             <link>https://docs.adobe.com/docs/en/spec/javax.jcr/javadocs/jcr-2.0/</link>
+            <link>https://jackrabbit.apache.org/oak/docs/apidocs</link>
             <link>https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
             <link>https://hc.apache.org/httpcomponents-client-ga/httpmime/apidocs/</link>
             <link>https://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs</link>
