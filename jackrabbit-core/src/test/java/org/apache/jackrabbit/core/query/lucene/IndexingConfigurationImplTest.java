@@ -41,6 +41,7 @@ import org.xml.sax.SAXException;
 public class IndexingConfigurationImplTest extends AbstractIndexingTest {
 
     private static final Name FOO = NameFactoryImpl.getInstance().create("", "foo");
+    private static final Name OTHER = NameFactoryImpl.getInstance().create("", "other");
 
     private NodeState nState;
     private Node n;
@@ -114,6 +115,15 @@ public class IndexingConfigurationImplTest extends AbstractIndexingTest {
         session.save();
         nState = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
                 new NodeId(n.getIdentifier()));        
+        assertTrue(config.isIndexed(nState, FOO));
+        assertFalse(config.isIndexed(nState, OTHER));
+        
+        n = testRootNode.addNode(nodeName2, ntUnstructured);
+        n.addMixin(mixReferenceable);
+        session.save();
+        nState = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
+                new NodeId(n.getIdentifier()));        
+        assertTrue(config.isIndexed(nState, OTHER));
         assertFalse(config.isIndexed(nState, FOO));
     }
 
