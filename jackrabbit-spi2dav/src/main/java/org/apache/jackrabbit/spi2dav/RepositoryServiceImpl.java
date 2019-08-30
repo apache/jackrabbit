@@ -328,7 +328,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         try {
             URI repositoryUri = computeRepositoryUri(uri);
-            httpHost = new HttpHost(repositoryUri.getHost(), repositoryUri.getPort());
+            httpHost = new HttpHost(repositoryUri.getHost(), repositoryUri.getPort(), repositoryUri.getScheme());
 
             nsCache = new NamespaceCache();
             uriResolver = new URIResolverImpl(repositoryUri, this, DomUtil.createDocument());
