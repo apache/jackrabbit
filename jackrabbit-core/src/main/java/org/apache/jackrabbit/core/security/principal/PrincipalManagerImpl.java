@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -212,7 +211,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
      * due to the fact, that the principal provider is not bound to a particular
      * Session object.
      */
-    private class CheckedGroup implements Group, GroupPrincipal, JackrabbitPrincipal {
+    private class CheckedGroup implements GroupPrincipal, JackrabbitPrincipal {
 
         final Principal delegatee;
         private final PrincipalProvider provider;

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -41,7 +40,7 @@ public final class GroupPrincipals {
      * @return true if the principal is of type group.
      */
     public static boolean isGroup(Principal principal) {
-        return principal instanceof Group || principal instanceof GroupPrincipal;
+        return principal instanceof GroupPrincipal;
     }
 
     /**
@@ -50,9 +49,6 @@ public final class GroupPrincipals {
      * @return an enumeration of the group members.
      */
     public static Enumeration<? extends Principal> members(Principal principal) {
-        if (principal instanceof Group) {
-            return ((Group) principal).members();
-        }
         if (principal instanceof GroupPrincipal) {
             return ((GroupPrincipal) principal).members();
         }
@@ -66,9 +62,6 @@ public final class GroupPrincipals {
      * @return true if the principal is a member of this group, false otherwise.
      */
     public static boolean isMember(Principal principal, Principal member) {
-        if (principal instanceof Group) {
-            return ((Group) principal).isMember(member);
-        }
         if (principal instanceof GroupPrincipal) {
             return ((GroupPrincipal) principal).isMember(member);
         }

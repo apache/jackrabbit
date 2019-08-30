@@ -20,7 +20,6 @@ package org.apache.jackrabbit.rmi.server.principal;
 
 import java.rmi.RemoteException;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -32,7 +31,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 
 public class ServerGroup extends ServerPrincipal implements RemoteGroup {
 
-    public ServerGroup(final Group principal, final RemoteAdapterFactory factory)
+    public ServerGroup(final GroupPrincipal principal, final RemoteAdapterFactory factory)
             throws RemoteException {
         super(principal, factory);
     }
@@ -81,13 +80,10 @@ public class ServerGroup extends ServerPrincipal implements RemoteGroup {
     }
 
     public static boolean isGroup(Principal principal) {
-        return principal instanceof Group || principal instanceof GroupPrincipal;
+        return principal instanceof GroupPrincipal;
     }
 
     private static Enumeration<? extends Principal> members(Principal principal) {
-        if (principal instanceof Group) {
-            return ((Group) principal).members();
-        }
         if (principal instanceof GroupPrincipal) {
             return ((GroupPrincipal) principal).members();
         }
