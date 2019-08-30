@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.19.4-SNAPSHOT</version>
+    <version>2.19.5-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
 
@@ -52,9 +52,6 @@
           <instructions>
             <Bundle-Category>jcr,jackrabbit</Bundle-Category>
             <Bundle-DocURL>http://jackrabbit.apache.org/</Bundle-DocURL>
-            <Export-Package>
-              org.apache.jackrabbit.rmi.*;version=3.1.0
-            </Export-Package>
             <!-- optional resolution XA -->
             <Import-Package>
               javax.transaction.xa;resolution:=optional,*
@@ -515,6 +512,11 @@ org.apache.jackrabbit.test.api.observation.EventJournalTest
   <!-- D E P E N D E N C I E S                                             -->
   <!-- =================================================================== -->
   <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.annotation</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <!-- Hard dependencies -->
     <dependency>
       <groupId>javax.jcr</groupId>
@@ -536,11 +538,10 @@ org.apache.jackrabbit.test.api.observation.EventJournalTest
       <scope>provided</scope>
     </dependency>
     
-    <!-- Jackrabbit API extensions -->
+    <!-- Oak Jackrabbit API extensions -->
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-api</artifactId>
-        <version>${project.version}</version>
+      <artifactId>oak-jackrabbit-api</artifactId>
       <scope>provided</scope>
     </dependency>
 

@@ -291,7 +291,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
     /**
      * Principal Implementation
      */
-    private class NodeBasedGroup extends NodeBasedPrincipal implements java.security.acl.Group, GroupPrincipal {
+    private class NodeBasedGroup extends NodeBasedPrincipal implements GroupPrincipal {
 
         private NodeBasedGroup(String name) {
             super(name);
