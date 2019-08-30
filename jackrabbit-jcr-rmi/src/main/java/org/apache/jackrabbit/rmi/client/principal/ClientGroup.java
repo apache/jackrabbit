@@ -20,10 +20,10 @@ package org.apache.jackrabbit.rmi.client.principal;
 
 import java.rmi.RemoteException;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Enumeration;
 import java.util.Iterator;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;
@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  * @see Group
  * @see RemoteGroup
  */
-public class ClientGroup extends ClientPrincipal implements Group {
+public class ClientGroup extends ClientPrincipal implements GroupPrincipal {
 
     private final LocalAdapterFactory factory;
 
