@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -33,9 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * <code>LocateByHistoryReport</code> encapsulates the DAV:locate-by-hisotry
  * report, that may be used to locate a version-controlled resource for that
@@ -48,7 +48,7 @@ import java.util.Set;
  * &lt;!ELEMENT version-history-set (href+)&gt;
  * </pre>
  */
-public class LocateByHistoryReport implements Report, DeltaVConstants {
+public class LocateByHistoryReport extends AbstractReport implements DeltaVConstants {
 
     private static Logger log = LoggerFactory.getLogger(LocateByHistoryReport.class);
 

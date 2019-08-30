@@ -16,21 +16,22 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.apache.jackrabbit.webdav.version.report.AbstractReport;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
-
-import javax.jcr.Session;
 
 /**
  * <code>AbstractJcrReport</code>...
  */
-public abstract class AbstractJcrReport implements Report {
+public abstract class AbstractJcrReport extends AbstractReport {
 
     private Session session;
     private ReportInfo reportInfo;

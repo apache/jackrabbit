@@ -400,7 +400,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Invalid update request body missing version href or containing multiple version hrefs.");
                 }
 
-                String versionPath = getLocatorFromHref(hrefs[0]).getRepositoryPath();
+                final String href = normalizeResourceHref(hrefs[0]);
+                String versionPath = getLocatorFromHref(href).getRepositoryPath();
                 String versionName = getItemName(versionPath);
 
                 String relPath = DomUtil.getChildText(udElem, XML_RELPATH, NAMESPACE);
@@ -423,7 +424,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 node.restoreByLabel(labels[0], removeExisting);
 
             } else if (updateInfo.getWorkspaceHref() != null) {
-                String href = obtainAbsolutePathFromUri(updateInfo.getWorkspaceHref());
+                String href = normalizeResourceHref(obtainAbsolutePathFromUri(updateInfo.getWorkspaceHref()));
                 String workspaceName = getLocatorFromHref(href).getWorkspaceName();
                 node.update(workspaceName);
             } else {
@@ -469,7 +470,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             // resources that got modified by this merge operation -> omitted.
             
             // todo: RFC allows multiple href elements inside the DAV:source element
-            String workspaceName = getLocatorFromHref(mergeInfo.getSourceHrefs()[0]).getWorkspaceName();
+            final String href = normalizeResourceHref(mergeInfo.getSourceHrefs()[0]);
+            String workspaceName = getLocatorFromHref(href).getWorkspaceName();
 
             String depth = DomUtil.getChildTextTrim(mergeInfo.getMergeElement(), DavConstants.XML_DEPTH, DavConstants.NAMESPACE);
             boolean isShallow = "0".equals(depth);

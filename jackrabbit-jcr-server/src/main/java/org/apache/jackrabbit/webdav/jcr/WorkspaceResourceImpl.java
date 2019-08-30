@@ -537,7 +537,8 @@ public class WorkspaceResourceImpl extends AbstractResource
             // perform the update/restore according to the update info
             Version[] versions = new Version[hrefs.length];
             for (int i = 0; i < hrefs.length; i++) {
-                DavResourceLocator vLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), hrefs[i]);
+                final String href = normalizeResourceHref(hrefs[i]);
+                DavResourceLocator vLoc = getLocator().getFactory().createResourceLocator(getLocator().getPrefix(), href);
                 String versionPath = vLoc.getRepositoryPath();
                 Item item = getRepositorySession().getItem(versionPath);
                 if (item instanceof Version) {

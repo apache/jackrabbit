@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.webdav.security.report;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -23,6 +26,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.version.report.AbstractReport;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
@@ -31,9 +35,6 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * <code>SearchablePropertyReport</code> identifies those properties that may be
@@ -57,7 +58,7 @@ import java.util.Set;
  * Note that a DAV:principal-search-property XML element is required for each
  * property that may be searched with the DAV:principal-property-search REPORT.
  */
-public class SearchablePropertyReport implements Report {
+public class SearchablePropertyReport extends AbstractReport {
 
     /**
      * The report name

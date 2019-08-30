@@ -273,7 +273,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         int methodCode = DavMethods.getMethodCode(request.getMethod());
         boolean noCache = DavMethods.isDeltaVMethod(webdavRequest) && !(DavMethods.DAV_VERSION_CONTROL == methodCode || DavMethods.DAV_REPORT == methodCode);
         WebdavResponse webdavResponse = new WebdavResponseImpl(response, noCache);
+
         try {
+            WebdavRequestContextHolder.setContext(new WebdavRequestContextImpl(webdavRequest));
+
             // make sure there is a authenticated user
             if (!getDavSessionProvider().attachSession(webdavRequest)) {
                 return;
@@ -313,6 +316,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 webdavResponse.sendError(e);
             }
         } finally {
+            WebdavRequestContextHolder.clearContext();
             getDavSessionProvider().releaseSession(webdavRequest);
         }
     }
