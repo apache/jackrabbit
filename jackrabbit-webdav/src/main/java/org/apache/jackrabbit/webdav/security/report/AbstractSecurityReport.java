@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.version.report.AbstractReport;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.w3c.dom.Document;
@@ -31,7 +32,7 @@ import org.w3c.dom.Element;
  * <code>AbstractSecurityReport</code> covers basic validation and utilities
  * common to the majority of the reports defined within RFC 3744.
  */
-public abstract class AbstractSecurityReport implements Report {
+public abstract class AbstractSecurityReport extends AbstractReport {
 
     protected MultiStatusResponse[] responses;
 

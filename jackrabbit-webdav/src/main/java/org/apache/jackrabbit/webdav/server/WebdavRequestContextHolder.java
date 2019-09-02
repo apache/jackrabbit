@@ -14,5 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@org.osgi.annotation.versioning.Version("1.1.0")
 package org.apache.jackrabbit.webdav.server;
+
+import org.apache.jackrabbit.webdav.WebdavRequestContext;
+
+/**
+ * Associates a {@link WebdavRequestContext} with the current execution thread.
+ */
+public final class WebdavRequestContextHolder {
+
+    private static ThreadLocal<WebdavRequestContext> tlWebdavRequestContext = new ThreadLocal<>();
+
+    private WebdavRequestContextHolder() {
+    }
+
+    /**
+     * Return the {@link WebdavRequestContext} with the current execution thread.
+     * @return the {@link WebdavRequestContext} with the current execution thread
+     */
+    public static WebdavRequestContext getContext() {
+        return tlWebdavRequestContext.get();
+    }
+
+    static void setContext(WebdavRequestContext context) {
+        tlWebdavRequestContext.set(context);
+    }
+
+    static void clearContext() {
+        tlWebdavRequestContext.remove();
+    }
+}
