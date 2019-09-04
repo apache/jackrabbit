@@ -67,6 +67,18 @@
             </Bundle-Activator>
           </instructions>
         </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>baseline</goal>
+            </goals>
+            <configuration>
+              <!-- JCR-2608 - baseline check disabled because the package version numbers assigned here are meaningless anway -->
+              <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
