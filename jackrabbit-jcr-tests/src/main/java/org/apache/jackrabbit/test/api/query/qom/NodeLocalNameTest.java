@@ -66,10 +66,9 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     public void testStringLiteralInvalidName() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue("[" + nodeLocalName);
         try {
-            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with STRING that cannot be converted to NAME must fail with InvalidQueryException");
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         } catch (InvalidQueryException e) {
-            // expected
+            fail("NodeName comparison with STRING that cannot be converted to NAME must fail with InvalidQueryException");
         }
     }
 
@@ -126,19 +125,17 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         literal = superuser.getValueFactory().createValue(
                 node1.getPath(), PropertyType.PATH);
         try {
-            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with absolute PATH must fail with InvalidQueryException");
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         } catch (InvalidQueryException e) {
-            // expected
+            fail("NodeName comparison with absolute PATH must fail with InvalidQueryException");
         }
 
         literal = superuser.getValueFactory().createValue(
                 nodeName1 + "/" + nodeName1, PropertyType.PATH);
         try {
-            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with PATH length >1 must fail with InvalidQueryException");
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         } catch (InvalidQueryException e) {
-            // expected
+            fail("NodeName comparison with PATH length >1 must fail with InvalidQueryException");
         }
     }
 
@@ -163,10 +160,9 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     public void testURILiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue("http://example.com", PropertyType.URI);
         try {
-            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with URI that cannot be converted to NAME must fail with InvalidQueryException");
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         } catch (InvalidQueryException e) {
-            // expected
+            fail("NodeName comparison with URI that cannot be converted to NAME must fail with InvalidQueryException");
         }
     }
 

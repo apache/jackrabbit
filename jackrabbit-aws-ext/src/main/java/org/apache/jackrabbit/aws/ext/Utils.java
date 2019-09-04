@@ -82,7 +82,7 @@ public final class Utils {
     public static AmazonS3Client openService(final Properties prop) {
         String accessKey = prop.getProperty(S3Constants.ACCESS_KEY);
         String secretKey = prop.getProperty(S3Constants.SECRET_KEY);
-        AmazonS3Client s3service = null;
+        AmazonS3Client s3service;
         if (StringUtils.isNullOrEmpty(accessKey)
             || StringUtils.isNullOrEmpty(secretKey)) {
             LOG.info("Configuring Amazon Client from environment");
@@ -95,7 +95,7 @@ public final class Utils {
                 getClientConfiguration(prop));
         }
         String region = prop.getProperty(S3Constants.S3_REGION);
-        String endpoint = null;
+        String endpoint;
         String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
         if ((propEndPoint != null) && !"".equals(propEndPoint)) {
             endpoint = propEndPoint;
@@ -127,28 +127,6 @@ public final class Utils {
         s3service.setEndpoint(endpoint);
         LOG.info("S3 service endpoint [{}] ", endpoint);
         return s3service;
-    }
-
-    /**
-     * Delete S3 bucket. This method first deletes all objects from bucket and
-     * then delete empty bucket.
-     * 
-     * @param bucketName the bucket name.
-     */
-    public static void deleteBucket(final String bucketName) throws IOException {
-        Properties prop = readConfig(DEFAULT_CONFIG_FILE);
-        AmazonS3 s3service = openService(prop);
-        ObjectListing prevObjectListing = s3service.listObjects(bucketName);
-        while (true) {
-            for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
-                s3service.deleteObject(bucketName, s3ObjSumm.getKey());
-            }
-            if (!prevObjectListing.isTruncated()) {
-                break;
-            }
-            prevObjectListing = s3service.listNextBatchOfObjects(prevObjectListing);
-        }
-        s3service.deleteBucket(bucketName);
     }
 
     /**
