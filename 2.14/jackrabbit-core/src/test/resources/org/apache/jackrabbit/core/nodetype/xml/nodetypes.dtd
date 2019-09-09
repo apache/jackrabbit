@@ -1,0 +1,75 @@
+<!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ -->
+<!--
+Note: The following DTD is included as an informal description of
+the node type configuration file format. It can however not be used for
+formal validation because of the namespace declarations.
+-->
+<!ELEMENT nodeTypes (nodeType)*>
+    <!ELEMENT nodeType (supertypes?|propertyDefinition*|childNodeDefinition*)>
+
+    <!ATTLIST nodeType
+        name CDATA #REQUIRED
+        isMixin (true|false) #REQUIRED
+        isAbstract (true|false) #REQUIRED
+        isQueryable (true|false) #REQUIRED
+        hasOrderableChildNodes (true|false) #REQUIRED
+        primaryItemName CDATA #REQUIRED
+    >
+    <!ELEMENT supertypes (supertype+)>
+    <!ELEMENT supertype (#PCDATA)>
+
+    <!ELEMENT propertyDefinition (valueConstraints?|defaultValues?)>
+    <!ATTLIST propertyDefinition
+        name CDATA #REQUIRED
+        requiredType (String|Date|Path|Name|Reference|Binary|Double|Long|Boolean|undefined) #REQUIRED
+        autoCreated (true|false) #REQUIRED
+        mandatory (true|false) #REQUIRED
+        onParentVersion (COPY|VERSION|INITIALIZE|COMPUTE|IGNORE|ABORT) #REQUIRED
+        protected (true|false) #REQUIRED
+        multiple (true|false) #REQUIRED
+        isFullTextSearchable (true|false) #REQUIRED
+        isQueryOrderable (true|false) #REQUIRED
+        multiple (true|false) #REQUIRED
+        availableQueryOperators ENTITIES #IMPLIED
+    >
+    <!ENTITY OP_EQ "{http://www.jcp.org/jcr/1.0s}operatorEqualTo">
+    <!ENTITY OP_NQ "{http://www.jcp.org/jcr/1.0}operatorNotEqualTo">
+    <!ENTITY OP_GT "{http://www.jcp.org/jcr/1.0}operatorGreaterThan">
+    <!ENTITY OP_GE "{http://www.jcp.org/jcr/1.0}operatorGreaterThanOrEqualTo">
+    <!ENTITY OP_LT "{http://www.jcp.org/jcr/1.0}operatorLessThan">
+    <!ENTITY OP_LE "{http://www.jcp.org/jcr/1.0}operatorLessThanOrEqualTo">
+    <!ENTITY OP_LIKE "{http://www.jcp.org/jcr/1.0}operatorLike">
+    <!ELEMENT valueConstraints (valueConstraint+)>
+    <!ELEMENT valueConstraint (#PCDATA)>
+    <!ELEMENT defaultValues (defaultValue+)>
+    <!ELEMENT defaultValue (#PCDATA)>
+
+    <!ELEMENT childNodeDefinition (requiredPrimaryTypes)>
+    <!ATTLIST childNodeDefinition
+        name CDATA #REQUIRED
+        defaultPrimaryType CDATA #REQUIRED
+        autoCreated (true|false) #REQUIRED
+        mandatory (true|false) #REQUIRED
+        onParentVersion (COPY|VERSION|INITIALIZE|COMPUTE|IGNORE|ABORT) #REQUIRED
+        protected (true|false) #REQUIRED
+        sameNameSiblings (true|false) #REQUIRED
+    >
+    <!ELEMENT requiredPrimaryTypes (requiredPrimaryType+)>
+    <!ELEMENT requiredPrimaryType (#PCDATA)>

@@ -1,0 +1,89 @@
+NodeTypeName
+  nt:nodeType
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+ChildNodeDefinition
+  Name jcr:childNodeDefinition
+  RequiredPrimaryTypes [nt:childNodeDefinition]
+  DefaultPrimaryType nt:childNodeDefinition
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  SameNameSiblings true
+ChildNodeDefinition
+  Name jcr:propertyDefinition
+  RequiredPrimaryTypes [nt:propertyDefinition]
+  DefaultPrimaryType nt:propertyDefinition
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  SameNameSiblings true
+PropertyDefinition
+  Name jcr:hasOrderableChildNodes
+  RequiredType BOOLEAN
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:isAbstract
+  RequiredType BOOLEAN
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:isMixin
+  RequiredType BOOLEAN
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:isQueryable
+  RequiredType BOOLEAN
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:nodeTypeName
+  RequiredType NAME
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:primaryItemName
+  RequiredType NAME
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:supertypes
+  RequiredType NAME
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple true

@@ -1,0 +1,77 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<!--
+    The configuration element configures the indexing behaviour of the lucene
+    backed query handler in Jackrabbit. It allows you to define indexing
+    aggregates and configure which properties of a node are indexed.
+    This element must contain all the namespace declarations that are used
+    throughout this configuration.
+-->
+<!ELEMENT configuration (aggregate*,index-rule*)>
+
+<!--
+    Each aggregate element defines an indexing aggregate based on the name of a
+    primary node type.
+-->
+<!ELEMENT aggregate (include*)>
+<!ATTLIST aggregate primaryType CDATA #REQUIRED>
+
+<!--
+    An include element contains a relative path pattern using either an exact
+    node name or *. Nodes that match the path pattern against the root of an
+    indexing aggregate are included in the aggregated node index. An include
+    element may optionally specify a primary node type name that needs to match
+    for the included node.
+-->
+<!ELEMENT include (#PCDATA)>
+<!ATTLIST include primaryType CDATA #IMPLIED>
+
+<!--
+    An index-rule element defines which properties of a node should be indexed.
+    When a node is indexed the list of index-rules is check for a matching
+    node type and whether the condition is true. If a match is found the
+    property is looked up.
+    The index-rule element also contains a boost value for the entire node
+    being indexed. A value higher than 1.0 will boost the score value for a node
+    that matched this index-rule.
+-->
+<!ELEMENT index-rule (property*)>
+<!ATTLIST index-rule nodeType CDATA #REQUIRED
+                     condition CDATA #IMPLIED
+                     boost CDATA "1.0">
+
+<!--
+    A property element defines the boost value for a matching property and a
+    flag that indicates whether the value of a string property should also be
+    included in the node scope fulltext index. Both boost and nodeScopeIndex
+    attributes only affect string properties and are ignored if the property
+    is not of type string.
+-->
+<!ELEMENT property (#PCDATA)>
+<!ATTLIST property boost CDATA "1.0"
+                   nodeScopeIndex CDATA "true">
+
+<!--
+    An analyzer element with property elements in it defines which analyzer is to 
+    be used for indexing and parsing the full text of this property. If the analyzer
+    class can not be found, the default analyzer is used. The node scope is always 
+    indexed with the default analyzer, so might return different results for search 
+    queries in some rare cases. 
+-->
+<!ELEMENT analyzers (analyzer*)>   
+<!ELEMENT analyzer (property*)>
+<!ATTLIST analyzer class CDATA #REQUIRED>

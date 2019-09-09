@@ -1,0 +1,80 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<body>
+Server implementation of the transparent JCR-RMI layer.
+<p>
+This package contains the default server implementation of the
+transparent JCR-RMI layer. The classes in this package can be used
+to make a local JCR repository available as an RMI service. In addition,
+this package offers a straightforward mechanism for extending or modifying
+the behaviour of the server layer.
+<p>
+The contents of this package is designed using two design patterns,
+Factory and Adapter. All the remotely accessible ServerObject subclasses
+implement the Adapter pattern to adapt a local JCR interface to the
+corresponding remote JCR-RMI interface. The Factory pattern is used
+to centralize the creation and configuration of all adapter instances.
+
+<h2>Setting up a JCR-RMI server</h2>
+<p>
+Setting up the server part of the JCR-RMI layer is quite straightforward.
+After instantiating a local JCR repository you need to wrap it into a
+remote adapter and create an RMI binding for the repository. A variation
+of the following code is usually all that is needed in addition to the
+standard RMI setup (starting rmiregistry, etc.):
+
+<pre>
+    Repository repository = ...; // The local repository
+    String name = ...; // The RMI URL for the repository
+    
+    RemoteAdapterFactory factory = new ServerAdapterFactory();
+    RemoteRepository remote = factory.getRemoteRepository(repository);
+    Naming.bind(name, remote);  // Make the RMI binding using java.rmi.Naming
+</pre>
+
+<h2>Extending the JCR-RMI server</h2>
+<p>
+The Factory pattern used by this package makes it easy to extend
+the behaviour of the JCR-RMI server. Such changes in behaviour or policy
+can be implemented by modifying or replacing the default
+ServerAdapterFactory used in the example above.
+<p>
+The following example code adds transparent logging of all session logins
+and logouts:
+
+<pre>
+    Repository repository = ...; // The local repository
+    String name = ...; // The RMI URL for the repository
+    
+    RemoteAdapterFactory factory = new ServerAdapterFactory() {
+        public RemoteSession getRemoteSession(Session session)
+                throws RemoteException {
+            System.out.println("LOGIN: " + session.getUserId());
+            return new ServerSession(session, this) {
+                public void logout() {
+                    System.out.println("LOGOUT: " + session.getUserId());
+                    super.logout();
+                }
+            };
+        }
+    };
+
+    RemoteRepository remote = factory.getRemoteRepository(repository);
+    Naming.bind(name, remote);  // Make the RMI binding using java.rmi.Naming
+</pre>
+
+</body>

@@ -1,0 +1,68 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml"
+ xmlns:mathml="http://www.w3.org/1998/Math/MathML">
+ <xhtml:head>
+  <xhtml:title>Three Namespaces</xhtml:title>
+ </xhtml:head>
+ <xhtml:body>
+  <xhtml:h1 align="center">An Ellipse and a Rectangle</xhtml:h1>
+  <svg:svg xmlns:svg="http://www.w3.org/2000/svg" width="12cm"
+   height="10cm">
+   <svg:ellipse rx="110" ry="130" />
+   <svg:rect x="4cm" y="1cm" width="3cm" height="6cm" />
+  </svg:svg>
+  <xhtml:p>The equation for ellipses</xhtml:p>
+  <mathml:math>
+   <mathml:apply>
+    <mathml:eq />
+    <mathml:cn> 1 </mathml:cn>
+    <mathml:apply>
+     <mathml:plus />
+     <mathml:apply>
+      <mathml:divide />
+      <mathml:apply>
+       <mathml:power />
+       <mathml:ci> x </mathml:ci>
+       <mathml:cn> 2 </mathml:cn>
+      </mathml:apply>
+      <mathml:apply>
+       <mathml:power />
+       <mathml:ci> a </mathml:ci>
+       <mathml:cn> 2 </mathml:cn>
+      </mathml:apply>
+     </mathml:apply>
+     <mathml:apply>
+      <mathml:divide />
+      <mathml:apply>
+       <mathml:power />
+       <mathml:ci> y </mathml:ci>
+       <mathml:cn> 2 </mathml:cn>
+      </mathml:apply>
+      <mathml:apply>
+       <mathml:power />
+       <mathml:ci> b </mathml:ci>
+       <mathml:cn> 2 </mathml:cn>
+      </mathml:apply>
+     </mathml:apply>
+    </mathml:apply>
+   </mathml:apply>
+  </mathml:math>
+  <xhtml:hr />
+  <xhtml:p>Last Modified January 10, 2002</xhtml:p>
+ </xhtml:body>
+</xhtml:html>

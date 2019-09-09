@@ -1,0 +1,17 @@
+NodeTypeName
+  nt:linkedFile
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  jcr:content
+PropertyDefinition
+  Name jcr:content
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion COPY
+  Protected false
+  Multiple false
