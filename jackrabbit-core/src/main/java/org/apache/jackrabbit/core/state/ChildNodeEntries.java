@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.util.EmptyLinkedMap;
+import org.apache.jackrabbit.core.util.EmptyLinkedHashMap;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.List;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -34,11 +34,21 @@ import java.util.Map;
  */
 class ChildNodeEntries implements Cloneable {
 
+    @SuppressWarnings("unchecked")
+    private static final LinkedHashMap<NodeId, ChildNodeEntry> EMPTY_ENTRIES = EmptyLinkedHashMap.INSTANCE;
+
+    // The JavaDoc for Collections.emptyMap() states:
+    // "Implementations of this method need not create a separate Map object
+    // for each call."
+    // https://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#emptyMap--
+    // This indicates that an implementation *might* return a separate Map object.
+    private static final Map<Name, Object> EMPTY_NAME_MAP = Collections.emptyMap();
+
     /**
      * Insertion-ordered map of entries
      * (key=NodeId, value=entry)
      */
-    private LinkedMap entries;
+    private LinkedHashMap<NodeId, ChildNodeEntry> entries;
 
     /**
      * Map used for lookup by name
@@ -57,7 +67,7 @@ class ChildNodeEntries implements Cloneable {
     }
 
     ChildNodeEntry get(NodeId id) {
-        return (ChildNodeEntry) entries.get(id);
+        return entries.get(id);
     }
 
     @SuppressWarnings("unchecked")
@@ -193,7 +203,7 @@ class ChildNodeEntries implements Cloneable {
         }
 
         // clean up name lookup map if necessary
-        if (siblings.size() == 0) {
+        if (siblings.isEmpty()) {
             // no more entries with that name left:
             // remove from name lookup map as well
             nameMap.remove(nodeName);
@@ -208,13 +218,13 @@ class ChildNodeEntries implements Cloneable {
     }
 
     /**
-     * Removes the child node entry refering to the node with the given id.
+     * Removes the child node entry referring to the node with the given id.
      *
      * @param id id of node whose entry is to be removed.
      * @return the removed entry or <code>null</code> if there is no such entry.
      */
     ChildNodeEntry remove(NodeId id) {
-        ChildNodeEntry entry = (ChildNodeEntry) entries.get(id);
+        ChildNodeEntry entry = entries.get(id);
         if (entry != null) {
             return remove(entry.getName(), entry.getIndex());
         }
@@ -260,8 +270,7 @@ class ChildNodeEntries implements Cloneable {
         }
 
         List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (Object e : entries.values()) {
-            ChildNodeEntry entry = (ChildNodeEntry) e;
+        for (ChildNodeEntry entry : entries.values()) {
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 continue;
@@ -294,8 +303,7 @@ class ChildNodeEntries implements Cloneable {
         }
 
         List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (Object e : entries.values()) {
-            ChildNodeEntry entry = (ChildNodeEntry) e;
+        for (ChildNodeEntry entry : entries.values()) {
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 result.add(entry);
@@ -313,15 +321,13 @@ class ChildNodeEntries implements Cloneable {
         return entries.isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
     public List<ChildNodeEntry> list() {
         return new ArrayList<ChildNodeEntry>(entries.values());
     }
 
     public List<ChildNodeEntry> getRenamedEntries(ChildNodeEntries that) {
         List<ChildNodeEntry> renamed = Collections.emptyList();
-        for (Object e : entries.values()) {
-            ChildNodeEntry entry = (ChildNodeEntry) e;
+        for (ChildNodeEntry entry : entries.values()) {
             ChildNodeEntry other = that.get(entry.getId());
             if (other != null && !entry.getName().equals(other.getName())) {
                 // child node entry with same id but different name exists in
@@ -375,7 +381,7 @@ class ChildNodeEntries implements Cloneable {
     protected Object clone() {
         try {
             ChildNodeEntries clone = (ChildNodeEntries) super.clone();
-            if (nameMap != Collections.EMPTY_MAP) {
+            if (nameMap != EMPTY_NAME_MAP) {
                 clone.shared = true;
                 shared = true;
             }
@@ -392,8 +398,8 @@ class ChildNodeEntries implements Cloneable {
      * Initializes the name and entries map with unmodifiable empty instances.
      */
     private void init() {
-        nameMap = Collections.emptyMap();
-        entries = EmptyLinkedMap.INSTANCE;
+        nameMap = EMPTY_NAME_MAP;
+        entries = EMPTY_ENTRIES;
         shared = false;
     }
 
@@ -403,11 +409,11 @@ class ChildNodeEntries implements Cloneable {
      */
     @SuppressWarnings("unchecked")
     private void ensureModifiable() {
-        if (nameMap == Collections.EMPTY_MAP) {
+        if (nameMap == EMPTY_NAME_MAP) {
             nameMap = new HashMap<Name, Object>();
-            entries = new LinkedMap();
+            entries = new LinkedHashMap<NodeId, ChildNodeEntry>();
         } else if (shared) {
-            entries = (LinkedMap) entries.clone();
+            entries = (LinkedHashMap<NodeId, ChildNodeEntry>) entries.clone();
             nameMap = new HashMap<Name, Object>(nameMap);
             for (Map.Entry<Name, Object> entry : nameMap.entrySet()) {
                 Object value = entry.getValue();
