@@ -1,47 +1,42 @@
-Release Notes -- Apache Jackrabbit -- Version 2.19.4
+Release Notes -- Apache Jackrabbit -- Version 2.19.5
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.19.4, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.19.5, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.19.4 is an unstable release cut directly from
+Apache Jackrabbit 2.19.5 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.18.x
 release.
 
-Changes in Jackrabbit 2.19.4
+Changes in Jackrabbit 2.19.5
 ----------------------------
 
 Bug
 
-    [JCR-4459] - Basic Authentication for HTTPS URIs does not work
+    [JCR-4458] - When JcrRemotingServlet deployed on non-root context, AclResource Webdav request fails
+    [JCR-4482] - jcr2spi: WorkspaceContentHandler leaks temp files
+    [JCR-4483] - jcr2spi: potential NPE in ImportHandler.endDocument
+    [JCR-4484] - jcr-tests: SerializationTest needs to cleanup after parse failures in import tests
+    [JCR-4485] - InternalValueFactory.create(File) does not close input stream
 
 Improvement
 
-    [JCR-4448] - Update committer list in jackrabbit-parent/pom.xml
+    [JCR-4467] - Remove all usage of java.security.acl.Group for Java 14
+    [JCR-4469] - link jackrabbit-api api docs from Oak
+    [JCR-4470] - update javadoc-plugin dependency to 3.1.1
+    [JCR-4475] - Improve o.a.j.jcr2dav.RepositoryStubImpl to test with custom servlet path mapping
 
 Task
 
-    [JCR-4437] - Update Tika dependency to 1.21
-    [JCR-4438] - jcr-webdav: AbstractLocatorFactory - fix Javadoc and add trace logging
-    [JCR-4439] - disable baseline check for jackrabbit-bundle
-    [JCR-4440] - remove jackrabbit-bundle
-    [JCR-4441] - Update surefire/failsafe dependencies to 2.22.2
-    [JCR-4442] - Update animal-sniffer dependency to 1.18
-    [JCR-4443] - set baseline comparisonVersion to latest stable (2.18.2)
-    [JCR-4447] - jackrabbit-jcr-commons: update cglib dependency
-    [JCR-4449] - remove jackrabbit-api and use oak-jackrabbit-api instead
-    [JCR-4450] - update checkstyle-plugin dependency to 3.1.0
-    [JCR-4451] - update jar-plugin dependency to 3.1.2
-    [JCR-4452] - update war-plugin dependency to 3.2.3
-    [JCR-4453] - update pmd-plugin dependency to 3.12.0
-    [JCR-4454] - update surefire-report-plugin dependency to 2.22.2
-    [JCR-4457] - Update httpclient/mime dependencies to 4.5.9
-    [JCR-4460] - allow to run remoted conformance tests with a custom servlet context path
-    [JCR-4464] - Update Tika dependency to 1.22
+    [JCR-4472] - jcr-rmi: switch to package-level version annotations
+    [JCR-4473] - set baseline comparisonVersion to latest stable (2.18.3)
+    [JCR-4476] - Update httpcore dependency to 4.4.12
+    [JCR-4478] - Update httpclient/mime dependencies to 4.5.10
+    [JCR-4489] - Update jacoco dependency to 0.8.4
 
 
 In addition to the above-mentioned changes, this release contains
