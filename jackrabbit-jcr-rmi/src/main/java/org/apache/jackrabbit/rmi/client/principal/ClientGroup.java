@@ -31,11 +31,8 @@ import org.apache.jackrabbit.rmi.remote.principal.RemoteGroup;
 import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
 
 /**
- * Local adapter for the JCR-RMI {@link RemoteGroup RemoteGroup} interface. This
- * class makes a remote group locally available using the Java {@link Group}
- * interface.
+ * Local adapter for the JCR-RMI {@link RemoteGroup RemoteGroup} interface.
  *
- * @see Group
  * @see RemoteGroup
  */
 public class ClientGroup extends ClientPrincipal implements GroupPrincipal {
