@@ -52,9 +52,6 @@
           <instructions>
             <Bundle-Category>jcr,jackrabbit</Bundle-Category>
             <Bundle-DocURL>http://jackrabbit.apache.org/</Bundle-DocURL>
-            <Export-Package>
-              org.apache.jackrabbit.rmi.*;version=3.1.0
-            </Export-Package>
             <!-- optional resolution XA -->
             <Import-Package>
               javax.transaction.xa;resolution:=optional,*
@@ -515,6 +512,11 @@ org.apache.jackrabbit.test.api.observation.EventJournalTest
   <!-- D E P E N D E N C I E S                                             -->
   <!-- =================================================================== -->
   <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.annotation</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <!-- Hard dependencies -->
     <dependency>
       <groupId>javax.jcr</groupId>
