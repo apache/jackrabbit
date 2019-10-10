@@ -162,7 +162,9 @@ public class ImportHandler extends DefaultHandler {
     @Override
     public void endDocument() throws SAXException {
         // delegate to target handler
-        targetHandler.endDocument();
+        if (targetHandler != null) {
+            targetHandler.endDocument();
+        }
         // cleanup
         nsContext.reset();
     }
