@@ -20,6 +20,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
@@ -46,6 +48,7 @@ public class WorkspaceContentHandler extends DefaultHandler {
     private final Workspace workspace;
 
     private final File tmpFile;
+    private final OutputStream tmpStream;
     private final ContentHandler delegatee;
 
     public WorkspaceContentHandler(Workspace workspace, String parentAbsPath, int uuidBehavior) throws RepositoryException {
@@ -56,8 +59,8 @@ public class WorkspaceContentHandler extends DefaultHandler {
         try {
             String tmpName = Text.md5(parentAbsPath);
             this.tmpFile = File.createTempFile("___" + tmpName, ".xml");
-            this.delegatee = SerializingContentHandler.getSerializer(
-                    new FileOutputStream(tmpFile));
+            this.tmpStream = new FileOutputStream(tmpFile);
+            this.delegatee = SerializingContentHandler.getSerializer(tmpStream);
         } catch (FileNotFoundException e) {
             throw new RepositoryException(e);
         } catch (IOException e) {
@@ -70,13 +73,19 @@ public class WorkspaceContentHandler extends DefaultHandler {
     @Override
     public void endDocument() throws SAXException {
         delegatee.endDocument();
-        try {
-            workspace.importXML(parentAbsPath, new FileInputStream(tmpFile), uuidBehavior);
+        try (InputStream is = new FileInputStream(tmpFile)) {
+            workspace.importXML(parentAbsPath, is, uuidBehavior);
         } catch (IOException e) {
             throw new SAXException(e);
         } catch (RepositoryException e) {
             throw new SAXException(e);
         } finally {
+            try {
+                tmpStream.close();
+            } catch (IOException ex) {
+                // best effort
+                log.error("closing temp file stream", ex);
+            }
             tmpFile.delete();
         }
     }
