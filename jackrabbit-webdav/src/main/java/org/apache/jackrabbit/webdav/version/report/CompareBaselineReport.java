@@ -16,30 +16,30 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.version.BaselineResource;
+import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.VersionControlledResource;
+import org.apache.jackrabbit.webdav.version.VersionResource;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.DavResourceIterator;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.apache.jackrabbit.webdav.version.BaselineResource;
-import org.apache.jackrabbit.webdav.version.VersionResource;
-import org.apache.jackrabbit.webdav.version.VersionControlledResource;
-import org.w3c.dom.Element;
 import org.w3c.dom.Document;
-
-import java.util.List;
-import java.util.ArrayList;
+import org.w3c.dom.Element;
 
 /**
  * <code>CompareBaselineReport</code>...
  */
-public class CompareBaselineReport implements Report {
+public class CompareBaselineReport extends AbstractReport {
 
     private static Logger log = LoggerFactory.getLogger(CompareBaselineReport.class);
 
@@ -95,7 +95,7 @@ public class CompareBaselineReport implements Report {
 
         // make sure the DAV:href element inside the request body points to
         // an baseline resource (precondition for this report).
-        String compareHref = DomUtil.getText(info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE));
+        String compareHref = normalizeResourceHref(DomUtil.getText(info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE)));
         DavResourceLocator locator = resource.getLocator();
         DavResourceLocator compareLocator = locator.getFactory().createResourceLocator(locator.getPrefix(), compareHref);
 

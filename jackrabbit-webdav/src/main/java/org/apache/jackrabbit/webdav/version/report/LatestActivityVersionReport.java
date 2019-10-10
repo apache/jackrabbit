@@ -16,30 +16,30 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavServletResponse;
+import java.util.List;
+
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.ActivityResource;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
-import org.w3c.dom.Element;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-
-import java.util.List;
+import org.w3c.dom.Element;
 
 /**
  * <code>LatestActivityVersionReport</code> is applied to a version history to
  * identify the latest version that is selected from that version history by a
  * given activity.
  */
-public class LatestActivityVersionReport implements Report {
+public class LatestActivityVersionReport extends AbstractReport {
 
     private static Logger log = LoggerFactory.getLogger(LatestActivityVersionReport.class);
 
@@ -91,7 +91,7 @@ public class LatestActivityVersionReport implements Report {
 
         // make sure the DAV:href element inside the request body points to
         // an activity resource (precondition for this report).
-        String activityHref = DomUtil.getText(info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE));
+        String activityHref = normalizeResourceHref(DomUtil.getText(info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE)));
         DavResourceLocator vhLocator = resource.getLocator();
         DavResourceLocator activityLocator = vhLocator.getFactory().createResourceLocator(vhLocator.getPrefix(), activityHref);
 

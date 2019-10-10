@@ -14,5 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@org.osgi.annotation.versioning.Version("1.1.0")
-package org.apache.jackrabbit.webdav.security.report;
+package org.apache.jackrabbit.webdav.server;
+
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.WebdavRequestContext;
+
+class WebdavRequestContextImpl implements WebdavRequestContext {
+
+    private final WebdavRequest request;
+
+    WebdavRequestContextImpl(final WebdavRequest request) {
+        this.request = request;
+    }
+
+    @Override
+    public WebdavRequest getRequest() {
+        return request;
+    }
+
+}

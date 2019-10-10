@@ -26,6 +26,8 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.WebdavRequestContext;
 import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
@@ -53,6 +55,7 @@ import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.server.WebdavRequestContextHolder;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
@@ -757,6 +760,33 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      */
     protected String getCreationDate() {
         return HttpDateFormat.creationDateFormat().format(new Date(0));
+    }
+
+    /**
+     * Normalize the resource {@code href}. For example, remove contextPath prefix if found.
+     * @param href resource href
+     * @return normalized resource {@code href}
+     */
+    protected String normalizeResourceHref(final String href) {
+        if (href == null) {
+            return href;
+        }
+
+        final WebdavRequestContext requestContext = WebdavRequestContextHolder.getContext();
+        final WebdavRequest request = (requestContext != null) ? requestContext.getRequest() : null;
+
+        if (request == null) {
+            log.error("WebdavRequest is unavailable in the current execution context.");
+            return href;
+        }
+
+        final String contextPath = request.getContextPath();
+
+        if (!contextPath.isEmpty() && href.startsWith(contextPath)) {
+            return href.substring(contextPath.length());
+        }
+
+        return href;
     }
 
     //--------------------------------------------------------------------------

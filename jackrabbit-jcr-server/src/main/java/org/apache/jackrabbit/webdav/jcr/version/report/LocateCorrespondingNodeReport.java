@@ -102,7 +102,7 @@ public class LocateCorrespondingNodeReport extends AbstractJcrReport {
         super.init(resource, info);
         // specific for this report: a workspace href must be provided
         Element workspace = info.getContentElement(DeltaVConstants.WORKSPACE.getName(), DeltaVConstants.WORKSPACE.getNamespace());
-        String workspaceHref = DomUtil.getChildTextTrim(workspace, DavConstants.XML_HREF, DavConstants.NAMESPACE);
+        String workspaceHref = normalizeResourceHref(DomUtil.getChildTextTrim(workspace, DavConstants.XML_HREF, DavConstants.NAMESPACE));
         if (workspaceHref == null || "".equals(workspaceHref)) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Request body must define the href of a source workspace");
         }

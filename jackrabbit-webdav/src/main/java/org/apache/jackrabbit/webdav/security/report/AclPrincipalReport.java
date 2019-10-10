@@ -81,7 +81,7 @@ public class AclPrincipalReport extends AbstractSecurityReport {
         Map<String, MultiStatusResponse> respMap = new HashMap<String, MultiStatusResponse>();
         List<AclProperty.Ace> list = (List<AclProperty.Ace>) ((AclProperty)acl).getValue();
         for (AclProperty.Ace ace : list) {
-            String href = ace.getPrincipal().getHref();
+            String href = normalizeResourceHref(ace.getPrincipal().getHref());
             if (href == null || respMap.containsKey(href)) {
                 // ignore non-href principals and principals that have been listed before
                 continue;

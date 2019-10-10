@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.webdav.version.report;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceIterator;
@@ -35,10 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * <code>ExpandPropertyReport</code> encapsulates the DAV:expand-property report,
@@ -61,7 +61,7 @@ import java.util.List;
  * @see DeltaVConstants#XML_EXPAND_PROPERTY
  * @see DeltaVConstants#XML_PROPERTY
  */
-public class ExpandPropertyReport implements Report, DeltaVConstants {
+public class ExpandPropertyReport extends AbstractReport implements DeltaVConstants {
 
     private static Logger log = LoggerFactory.getLogger(ExpandPropertyReport.class);
 
