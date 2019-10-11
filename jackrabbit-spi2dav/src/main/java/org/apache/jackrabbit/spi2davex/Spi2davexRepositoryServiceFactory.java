@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.RepositoryServiceFactory;
 import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
+import org.apache.jackrabbit.spi2dav.ConnectionOptions;
 
 /**
  * This {@link RepositoryServiceFactory} implementation is responsible
@@ -129,11 +130,7 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
             }
         }
 
-        if (maximumHttpConnections > 0) {
-            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, maximumHttpConnections);
-        } else {
-            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize);
-        }
+        return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, maximumHttpConnections, ConnectionOptions.fromServiceFactoryParameters("org.apache.jackrabbit.spi2davex", parameters));
     }
 
 }

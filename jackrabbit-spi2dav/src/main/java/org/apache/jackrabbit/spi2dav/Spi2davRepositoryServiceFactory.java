@@ -148,10 +148,6 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
             }
         }
         
-        if (maximumHttpConnections > 0) {
-            return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, maximumHttpConnections);
-        } else {
-            return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize);
-        }
+        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, maximumHttpConnections, ConnectionOptions.fromServiceFactoryParameters("org.apache.jackrabbit.spi2dav", parameters));
     }
 }
