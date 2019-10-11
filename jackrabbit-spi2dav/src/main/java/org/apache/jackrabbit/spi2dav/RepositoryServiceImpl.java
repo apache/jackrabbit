@@ -57,7 +57,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -286,7 +285,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory) throws RepositoryException {
-        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, false);
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, MAX_CONNECTIONS_DEFAULT, false);
     }
 
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
@@ -562,21 +561,29 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         Object clientKey = getClientKey(sessionInfo);
         HttpClient client = clients.get(clientKey);
         if (client == null) {
-            try {
+                Boolean buildClient = true;
                 if (allowInsecureHttps) {
-                    // use the TrustSelfSignedStrategy to allow Self Signed Certificates
-                    log.info("allowInsecureHttps flag is true, enabling self signed strategy");
-                    SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
+                    //on failure return normal http client
+                    try {
+                        // use the TrustSelfSignedStrategy to allow Self Signed Certificates
+                        log.info("attempting to allowInsecureHttps flag is true, enabling self signed strategy");
+                        SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
 
-                    // we can optionally disable hostname verification.
-                    HostnameVerifier allowAllHosts = new NoopHostnameVerifier();
+                        // we can optionally disable hostname verification.
+                        HostnameVerifier allowAllHosts = new NoopHostnameVerifier();
 
-                    // create an SSL Socket Factory to use the SSLContext with the trust self signed certificate strategy
-                    // and allow all hosts verifier.
-                    SSLConnectionSocketFactory connectionFactory = new SSLConnectionSocketFactory(sslContext, allowAllHosts);
+                        // create an SSL Socket Factory to use the SSLContext with the trust self signed certificate strategy
+                        // and allow all hosts verifier.
+                        SSLConnectionSocketFactory connectionFactory = new SSLConnectionSocketFactory(sslContext, allowAllHosts);
 
-                    client = HttpClients.custom().setSSLSocketFactory(connectionFactory).build();
-                } else {
+                        client = HttpClients.custom().setSSLSocketFactory(connectionFactory).build();
+                        buildClient = false;
+                    } catch (Exception ex) {
+                        log.info("attempting to allowInsecureHttps failed error: {}", ex);
+                    }
+                }
+
+                if (buildClient) {
                     client = httpClientBuilder.build();
                 }
 
@@ -586,15 +593,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     log.debug("Created Client " + client + " for SessionInfo " + sessionInfo);
                 }
 
-            } catch (KeyManagementException mke) {
-                //todo: do the right thing here
-            } catch (NoSuchAlgorithmException nsae) {
-                //todo: do the right thing here
-            } catch (KeyStoreException kse) {
-                //todo: do the right thing here
-            }
         }
-
         return client;
     }
 
