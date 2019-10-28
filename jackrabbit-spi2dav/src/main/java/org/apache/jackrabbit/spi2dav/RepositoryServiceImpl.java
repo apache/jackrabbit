@@ -288,12 +288,43 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         this(uri, idFactory, nameFactory, pathFactory, qValueFactory, MAX_CONNECTIONS_DEFAULT, false);
     }
 
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
+     * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
+     * connections on the client.
+     *
+     * @param uri The server uri.
+     * @param idFactory The id factory.
+     * @param nameFactory The name factory.
+     * @param pathFactory The path factory.
+     * @param qValueFactory The value factory.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @param allowInsecureHttps Allow connecting to repository with custom certificate.
+     * @throws RepositoryException If an error occurs.
+     */
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize, boolean allowInsecureHttps) throws RepositoryException {
         this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, allowInsecureHttps);
     }
 
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
+     * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
+     * connections on the client.
+     *
+     * @param uri The server uri.
+     * @param idFactory The id factory.
+     * @param nameFactory The name factory.
+     * @param pathFactory The path factory.
+     * @param qValueFactory The value factory.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @param maximumHttpConnections A int &gt;0 defining the maximum number of
+     * connections per host to be configured on
+     * @throws RepositoryException If an error occurs.
+     */
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize, int maximumHttpConnections ) throws RepositoryException {
@@ -330,6 +361,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @param itemInfoCacheSize The size of the item info cache.
      * @param maximumHttpConnections A int &gt;0 defining the maximum number of
      * connections per host to be configured on
+     * @param allowInsecureHttps Allow connecting to repository with custom certificate.
      * {@link PoolingHttpClientConnectionManager#setMaxTotal(int)}.
      * @throws RepositoryException If an error occurs.
      */
@@ -1099,9 +1131,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * get item definion from session.
      * @param sessionInfo the session info to check.
-     * @param itemId cache item id
-     * @return
-     * @throws RepositoryException
+     * @param itemId cache item id.
+     * @return item definition
+     * @throws RepositoryException if cant get item uri.
      */
     private QItemDefinition getItemDefinition(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         // set of properties to be retrieved
