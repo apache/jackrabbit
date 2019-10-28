@@ -171,11 +171,32 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @param defaultWorkspaceName The default workspace name.
      * @param batchReadConfig The batch read configuration.
      * @param itemInfoCacheSize The size of the item info cache.
+     * @param allowInsecureHttps Allow connecting to repository with custom certificate.
      * @throws RepositoryException If an exception occurs.
      */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
                                  BatchReadConfig batchReadConfig, int itemInfoCacheSize, Boolean allowInsecureHttps) throws RepositoryException {
-        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, allowInsecureHttps);    }
+        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, allowInsecureHttps);
+    }
+
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int, boolean)}
+     * using <code>false</code> for allowInsecureHttps.
+     *
+     * @param jcrServerURI The server uri.
+     * @param defaultWorkspaceName The default workspace name.
+     * @param batchReadConfig The batch read configuration.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @param maximumHttpConnections maximumHttpConnections A int &gt;0 defining
+     * the maximum number of connections per host to be configured on
+     * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
+     * @throws RepositoryException If an exception occurs.
+     */
+    public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
+                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize,
+                                 int maximumHttpConnections) throws RepositoryException {
+        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, maximumHttpConnections, false);
+    }
 
     /**
      * Creates a new instance of this repository service.
@@ -185,6 +206,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @param batchReadConfig The batch read configuration.
      * @param itemInfoCacheSize The size of the item info cache.
      * @param maximumHttpConnections maximumHttpConnections A int &gt;0 defining
+     * @param allowInsecureHttps Allow connecting to repository with custom certificate.
      * the maximum number of connections per host to be configured on
      * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
      * @throws RepositoryException If an exception occurs.
