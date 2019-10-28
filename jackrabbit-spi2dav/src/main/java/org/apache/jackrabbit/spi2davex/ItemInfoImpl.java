@@ -44,7 +44,7 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
      *
      * @param path     the path to this item.
      * @param isNode   if this item is a node.
-     * @throws javax.jcr.RepositoryException if path is null
+     * @throws javax.jcr.RepositoryException if path is null.
      */
     public ItemInfoImpl(Path path, boolean isNode) throws RepositoryException {
         if (path == null) {
