@@ -546,7 +546,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * SessionInfo or a marker if the session info is null (used during
      * repository instantiation).
      *
-     * @param sessionInfo
+     * @param sessionInfo the session info to check.
      * @return Key for the client map.
      */
     private static Object getClientKey(SessionInfo sessionInfo) {
@@ -632,7 +632,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * Clear all URI mappings. This is required after hierarchy operations such
      * as e.g. MOVE.
      *
-     * @param sessionInfo
+     * @param sessionInfo the session info to check.
      */
     protected void clearItemUriCache(SessionInfo sessionInfo) {
         uriResolver.clearCacheEntries(sessionInfo);
@@ -700,6 +700,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     //--------------------------------------------------------------------------
     /**
      * Execute a 'Workspace' operation.
+     * @param request HTTP request.
+     * @param sessionInfo the session info to check.
      */
     private HttpResponse execute(BaseDavRequest request, SessionInfo sessionInfo) throws RepositoryException {
         try {
@@ -1095,9 +1097,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     *
-     * @param sessionInfo
-     * @param itemId
+     * get item definion from session.
+     * @param sessionInfo the session info to check.
+     * @param itemId cache item id
      * @return
      * @throws RepositoryException
      */
@@ -2687,7 +2689,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     /**
      *
-     * @param sessionInfo
+     * @param sessionInfo the session info to check.
      * @param namespaces
      * @throws NamespaceException
      * @throws UnsupportedRepositoryOperationException
@@ -2839,8 +2841,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * Compute the repository URI (while dealing with trailing / and port number
-     * defaulting)
+     * Compute the repository URI (while dealing with trailing / and port number defaulting).
+     * @param uri uri to use
+     * @return repository uri
+     * @throws URISyntaxException if cant compute uri
      */
     public static URI computeRepositoryUri(String uri) throws URISyntaxException {
         URI repositoryUri = URI.create((uri.endsWith("/")) ? uri : uri + "/");
@@ -2863,10 +2867,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     *
-     * @param sessionInfo
-     * @param reportDoc
-     * @return
+     * Get node type definition from element.
+     * @param sessionInfo the session info to check.
+     * @param reportDoc root element to use.
+     * @return found node type
      * @throws RepositoryException
      */
     private Iterator<QNodeTypeDefinition> retrieveQNodeTypeDefinitions(SessionInfo sessionInfo, Document reportDoc) throws RepositoryException {

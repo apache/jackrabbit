@@ -31,12 +31,13 @@ public interface BatchReadConfig {
     /**
      * Return the depth for the given path.
      *
-     * @param path
-     * @param resolver
+     * @param path path to yse
+     * @param resolver resolver to use
      * @return -1 if all child infos should be return or any value greater
      * than -1 if only parts of the subtree should be returned. If there is no
      * matching configuration entry some implementation specific default depth
      * will be returned.
+     * @throws NamespaceException if cant read value
      */
     public int getDepth(Path path, PathResolver resolver) throws NamespaceException;
 
