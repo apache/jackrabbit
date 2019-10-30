@@ -270,10 +270,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private Set<String> remoteDavComplianceClasses = null;
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, boolean)}
      * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
      * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client.
+     * connections on the client and FALSE for allowInsecureHttps for
+     * connection to host that has custom certificate.
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -285,13 +286,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory) throws RepositoryException {
-        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, MAX_CONNECTIONS_DEFAULT, false);
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
     }
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
-     * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
-     * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, boolean)}
+     * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
      * connections on the client.
      *
      * @param uri The server uri.
@@ -310,10 +310,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, boolean)}
      * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
      * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client.
+     * connections on the client and FALSE for allowInsecureHttps for
+     * connection to host that has custom certificate.
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -332,9 +333,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, boolean)}
      * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client.
+     * connections on the client and FALSE for allowInsecureHttps for
+     * connection to host that has custom certificate.
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -347,7 +349,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize) throws RepositoryException {
-        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT);
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, false);
     }
 
     /**
