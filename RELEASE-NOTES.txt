@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.18.3
+Release Notes -- Apache Jackrabbit -- Version 2.18.4
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.18.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.18.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.18.3 is an incremental feature release based on
+Apache Jackrabbit 2.18.4 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.18.x releases are considered stable and targeted for production use.
 
@@ -18,33 +18,28 @@ The minimum Java version for this release is Java 8. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.18.3
+Changes in Jackrabbit 2.18.4
 ----------------------------
 
 Bug
 
-    [JCR-4455] - condition index-rule handling more broken after JCR-4339
-    [JCR-4459] - Basic Authentication for HTTPS URIs does not work
+    [JCR-4458] - When JcrRemotingServlet deployed on non-root context, AclResource Webdav request fails
+    [JCR-4482] - jcr2spi: WorkspaceContentHandler leaks temp files
+    [JCR-4483] - jcr2spi: potential NPE in ImportHandler.endDocument
+    [JCR-4484] - jcr-tests: SerializationTest needs to cleanup after parse failures in import tests
+    [JCR-4485] - InternalValueFactory.create(File) does not close input stream
 
 Improvement
 
-    [JCR-4463] - Update JavaDoc for completeBinaryUpload explaining idempotency
+    [JCR-4470] - update javadoc-plugin dependency to 3.1.1
+    [JCR-4475] - Improve o.a.j.jcr2dav.RepositoryStubImpl to test with custom servlet path mapping
 
 Task
 
-    [JCR-4437] - Update Tika dependency to 1.21
-    [JCR-4438] - jcr-webdav: AbstractLocatorFactory - fix Javadoc and add trace logging
-    [JCR-4441] - Update surefire/failsafe dependencies to 2.22.2
-    [JCR-4442] - Update animal-sniffer dependency to 1.18
-    [JCR-4447] - jackrabbit-jcr-commons: update cglib dependency
-    [JCR-4450] - update checkstyle-plugin dependency to 3.1.0
-    [JCR-4451] - update jar-plugin dependency to 3.1.2
-    [JCR-4452] - update war-plugin dependency to 3.2.3
-    [JCR-4453] - update pmd-plugin dependency to 3.12.0
-    [JCR-4454] - update surefire-report-plugin dependency to 2.22.2
-    [JCR-4457] - Update httpclient/mime dependencies to 4.5.9
-    [JCR-4460] - allow to run remoted conformance tests with a custom servlet context path
-    [JCR-4464] - Update Tika dependency to 1.22
+    [JCR-4472] - jcr-rmi: switch to package-level version annotations
+    [JCR-4476] - Update httpcore dependency to 4.4.12
+    [JCR-4478] - Update httpclient/mime dependencies to 4.5.10
+    [JCR-4489] - Update jacoco dependency to 0.8.4
 
 
 For more detailed information about all the changes in this and other
