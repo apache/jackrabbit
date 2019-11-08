@@ -110,11 +110,8 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     }
 
     public QValue create(File value) throws RepositoryException, IOException {
-        InputStream in = new FileInputStream(value);
-        if (store == null) {
-            return InternalValue.createTemporary(in);
-        } else {
-            return InternalValue.create(in, store);
+        try (InputStream in = new FileInputStream(value)) {
+            return create(in);
         }
     }
 
