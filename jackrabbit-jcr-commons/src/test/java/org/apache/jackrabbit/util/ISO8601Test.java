@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.util;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
@@ -30,7 +31,11 @@ public class ISO8601Test extends TestCase {
 
     public void testFormatThrowsIllegalArgumentException() {
         try {
-            ISO8601.format(null);
+            ISO8601.format((Calendar)null);
+        } catch (IllegalArgumentException expected) {
+        }
+        try {
+            ISO8601.format((Date)null);
         } catch (IllegalArgumentException expected) {
         }
     }
@@ -48,9 +53,17 @@ public class ISO8601Test extends TestCase {
 
         c.setTimeInMillis(0);
         assertEquals("1970-01-01T00:00:00.000Z", ISO8601.format(c));
+        assertEquals("1970-01-01T00:00:00.000Z", ISO8601.format(0));
+        assertEquals("1970-01-01T00:00:00.000Z", ISO8601.format(new Date(0)));
+        assertEquals("1970-01-01T00:00:00.000Z", ISO8601.format(0, 0));
+        assertEquals("1970-01-01T00:00:00.000Z", ISO8601.format(new Date(0), 0));
 
         c.setTimeInMillis(123456789012L);
         assertEquals("1973-11-29T21:33:09.012Z", ISO8601.format(c));
+        assertEquals("1973-11-29T21:33:09.012Z", ISO8601.format(123456789012L));
+        assertEquals("1973-11-29T21:33:09.012Z", ISO8601.format(new Date(123456789012L)));
+        assertEquals("1973-11-29T21:33:09.012Z", ISO8601.format(123456789012L, 0));
+        assertEquals("1973-11-29T21:33:09.012Z", ISO8601.format(new Date(123456789012L), 0));
     }
 
     public void testFormatCustomTz() {
@@ -59,17 +72,25 @@ public class ISO8601Test extends TestCase {
 
         c.setTimeInMillis(0);
         assertEquals("1970-01-01T01:23:00.000+01:23", ISO8601.format(c));
+        assertEquals("1970-01-01T01:23:00.000+01:23", ISO8601.format(0, customPlus.getRawOffset()));
+        assertEquals("1970-01-01T01:23:00.000+01:23", ISO8601.format(new Date(0), customPlus.getRawOffset()));
 
         c.setTimeInMillis(123456789012L);
         assertEquals("1973-11-29T22:56:09.012+01:23", ISO8601.format(c));
+        assertEquals("1973-11-29T22:56:09.012+01:23", ISO8601.format(123456789012L, customPlus.getRawOffset()));
+        assertEquals("1973-11-29T22:56:09.012+01:23", ISO8601.format(new Date(123456789012L), customPlus.getRawOffset()));
 
         c.setTimeZone(customMinus);
 
         c.setTimeInMillis(0);
         assertEquals("1969-12-31T03:58:00.000-20:02", ISO8601.format(c));
+        assertEquals("1969-12-31T03:58:00.000-20:02", ISO8601.format(0, customMinus.getRawOffset()));
+        assertEquals("1969-12-31T03:58:00.000-20:02", ISO8601.format(new Date(0), customMinus.getRawOffset()));
 
         c.setTimeInMillis(123456789012L);
         assertEquals("1973-11-29T01:31:09.012-20:02", ISO8601.format(c));
+        assertEquals("1973-11-29T01:31:09.012-20:02", ISO8601.format(123456789012L, customMinus.getRawOffset()));
+        assertEquals("1973-11-29T01:31:09.012-20:02", ISO8601.format(new Date(123456789012L), customMinus.getRawOffset()));
     }
 
     public void testParseUTC() {
