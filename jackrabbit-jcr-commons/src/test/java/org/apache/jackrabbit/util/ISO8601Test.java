@@ -76,6 +76,30 @@ public class ISO8601Test extends TestCase {
         assertEquals("1973-11-29T21:33:09.012Z", ISO8601.format(new Date(123456789012L), 0));
     }
 
+    public void testFormatUTCShort() {
+        Calendar c = Calendar.getInstance();
+        c.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Clock clock;
+
+        c.setTimeInMillis(0);
+        clock = Clock.fixed(Instant.ofEpochMilli(0), ZoneId.of("Z"));
+        assertEquals("1970-01-01T00:00:00Z", ISO8601.SHORT.format(c));
+        assertEquals("1970-01-01T00:00:00Z", ISO8601.SHORT.format(clock));
+        assertEquals("1970-01-01T00:00:00Z", ISO8601.SHORT.format(0));
+        assertEquals("1970-01-01T00:00:00Z", ISO8601.SHORT.format(new Date(0)));
+        assertEquals("1970-01-01T00:00:00Z", ISO8601.SHORT.format(0, 0));
+        assertEquals("1970-01-01T00:00:00Z", ISO8601.SHORT.format(new Date(0), 0));
+
+        c.setTimeInMillis(123456789012L);
+        clock = Clock.fixed(Instant.ofEpochMilli(123456789012L), ZoneId.of("Z"));
+        assertEquals("1973-11-29T21:33:09Z", ISO8601.SHORT.format(c));
+        assertEquals("1973-11-29T21:33:09Z", ISO8601.SHORT.format(clock));
+        assertEquals("1973-11-29T21:33:09Z", ISO8601.SHORT.format(123456789012L));
+        assertEquals("1973-11-29T21:33:09Z", ISO8601.SHORT.format(new Date(123456789012L)));
+        assertEquals("1973-11-29T21:33:09Z", ISO8601.SHORT.format(123456789012L, 0));
+        assertEquals("1973-11-29T21:33:09Z", ISO8601.SHORT.format(new Date(123456789012L), 0));
+    }
+
     public void testFormatCustomTz() {
         Calendar c = Calendar.getInstance();
         c.setTimeZone(customPlus);
