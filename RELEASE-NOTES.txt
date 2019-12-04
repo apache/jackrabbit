@@ -1,46 +1,39 @@
-Release Notes -- Apache Jackrabbit -- Version 2.19.5
+Release Notes -- Apache Jackrabbit -- Version 2.19.6
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.19.5, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.19.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.19.5 is an unstable release cut directly from
+Apache Jackrabbit 2.19.6 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.18.x
 release.
 
-Changes in Jackrabbit 2.19.5
+Changes in Jackrabbit 2.19.6
 ----------------------------
-
-Bug
-
-    [JCR-4458] - When JcrRemotingServlet deployed on non-root context, AclResource Webdav request fails
-    [JCR-4482] - jcr2spi: WorkspaceContentHandler leaks temp files
-    [JCR-4483] - jcr2spi: potential NPE in ImportHandler.endDocument
-    [JCR-4484] - jcr-tests: SerializationTest needs to cleanup after parse failures in import tests
-    [JCR-4485] - InternalValueFactory.create(File) does not close input stream
 
 Improvement
 
-    [JCR-4467] - Remove all usage of java.security.acl.Group for Java 14
-    [JCR-4469] - link jackrabbit-api api docs from Oak
-    [JCR-4470] - update javadoc-plugin dependency to 3.1.1
-    [JCR-4475] - Improve o.a.j.jcr2dav.RepositoryStubImpl to test with custom servlet path mapping
+    [JCR-4497] - pass computed args to surefire/failsafe invocations
+    [JCR-4499] - Update jacoco dependency to 0.8.5 and align config with Oak
+    [JCR-4500] - jcr-commons: enable coverage checks
+    [JCR-4501] - jcr-commons: add test coverage for ISO8601 util
+    [JCR-4502] - ISO8601: add convenience methods that do not require passing a Calendar, also support short format without ms information)
 
 Task
 
-    [JCR-4472] - jcr-rmi: switch to package-level version annotations
-    [JCR-4473] - set baseline comparisonVersion to latest stable (2.18.3)
-    [JCR-4476] - Update httpcore dependency to 4.4.12
-    [JCR-4478] - Update httpclient/mime dependencies to 4.5.10
-    [JCR-4489] - Update jacoco dependency to 0.8.4
+    [JCR-4492] - Update Jackrabbit trunk to Oak 1.18.0
+    [JCR-4496] - align ISO8601 class in tests with jcr-commons version
+    [JCR-4503] - Update Oak dependency to 1.20.0
+    [JCR-4504] - Update maven-bundle-plugin to 4.2.1
+    [JCR-4505] - Update maven-assembly-plugin to 3.2.0
+    [JCR-4506] - Update maven-jar-plugin to 3.2.0
+    [JCR-4507] - Update spotbugs-maven-plugin to 3.1.12.2
+    [JCR-4508] - Upgrade maven-scr-plugin to 1.26.2
 
-
-In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.19.2 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
