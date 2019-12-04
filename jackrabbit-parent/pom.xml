@@ -58,7 +58,6 @@
     <skip.coverage>true</skip.coverage>
     <minimum.line.coverage>0.0</minimum.line.coverage>
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
-    <jacoco.version>0.8.5</jacoco.version>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -225,6 +224,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.5</version>
         <executions>
           <execution>
             <id>pre-unit-test</id>
