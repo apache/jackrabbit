@@ -18,6 +18,8 @@ package org.apache.jackrabbit.test;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -45,7 +47,38 @@ import java.util.TimeZone;
  *           in the form of +hh:mm or -hh:mm
  * </pre>
  */
+
+// this class is a copy of org.apache.jackrabbit.util.ISO8601 (in order to avoid
+// a dependency to that project)
+
 public final class ISO8601 {
+
+    /**
+     * Flyweight instances of known time zones.
+     */
+    private static final Map<String, TimeZone> TZS =
+            new HashMap<String, TimeZone>();
+
+    static {
+        TimeZone gmt = TimeZone.getTimeZone("GMT");
+        TZS.put("Z", gmt);
+        TZS.put("+00:00", gmt);
+        TZS.put("-00:00", gmt);
+
+        // http://en.wikipedia.org/wiki/List_of_UTC_time_offsets
+        String[] tzs = {
+                "-12:00", "-11:00", "-10:00", "-09:30", "-09:00", "-08:00",
+                "-07:00", "-06:00", "-05:00", "-04:30", "-04:00", "-03:30",
+                "-03:00", "-02:00", "-01:00", "+01:00", "+02:00", "+03:00",
+                "+03:30", "+04:00", "+04:30", "+05:00", "+05:30", "+05:45",
+                "+06:00", "+06:30", "+07:00", "+08:00", "+08:45", "+09:00",
+                "+09:30", "+10:00", "+10:30", "+11:00", "+11:30", "+12:00",
+                "+12:45", "+13:00", "+14:00" };
+        for (String tz : tzs) {
+            TZS.put(tz, TimeZone.getTimeZone("GMT" + tz));
+        }
+    }
+
     /**
      * Parses an ISO8601-compliant date/time string.
      *
@@ -82,7 +115,7 @@ public final class ISO8601 {
          */
 
         int year, month, day, hour, min, sec, ms;
-        String tzID;
+        TimeZone tz;
         try {
             // year (YYYY)
             year = Integer.parseInt(text.substring(start, start + 4));
@@ -136,25 +169,21 @@ public final class ISO8601 {
             ms = Integer.parseInt(text.substring(start, start + 3));
             start += 3;
             // time zone designator (Z or +00:00 or -00:00)
-            if (text.charAt(start) == '+' || text.charAt(start) == '-') {
+            String tzid = text.substring(start);
+            tz = TZS.get(tzid);
+            if (tz == null) {
                 // offset to UTC specified in the format +00:00/-00:00
-                tzID = "GMT" + text.substring(start);
-            } else if (text.substring(start).equals("Z")) {
-                tzID = "GMT";
-            } else {
-                // invalid time zone designator
-                return null;
+                tzid = "GMT" + tzid;
+                tz = TimeZone.getTimeZone(tzid);
+                // verify id of returned time zone (getTimeZone defaults to "GMT")
+                if (!tz.getID().equals(tzid)) {
+                    // invalid time zone
+                    return null;
+                }
             }
         } catch (IndexOutOfBoundsException e) {
             return null;
         } catch (NumberFormatException e) {
-            return null;
-        }
-
-        TimeZone tz = TimeZone.getTimeZone(tzID);
-        // verify id of returned time zone (getTimeZone defaults to "GMT")
-        if (!tz.getID().equals(tzID)) {
-            // invalid time zone
             return null;
         }
 
@@ -222,7 +251,7 @@ public final class ISO8601 {
          * note that we cannot use java.text.SimpleDateFormat for
          * formatting because it can't handle years <= 0 and TZD's
          */
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         // year ([-]YYYY)
         appendZeroPaddedInt(buf, getYear(cal), 4);
         buf.append('-');
@@ -298,7 +327,7 @@ public final class ISO8601 {
      * @param n number to append
      * @param precision number of digits to append
      */
-    private static void appendZeroPaddedInt(StringBuffer buf, int n, int precision) {
+    private static void appendZeroPaddedInt(StringBuilder buf, int n, int precision) {
         if (n < 0) {
             buf.append('-');
             n = -n;
