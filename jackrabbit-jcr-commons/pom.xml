@@ -36,8 +36,8 @@
 
   <properties>
       <skip.coverage>false</skip.coverage>
-      <minimum.line.coverage>0.23</minimum.line.coverage>
-      <minimum.branch.coverage>0.15</minimum.branch.coverage>
+      <minimum.line.coverage>0.24</minimum.line.coverage>
+      <minimum.branch.coverage>0.16</minimum.branch.coverage>
   </properties>
 
   <build>
