@@ -16,10 +16,13 @@
  */
 package org.apache.jackrabbit.util;
 
+import java.time.Clock;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
 /**
@@ -74,6 +77,8 @@ public final class ISO8601 {
             TZS.put(tz, TimeZone.getTimeZone("GMT" + tz));
         }
     }
+
+    private static TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     /**
      * Parses an ISO8601-compliant date/time string.
@@ -226,6 +231,91 @@ public final class ISO8601 {
     }
 
     /**
+     * Formats a time instant into an ISO8601-compliant date/time string using
+     * the UTC timezone.
+     *
+     * @param date
+     *            date to be formatted
+     * @return the formatted date/time string.
+     * @throws IllegalArgumentException
+     *             if the calendar cannot be represented as defined by ISO 8601
+     *             (i.e. year with more than four digits).
+     */
+    public static String format(Date date) throws IllegalArgumentException {
+        return format(date, 0);
+    }
+
+    /**
+     * Formats a clock time instant into an ISO8601-compliant date/time string.
+     * 
+     * @param clock
+     *            clock to obtain time and time zone from
+     * @return the formatted date/time string.
+     * @throws IllegalArgumentException
+     *             if the calendar cannot be represented as defined by ISO 8601
+     *             (i.e. year with more than four digits).
+     */
+    public static String format(Clock clock) throws IllegalArgumentException {
+        return format(clock.millis(), clock.getZone().getRules().getOffset(clock.instant()).getTotalSeconds());
+    }
+
+    /**
+     * Formats a time instant into an ISO8601-compliant date/time string using
+     * the UTC timezone.
+     *
+     * @param millisSinceEpoch
+     *            milliseconds since the epoch
+     * @return the formatted date/time string.
+     * @throws IllegalArgumentException
+     *             if the calendar cannot be represented as defined by ISO 8601
+     *             (i.e. year with more than four digits).
+     */
+    public static String format(long millisSinceEpoch) throws IllegalArgumentException {
+        return format(millisSinceEpoch, 0);
+    }
+
+    /**
+     * Formats a time instant and a timezone offset into an ISO8601-compliant
+     * date/time string.
+     *
+     * @param date
+     *            date to be formatted
+     * @param tzOffsetInSeconds
+     *            timezone offset from UTC in seconds
+     * @return the formatted date/time string.
+     * @throws IllegalArgumentException
+     *             if the calendar cannot be represented as defined by ISO 8601
+     *             (i.e. year with more than four digits).
+     */
+    public static String format(Date date, int tzOffsetInSeconds) throws IllegalArgumentException {
+        if (date == null) {
+            throw new IllegalArgumentException("argument can not be null");
+        }
+        return format(date.getTime(), tzOffsetInSeconds);
+    }
+
+    /**
+     * Formats a time instant and a timezone offset into an ISO8601-compliant
+     * date/time string.
+     *
+     * @param millisSinceEpoch
+     *            milliseconds since the epoch
+     * @param tzOffsetInSeconds
+     *            timezone offset from UTC in seconds
+     * @return the formatted date/time string.
+     * @throws IllegalArgumentException
+     *             if a <code>null</code> argument is passed the calendar cannot
+     *             be represented as defined by ISO 8601 (i.e. year with more
+     *             than four digits).
+     */
+    public static String format(long millisSinceEpoch, int tzOffsetInSeconds) throws IllegalArgumentException {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeZone(tzOffsetInSeconds == 0 ? UTC : new SimpleTimeZone(tzOffsetInSeconds * 1000, ""));
+        cal.setTimeInMillis(millisSinceEpoch);
+        return format(cal);
+    }
+
+    /**
      * Formats a <code>Calendar</code> value into an ISO8601-compliant
      * date/time string.
      *
@@ -236,6 +326,10 @@ public final class ISO8601 {
      * with more than four digits).
      */
     public static String format(Calendar cal) throws IllegalArgumentException {
+        return format(cal, true);
+    }
+
+    private static String format(Calendar cal, boolean includeMs) throws IllegalArgumentException {
         if (cal == null) {
             throw new IllegalArgumentException("argument can not be null");
         }
@@ -265,9 +359,11 @@ public final class ISO8601 {
         buf.append(':');
         // second (ss)
         appendZeroPaddedInt(buf, cal.get(Calendar.SECOND), 2);
-        buf.append('.');
-        // millisecond (SSS)
-        appendZeroPaddedInt(buf, cal.get(Calendar.MILLISECOND), 3);
+        if (includeMs) {
+            buf.append('.');
+            // millisecond (SSS)
+            appendZeroPaddedInt(buf, cal.get(Calendar.MILLISECOND), 3);
+        }
         // time zone designator (Z or +00:00 or -00:00)
         TimeZone tz = cal.getTimeZone();
         // determine offset of timezone from UTC (incl. daylight saving)
@@ -311,6 +407,62 @@ public final class ISO8601 {
                     "year digits, cannot be formatted as ISO8601: " + year);
         }
         return year;
+    }
+
+
+    /**
+     * Variants that exclude the milliseconds from the formatted string.
+     *
+     */
+    public static class SHORT {
+
+        /**
+         * @see ISO8601#format(Date)
+         */
+        public static String format(Date date) throws IllegalArgumentException {
+            return format(date, 0);
+        }
+
+        /**
+         * @see ISO8601#format(Clock)
+         */
+        public static String format(Clock clock) throws IllegalArgumentException {
+            return format(clock.millis(), clock.getZone().getRules().getOffset(clock.instant()).getTotalSeconds());
+        }
+
+        /**
+         * @see ISO8601#format(long)
+         */
+        public static String format(long millisSinceEpoch) throws IllegalArgumentException {
+            return format(millisSinceEpoch, 0);
+        }
+
+        /**
+         * @see ISO8601#format(Date, int)
+         */
+        public static String format(Date date, int tzOffsetInSeconds) throws IllegalArgumentException {
+            if (date == null) {
+                throw new IllegalArgumentException("argument can not be null");
+            }
+            return format(date.getTime(), tzOffsetInSeconds);
+        }
+
+        /**
+         * @see ISO8601#format(long, int)
+         */
+        public static String format(long millisSinceEpoch, int tzOffsetInSeconds) throws IllegalArgumentException {
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeZone(tzOffsetInSeconds == 0 ? UTC : new SimpleTimeZone(tzOffsetInSeconds * 1000, ""));
+            cal.setTimeInMillis(millisSinceEpoch);
+            return format(cal);
+        }
+
+        /**
+         * @see ISO8601#format(Calendar)
+         */
+        public static String format(Calendar cal) throws IllegalArgumentException {
+            return ISO8601.format(cal, false);
+        }
     }
 
     /**

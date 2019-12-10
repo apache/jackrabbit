@@ -17,9 +17,7 @@
 package org.apache.jackrabbit.spi.commons.query.xpath;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
@@ -505,10 +503,8 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         } else if (node.getValueType() == TYPE_STRING) {
             b.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
         } else if (node.getValueType() == TYPE_DATE || node.getValueType() == TYPE_TIMESTAMP) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(node.getDateValue());
             b.append(resolver.getJCRName(XPathQueryBuilder.XS_DATETIME));
-            b.append("('").append(ISO8601.format(cal)).append("')");
+            b.append("('").append(ISO8601.format(node.getDateValue())).append("')");
         } else if (node.getValueType() == TYPE_POSITION) {
             if (node.getPositionValue() == LocationStepQueryNode.LAST) {
                 b.append("last()");

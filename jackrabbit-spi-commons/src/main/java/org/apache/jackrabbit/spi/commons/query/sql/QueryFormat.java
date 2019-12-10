@@ -17,10 +17,8 @@
 package org.apache.jackrabbit.spi.commons.query.sql;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
@@ -553,9 +551,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         } else if (node.getValueType() == TYPE_STRING) {
             b.append("'").append(node.getStringValue().replaceAll("'", "''")).append("'");
         } else if (node.getValueType() == TYPE_DATE || node.getValueType() == TYPE_TIMESTAMP) {
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.setTime(node.getDateValue());
-            b.append("TIMESTAMP '").append(ISO8601.format(cal)).append("'");
+            b.append("TIMESTAMP '").append(ISO8601.format(node.getDateValue())).append("'");
         } else {
             exceptions.add(new InvalidQueryException("Invalid type: " + node.getValueType()));
         }
