@@ -17,6 +17,13 @@ The minimum Java version for this release is Java 8. See
   
 for maintenance versions that support earlier Java versions.
 
+Be aware of the artifact changes below:
+
+1) jackrabbit-api has been removed; use Jackrabbit Oak's oak-jackrabbit-api
+   instead (JCR-4449)
+2) jackrabbit-bundle has been removed (JCR-4440)
+3) jackrabbit-standalone-components has been added (JCR-4401)
+
 
 Changes in Jackrabbit 2.20.0
 ----------------------------
