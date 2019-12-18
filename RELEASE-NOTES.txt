@@ -1,39 +1,22 @@
-Release Notes -- Apache Jackrabbit -- Version 2.19.6
+Release Notes -- Apache Jackrabbit -- Version 2.21.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.19.6, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.19.6 is an unstable release cut directly from
+Apache Jackrabbit 2.21.0 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.18.x
+improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.19.6
+Changes in Jackrabbit 2.21.0
 ----------------------------
 
-Improvement
-
-    [JCR-4497] - pass computed args to surefire/failsafe invocations
-    [JCR-4499] - Update jacoco dependency to 0.8.5 and align config with Oak
-    [JCR-4500] - jcr-commons: enable coverage checks
-    [JCR-4501] - jcr-commons: add test coverage for ISO8601 util
-    [JCR-4502] - ISO8601: add convenience methods that do not require passing a Calendar, also support short format without ms information)
-
-Task
-
-    [JCR-4492] - Update Jackrabbit trunk to Oak 1.18.0
-    [JCR-4496] - align ISO8601 class in tests with jcr-commons version
-    [JCR-4503] - Update Oak dependency to 1.20.0
-    [JCR-4504] - Update maven-bundle-plugin to 4.2.1
-    [JCR-4505] - Update maven-assembly-plugin to 3.2.0
-    [JCR-4506] - Update maven-jar-plugin to 3.2.0
-    [JCR-4507] - Update spotbugs-maven-plugin to 3.1.12.2
-    [JCR-4508] - Upgrade maven-scr-plugin to 1.26.2
-
+(this is the first release since branching 2.20 so it does not contain any
+changes)
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
