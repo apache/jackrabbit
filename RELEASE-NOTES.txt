@@ -15,8 +15,16 @@ release.
 Changes in Jackrabbit 2.21.0
 ----------------------------
 
-(this is the first release since branching 2.20 so it does not contain any
-changes)
+Task
+
+    [JCR-4491] - Upgrade Commons VFS to 2.6
+    [JCR-4516] - switch bundle comparisonVersion for 2.20.0
+    [JCR-4519] - Update httpcore dependency to 4.4.13
+    [JCR-4520] - Update Jackrabbit trunk and 2.20 to Oak 1.22.0
+    [JCR-4522] - Update httpclient/mime dependencies to 4.5.11
+    [JCR-4525] - Update Jackrabbit trunk and 2.20 to Oak 1.24.0
+    [JCR-4529] - Update tomcat dependency to 8.5.50
+    [JCR-4530] - jackrabbit-core: avoid use of deprecated commons-collections Buffers
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
