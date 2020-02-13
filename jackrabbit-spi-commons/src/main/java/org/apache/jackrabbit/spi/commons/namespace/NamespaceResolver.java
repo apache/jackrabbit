@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi.commons.namespace;
 
 import javax.jcr.NamespaceException;
 
+import org.apache.jackrabbit.spi.commons.conversion.NameParser;
+
 /**
  * Interface for resolving namespace URIs and prefixes. Unlike the JCR
  * {@link javax.jcr.NamespaceRegistry} interface, this interface contains
@@ -30,9 +32,10 @@ public interface NamespaceResolver {
 
     /**
      * Returns the URI to which the given prefix is mapped.
+     * For the empty prefix the default namespace uri should be returned as the {@link NameParser} relies on that.
      *
      * @param prefix namespace prefix
-     * @return the namespace URI to which the given prefix is mapped.
+     * @return the namespace URI to which the given prefix is mapped (never {@code null}).
      * @throws NamespaceException if the prefix is unknown.
      */
     String getURI(String prefix) throws NamespaceException;
@@ -41,7 +44,7 @@ public interface NamespaceResolver {
      * Returns the prefix which is mapped to the given URI.
      *
      * @param uri namespace URI
-     * @return the prefix mapped to the given URI.
+     * @return the prefix mapped to the given URI (never {@code null}).
      * @throws NamespaceException if the URI is unknown.
      */
     String getPrefix(String uri) throws NamespaceException;
