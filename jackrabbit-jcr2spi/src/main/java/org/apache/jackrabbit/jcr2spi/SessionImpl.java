@@ -109,6 +109,11 @@ public class SessionImpl extends AbstractSession
         implements NamespaceResolver, ManagerProvider {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
+    private static final SAXParserFactory SAX_PARSER_FACTORY = SAXParserFactory.newInstance();
+
+    static {
+        SAX_PARSER_FACTORY.setNamespaceAware(true);
+    }
 
     private boolean alive;
 
@@ -390,12 +395,10 @@ public class SessionImpl extends AbstractSession
         // NOTE: checks are performed by 'getImportContentHandler'
         ImportHandler handler = (ImportHandler) getImportContentHandler(parentAbsPath, uuidBehavior);
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(
+            SAX_PARSER_FACTORY.setFeature(
                     "http://xml.org/sax/features/namespace-prefixes", false);
 
-            SAXParser parser = factory.newSAXParser();
+            SAXParser parser = SAX_PARSER_FACTORY.newSAXParser();
             parser.parse(new InputSource(in), handler);
         } catch (SAXException se) {
             // check for wrapped repository exception
