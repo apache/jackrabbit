@@ -249,18 +249,32 @@ public class SerializationTest extends AbstractJCRTest {
         try {
             ih = session.getImportContentHandler(treeComparator.targetFolder,
                     ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+            helpTestSaxException(ih, in, "session");
         } catch (RepositoryException e) {
             fail("ImportHandler not created: " + e);
+        } finally {
+            closeContentHandler(ih);
         }
-        helpTestSaxException(ih, in, "session");
 
         in = new StringReader("<this is not a <valid> <xml> file/>");
         try {
             ih = workspace.getImportContentHandler(treeComparator.targetFolder, 0);
+            helpTestSaxException(ih, in, "workspace");
         } catch (RepositoryException e) {
             fail("ImportHandler not created: " + e);
+        } finally {
+            closeContentHandler(ih);
         }
-        helpTestSaxException(ih, in, "workspace");
+    }
+
+    private static void closeContentHandler(ContentHandler ch) {
+        if (ch != null) {
+            try {
+                ch.endDocument();
+            } catch (SAXException e) {
+                // best effort
+            }
+        }
     }
 
     /**
@@ -583,11 +597,19 @@ public class SerializationTest extends AbstractJCRTest {
         if (useHandler) {
             if (useWorkspace) {
                 ContentHandler ih = workspace.getImportContentHandler(absPath, 0);
-                createXMLReader(ih).parse(new InputSource(in));
+                try {
+                    createXMLReader(ih).parse(new InputSource(in));
+                } finally {
+                    ih.endDocument();
+                }
             } else {
                 ContentHandler ih = session.getImportContentHandler(absPath, 0);
-                createXMLReader(ih).parse(new InputSource(in));
-                session.save();
+                try {
+                    createXMLReader(ih).parse(new InputSource(in));
+                    session.save();
+                } finally {
+                    ih.endDocument();
+                }
             }
         } else {
             if (useWorkspace) {
