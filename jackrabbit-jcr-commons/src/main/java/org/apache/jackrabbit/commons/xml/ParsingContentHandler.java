@@ -36,6 +36,12 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class ParsingContentHandler extends DefaultContentHandler {
 
+    private static final SAXParserFactory SAX_PARSER_FACTORY = SAXParserFactory.newInstance();
+
+    static {
+        SAX_PARSER_FACTORY.setNamespaceAware(true);
+    }
+
     /**
      * Creates a {@link DefaultHandler} adapter for the given content
      * handler.
@@ -57,9 +63,7 @@ public class ParsingContentHandler extends DefaultContentHandler {
      */
     public void parse(InputStream in) throws IOException, SAXException {
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.newSAXParser().parse(new InputSource(in), this);
+            SAX_PARSER_FACTORY.newSAXParser().parse(new InputSource(in), this);
         } catch (ParserConfigurationException e) {
             throw new SAXException("SAX parser configuration error", e);
         }
