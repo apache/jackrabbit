@@ -1,30 +1,52 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.0
+Release Notes -- Apache Jackrabbit -- Version 2.21.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.0 is an unstable release cut directly from
+Apache Jackrabbit 2.21.1 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.0
+Changes in Jackrabbit 2.21.1
 ----------------------------
+
+Bug
+
+    [JCR-3942] - Content-Length header field may be set twice
+    [JCR-4549] - backup with RepositoryCopier.copy() fails on second method call
+    [JCR-4551] - Use the normalized MediaType to check if the given MediaType should be indexed
+
+Improvement
+
+    [JCR-4541] - reduce classpath lookups for SaxParserFactory
 
 Task
 
-    [JCR-4491] - Upgrade Commons VFS to 2.6
-    [JCR-4516] - switch bundle comparisonVersion for 2.20.0
-    [JCR-4519] - Update httpcore dependency to 4.4.13
-    [JCR-4520] - Update Jackrabbit trunk and 2.20 to Oak 1.22.0
-    [JCR-4522] - Update httpclient/mime dependencies to 4.5.11
-    [JCR-4525] - Update Jackrabbit trunk and 2.20 to Oak 1.24.0
-    [JCR-4529] - Update tomcat dependency to 8.5.50
-    [JCR-4530] - jackrabbit-core: avoid use of deprecated commons-collections Buffers
+    [JCR-4531] - Update tomcat dependency to 8.5.51/7.0.100
+    [JCR-4539] - Update Jackrabbit trunk and 2.20 to Oak 1.26.0
+    [JCR-4543] - Update Tika dependency to 1.24
+    [JCR-4544] - Update slf4j dependency to 1.7.30
+    [JCR-4545] - Update httpclient/mime dependencies to 4.5.12
+    [JCR-4546] - Update aws java sdk version to 1.11.700 (consistent with Oak)
+    [JCR-4547] - Update tomcat dependency to 8.5.53/7.0.103
+    [JCR-4548] - update javadoc-plugin dependency to 3.2.0
+    [JCR-4554] - Update Tika dependency to 1.24.1
+    [JCR-4555] - Update mockito dependency to 3.3.3
+    [JCR-4556] - Update tomcat dependency to 8.5.54
+    [JCR-4557] - update junit dependency to 4.13
+    [JCR-4558] - update Apache parent pom to version 23
+    [JCR-4559] - Update commons file-upload dependency to 1.4
+    [JCR-4560] - Update h2db dependency to 1.4.200
+    [JCR-4561] - webapp: update htmlunit dependency to 2.40.0
+    [JCR-4562] - Remove workaround for FELIX-2492
+    [JCR-4563] - test OSGi bundles
+    [JCR-4564] - jackrabbit-jcr-server: remove obsolete workaround for scr-plugin
+
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
