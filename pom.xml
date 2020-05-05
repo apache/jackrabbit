@@ -58,6 +58,7 @@
     <module>jackrabbit-jcr-client</module>
     <module>jackrabbit-standalone-components</module>
     <module>jackrabbit-standalone</module>
+    <module>jackrabbit-it-osgi</module>
   </modules>
 
   <scm>
