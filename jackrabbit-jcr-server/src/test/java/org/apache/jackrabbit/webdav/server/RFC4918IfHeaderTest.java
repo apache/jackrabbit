@@ -23,8 +23,8 @@ import java.net.URISyntaxException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.client.methods.HttpLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Scope;
@@ -35,97 +35,108 @@ import org.apache.jackrabbit.webdav.lock.Type;
  * (see <a href="http://www.webdav.org/specs/rfc4918.html#rfc.section.10.4">RFC 4918, Section 10.4</a>
  */
 
-public class RFC4918IfHeaderTest extends WebDAVTest {
+public class RFC4918IfHeaderTest extends WebDAVTestBase {
 
-    public void testPutIfEtag() throws IOException, DavException, URISyntaxException {
+    public void testPutIfEtag() throws IOException {
 
         String testuri = this.root + "iftest";
-
+        HttpPut put = new HttpPut(testuri);
         try {
-            HttpPut put = new HttpPut(testuri);
+            put = new HttpPut(testuri);
             String condition = "<" + testuri + "> ([" + "\"an-etag-this-testcase-invented\"" + "])";
             put.setEntity(new StringEntity("1"));
             put.setHeader("If", condition);
             int status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
             assertEquals("status: " + status, 412, status);
+            put.releaseConnection();
+
         }
         finally {
+            put.releaseConnection();
             HttpDelete delete = new HttpDelete(testuri);
             int status = this.client.execute(delete, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+            delete.releaseConnection();
         }
     }
 
-    public void testPutIfLockToken() throws IOException, DavException, URISyntaxException {
+    public void testPutIfLockToken() throws IOException, URISyntaxException {
 
         String testuri = this.root + "iflocktest";
         String locktoken = null;
 
+        HttpRequestBase requestBase = null;
         try {
-            HttpPut put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("1"));
-            int status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("1"));
+            int status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
+            requestBase.releaseConnection();
 
-            HttpLock lock = new HttpLock(testuri, new LockInfo(
+            requestBase = new HttpLock(testuri, new LockInfo(
                     Scope.EXCLUSIVE, Type.WRITE, "testcase", 10000, true));
-            HttpResponse response = this.client.execute(lock, this.context);
+            HttpResponse response = this.client.execute(requestBase, this.context);
             status = response.getStatusLine().getStatusCode();
             assertEquals("status", 200, status);
-            locktoken = lock.getLockToken(response);
+            locktoken = ((HttpLock)requestBase).getLockToken(response);
             assertNotNull(locktoken);
-            System.out.println(locktoken);
-            System.out.println(response.getFirstHeader("lock-token").getValue());
+            requestBase.releaseConnection();
 
             // try to overwrite without lock token
-            put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("2"));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("2"));
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertEquals("status: " + status, 423, status);
+            requestBase.releaseConnection();
 
             // try to overwrite using bad lock token
-            put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("2"));
-            put.setHeader("If", "(<" + "DAV:foobar" + ">)");
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("2"));
+            requestBase.setHeader("If", "(<" + "DAV:foobar" + ">)");
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertEquals("status: " + status, 412, status);
+            requestBase.releaseConnection();
 
             // try to overwrite using correct lock token, using  No-Tag-list format
-            put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("2"));
-            put.setHeader("If", "(<" + locktoken + ">)");
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("2"));
+            requestBase.setHeader("If", "(<" + locktoken + ">)");
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204);
+            requestBase.releaseConnection();
 
             // try to overwrite using correct lock token, using Tagged-list format
             // and full URI
-            put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("3"));
-            put.setHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("3"));
+            requestBase.setHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204);
+            requestBase.releaseConnection();
 
             // try to overwrite using correct lock token, using Tagged-list format
             // and absolute path only
-            put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("4"));
-            put.setHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("4"));
+            requestBase.setHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204);
+            requestBase.releaseConnection();
 
             // try to overwrite using correct lock token, using Tagged-list format
             // and bad path
-            put = new HttpPut(testuri);
-            put.setEntity(new StringEntity("5"));
-            put.setHeader("If", "</foobar>" + "(<" + locktoken + ">)");
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            ((HttpPut)requestBase).setEntity(new StringEntity("5"));
+            requestBase.setHeader("If", "</foobar>" + "(<" + locktoken + ">)");
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 404 || status == 412);
         } finally {
-            HttpDelete delete = new HttpDelete(testuri);
+            requestBase.releaseConnection();
+            requestBase = new HttpDelete(testuri);
             if (locktoken != null) {
-                delete.setHeader("If", "(<" + locktoken + ">)");
+                requestBase.setHeader("If", "(<" + locktoken + ">)");
             }
-            int status = this.client.execute(delete, this.context).getStatusLine().getStatusCode();
+            int status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
         }
     }
