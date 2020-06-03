@@ -148,14 +148,26 @@ class IndexMerger implements IndexListener {
                 long lower = 0;
                 long upper = minMergeDocs;
                 while (upper < maxMergeDocs) {
-                    indexBuckets.add(new IndexBucket(lower, upper, true));
+                    IndexBucket indexBucket = new IndexBucket(lower, upper, true);
+                    indexBuckets.add(indexBucket);
+                    if (log.isDebugEnabled()) {
+                        log.debug("IndexBucket (" + indexBucket.toString() +") created.");
+                    }
                     lower = upper + 1;
                     upper *= mergeFactor;
                 }
                 // one with upper = maxMergeDocs
-                indexBuckets.add(new IndexBucket(lower, maxMergeDocs, false));
+                IndexBucket upperIndexBucket = new IndexBucket(lower, maxMergeDocs, false);
+                indexBuckets.add(upperIndexBucket);
+                if (log.isDebugEnabled()) {
+                    log.debug("IndexBucket (" + upperIndexBucket.toString() + ") created.");
+                }
                 // and another one as overflow, just in case...
-                indexBuckets.add(new IndexBucket(maxMergeDocs + 1, Long.MAX_VALUE, false));
+                IndexBucket overlowIndexBucket = new IndexBucket(maxMergeDocs + 1, Long.MAX_VALUE, false);
+                indexBuckets.add(overlowIndexBucket);
+                if (log.isDebugEnabled()) {
+                    log.debug("IndexBucket (" + overlowIndexBucket.toString() + ") created.");
+                }
             }
 
             // put index in bucket
@@ -169,7 +181,7 @@ class IndexMerger implements IndexListener {
             bucket.add(new Index(name, numDocs));
 
             if (log.isDebugEnabled()) {
-                log.debug("index added: name=" + name + ", numDocs=" + numDocs);
+                log.debug("index added name: " + name + ", numDocs: " + numDocs + " into IndexBucket (" + bucket.toString() + ")");
             }
 
             // if bucket does not allow merge, we don't have to continue
@@ -181,6 +193,9 @@ class IndexMerger implements IndexListener {
             if (bucket.size() >= mergeFactor) {
                 long targetMergeDocs = bucket.upper;
                 targetMergeDocs = Math.min(targetMergeDocs * mergeFactor, maxMergeDocs);
+                if (log.isDebugEnabled()) {
+                    log.debug("check merge for IndexBucket (" + bucket.toString() + "), targetMergeDocs: " + targetMergeDocs);
+                }
                 // sum up docs in bucket
                 List<Index> indexesToMerge = new ArrayList<Index>();
                 int mergeDocs = 0;
@@ -452,6 +467,11 @@ class IndexMerger implements IndexListener {
          */
         boolean allowsMerge() {
             return allowMerge;
+        }
+        
+        @Override
+        public String toString() {
+            return "Lower: " + lower + ", Upper: " + upper + ", AllowMerge: " + allowMerge + ", Size: " + size();
         }
     }
 
