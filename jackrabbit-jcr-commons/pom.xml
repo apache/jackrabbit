@@ -32,7 +32,7 @@
   <artifactId>jackrabbit-jcr-commons</artifactId>
   <name>Jackrabbit JCR Commons</name>
   <description>General purpose classes for use with the JCR API</description>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <properties>
       <skip.coverage>false</skip.coverage>
@@ -42,22 +42,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Main-Class>
-              org.apache.jackrabbit.util.Base64
-            </Main-Class>
-            <Import-Package>
-              org.apache.jackrabbit.api.security.user;version="[2.2,3)";resolution:=optional,
-              *
-            </Import-Package>
-          </instructions>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 
