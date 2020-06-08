@@ -47,6 +47,7 @@ import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
+import org.apache.tika.mime.MediaTypeRegistry;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
@@ -934,7 +935,7 @@ public class NodeIndexer {
         if (supportedMediaTypes == null) {
             supportedMediaTypes = parser.getSupportedTypes(new ParseContext());
         }
-        return supportedMediaTypes.contains(MediaType.parse(type));
+        return supportedMediaTypes.contains(MediaTypeRegistry.getDefaultRegistry().normalize(MediaType.parse(type)));
     }
 
     /**
