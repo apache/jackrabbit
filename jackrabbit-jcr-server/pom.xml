@@ -69,14 +69,6 @@
             </configuration>
           </execution>
         </executions>
-        <dependencies>
-          <!-- See http://stackoverflow.com/questions/13269942/querydsl-maven-plugin-missing-a-class -->
-          <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-            <version>3.1.0</version>
-          </dependency>
-        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
