@@ -150,17 +150,20 @@ public class PersistenceCopier {
                 targetState.setType(sourceState.getType());
                 targetState.setMultiValued(sourceState.isMultiValued());
                 InternalValue[] values = sourceState.getValues();
+
+                // special case copy of binary values
                 if (sourceState.getType() == PropertyType.BINARY) {
+                    InternalValue[] convertedValues = new InternalValue[values.length];
                     for (int i = 0; i < values.length; i++) {
-                        InputStream stream = values[i].getStream();
-                        try {
-                            values[i] = InternalValue.create(stream, store);
-                        } finally {
-                            stream.close();
+                        try (InputStream stream = values[i].getStream()) {
+                            convertedValues[i] = InternalValue.create(stream, store);
                         }
                     }
+                    targetState.setValues(convertedValues);
+                } else {
+                    targetState.setValues(values);
                 }
-                targetState.setValues(values);
+
                 if (target.exists(targetState.getPropertyId())) {
                     changes.modified(targetState);
                 } else {
