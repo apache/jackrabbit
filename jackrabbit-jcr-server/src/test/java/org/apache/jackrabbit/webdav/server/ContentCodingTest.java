@@ -19,8 +19,14 @@ package org.apache.jackrabbit.webdav.server;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPut;
@@ -104,7 +110,9 @@ public class ContentCodingTest extends WebDAVTestBase {
         HttpResponse response = this.client.execute(propfind, this.context);
         int status = response.getStatusLine().getStatusCode();
         assertTrue("server must signal error for unknown content coding, got: " + status, status == 415);
-        assertEquals("gzip", response.getFirstHeader("Accept").getValue());
+        List<String> encodings = getContentCodings(response);
+        assertTrue("Accept should list 'gzip' but did not: " + encodings, encodings.contains("gzip"));
+        assertTrue("Accept should list 'deflate' but did not: " + encodings, encodings.contains("deflate"));
     }
 
     public void testPropfindGzipContentCoding() throws IOException {
@@ -137,6 +145,33 @@ public class ContentCodingTest extends WebDAVTestBase {
         assertEquals(400, status);
     }
 
+    public void testPropfindDeflateContentCoding() throws IOException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(PF));
+        entity.setContentEncoding(new BasicHeader("Content-Encoding", "deflate"));
+        propfind.setEntity(entity);
+        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        assertEquals(207, status);
+    }
+
+    public void testPropfindGzipDeflateContentCoding() throws IOException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(asGzipOctets(PF)));
+        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip, deflate"));
+        propfind.setEntity(entity);
+        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        assertEquals(207, status);
+    }
+
+    public void testPropfindGzipDeflateContentCodingMislabeled() throws IOException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(asGzipOctets(PF)));
+        entity.setContentEncoding(new BasicHeader("Content-Encoding", "deflate, gzip"));
+        propfind.setEntity(entity);
+        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        assertEquals(400, status);
+    }
+
     private static byte[] asGzipOctets(String input) throws IOException {
         return asGzipOctets(input.getBytes("UTF-8"));
     }
@@ -148,5 +183,34 @@ public class ContentCodingTest extends WebDAVTestBase {
         gos.flush();
         gos.close();
         return bos.toByteArray();
+    }
+
+    private static byte[] asDeflateOctets(String input) throws IOException {
+        return asDeflateOctets(input.getBytes("UTF-8"));
+    }
+
+    private static byte[] asDeflateOctets(byte[] input) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        OutputStream gos = new DeflaterOutputStream(bos);
+        gos.write(input);
+        gos.flush();
+        gos.close();
+        return bos.toByteArray();
+    }
+
+    private static List<String> getContentCodings(HttpResponse response) {
+        List<String> result = Collections.emptyList();
+        for (Header l : response.getHeaders("Accept")) {
+            for (String h : l.getValue().split(",")) {
+                if (!h.trim().isEmpty()) {
+                    if (result.isEmpty()) {
+                        result = new ArrayList<String>();
+                    }
+                    result.add(h.trim().toLowerCase(Locale.ENGLISH));
+                }
+            }
+        }
+
+        return result;
     }
 }

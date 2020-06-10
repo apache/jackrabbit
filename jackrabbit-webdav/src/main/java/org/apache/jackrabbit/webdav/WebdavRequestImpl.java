@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
@@ -384,6 +385,8 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
             log.trace("decoding: " + s);
             if ("gzip".equals(s)) {
                 result = new GZIPInputStream(result);
+            } else if ("deflate".equals(s)) {
+                result = new InflaterInputStream(result);
             } else {
                 String message = "Unsupported content coding: " + s;
                 try {
@@ -402,7 +405,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
 
     @Override
     public String getAcceptableCodings() {
-        return "gzip";
+        return "deflate, gzip";
     }
 
     /**
