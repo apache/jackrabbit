@@ -138,13 +138,7 @@ public class WebdavResponseImpl implements WebdavResponse {
             try {
                 Document doc = DomUtil.createDocument();
                 doc.appendChild(serializable.toXml(doc));
-
-                // JCR-2636: Need to use an explicit OutputStreamWriter
-                // instead of relying on the built-in UTF-8 serialization
-                // to avoid problems with surrogate pairs on Sun JRE 1.5.
-                Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
-                DomUtil.transformDocument(doc, writer);
-                writer.flush();
+                DomUtil.transformDocument(doc, out);
 
                 // TODO: Should this be application/xml? See JCR-1621
                 httpResponse.setContentType("text/xml; charset=UTF-8");
