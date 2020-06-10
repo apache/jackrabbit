@@ -39,7 +39,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.webdav.bind.BindInfo;
@@ -390,8 +389,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
             } else {
                 String message = "Unsupported content coding: " + s;
                 try {
-                    Element condition = DomUtil.createElement(
-                            DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(), PRECONDITION_SUPPORTED);
+                    Element condition = DomUtil.createElement(DomUtil.createDocument(), PRECONDITION_SUPPORTED);
                     throw new IOException(
                             new DavException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, message, null, condition));
                 } catch (ParserConfigurationException ex) {
