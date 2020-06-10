@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.server;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,7 +24,7 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.jackrabbit.webdav.DavConstants;
@@ -54,7 +53,7 @@ public class ContentCodingTest extends WebDAVTestBase {
             entity.setContentEncoding(new BasicHeader("Content-Encoding", "qux"));
             put.setEntity(entity);
             status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
-            assertTrue("server must signal error for unknown content coding", status == 415);
+            assertTrue("server must signal error for unknown content coding, got: " + status, status == 415);
         } finally {
             if (status / 2 == 100) {
                 delete(testUri);
@@ -68,22 +67,19 @@ public class ContentCodingTest extends WebDAVTestBase {
         try {
             byte bytes[] = "foobarfoobarfoobar".getBytes("UTF-8");
             HttpPut put = new HttpPut(testUri);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            OutputStream gos = new GZIPOutputStream(bos);
-            gos.write(bytes);
-            gos.flush();
-            assertTrue(bos.toByteArray().length != bytes.length);
-            InputStreamEntity entity = new InputStreamEntity(new ByteArrayInputStream(bos.toByteArray()));
+            byte gzbytes[] = asGzipOctets(bytes);
+            assertTrue(gzbytes.length != bytes.length);
+            ByteArrayEntity entity = new ByteArrayEntity(gzbytes);
             entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
             put.setEntity(entity);
             status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
-            assertTrue("server create or signal error", status == 201 || status == 415);
+            assertTrue("server create or signal error, got: " + status, status == 201 || status == 415);
             if (status / 2 == 100) {
                 // check length
                 HttpHead head = new HttpHead(testUri);
                 HttpResponse response = this.client.execute(head, this.context);
                 assertEquals(200, response.getStatusLine().getStatusCode());
-                assertEquals(bytes.length, response.getFirstHeader("Content-Length").getValue());
+                assertEquals(bytes.length, Integer.parseInt(response.getFirstHeader("Content-Length").getValue()));
             }
         } finally {
             if (status / 2 == 100) {
@@ -98,13 +94,59 @@ public class ContentCodingTest extends WebDAVTestBase {
         assertEquals(207, status);
     }
 
+    private static String PF = "<D:propfind xmlns:D=\"DAV:\"><D:prop><D:resourcetype/></D:prop></D:propfind>";
+
     public void testPropfindUnknownContentCoding() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        StringEntity entity = new StringEntity(
-                "<D:propfind xmlns:D=\"DAV:\"><D:prop xmlns:R=\"http://ns.example.com/boxschema/\"><R:bigbox/></D:prop></D:propfind>");
+        StringEntity entity = new StringEntity(PF);
         entity.setContentEncoding(new BasicHeader("Content-Encoding", "qux"));
         propfind.setEntity(entity);
+        HttpResponse response = this.client.execute(propfind, this.context);
+        int status = response.getStatusLine().getStatusCode();
+        assertTrue("server must signal error for unknown content coding, got: " + status, status == 415);
+        assertEquals("gzip", response.getFirstHeader("Accept").getValue());
+    }
+
+    public void testPropfindGzipContentCoding() throws IOException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(PF));
+        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
+        propfind.setEntity(entity);
         int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
-        assertTrue("server must signal error for unknown content coding", status == 415);
+        assertEquals(207, status);
+    }
+
+    // double encoded, empty list member in field value, mixed upper/lower in
+    // coding name
+    public void testPropfindGzipContentCodingTwice() throws IOException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(asGzipOctets(PF)));
+        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gziP,, Gzip"));
+        propfind.setEntity(entity);
+        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        assertEquals(207, status);
+    }
+
+    // double encoded, but only when encoding in header field
+    public void testPropfindGzipContentCodingBadSpec() throws IOException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(asGzipOctets(PF)));
+        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
+        propfind.setEntity(entity);
+        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        assertEquals(400, status);
+    }
+
+    private static byte[] asGzipOctets(String input) throws IOException {
+        return asGzipOctets(input.getBytes("UTF-8"));
+    }
+
+    private static byte[] asGzipOctets(byte[] input) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        OutputStream gos = new GZIPOutputStream(bos);
+        gos.write(input);
+        gos.flush();
+        gos.close();
+        return bos.toByteArray();
     }
 }

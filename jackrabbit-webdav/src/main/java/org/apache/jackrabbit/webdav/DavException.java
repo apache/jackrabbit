@@ -139,6 +139,15 @@ public class DavException extends Exception implements XmlSerializable {
     }
 
     /**
+     * Return the error condition attached to this <code>DavException</code>.
+     *
+     * @return errorCondition
+     */
+    public Element getErrorCondition() {
+        return errorCondition;
+    }
+
+    /**
      * Returns a DAV:error element containing the error condition or
      * <code>null</code> if no specific condition is available. See
      * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>

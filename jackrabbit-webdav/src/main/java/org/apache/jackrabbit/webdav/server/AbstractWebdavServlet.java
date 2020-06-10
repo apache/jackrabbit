@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.server;
 
+import org.apache.jackrabbit.webdav.ContentCodingAwareRequest;
 import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
@@ -76,9 +77,11 @@ import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.apache.jackrabbit.webdav.version.VersionableResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -91,6 +94,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * <code>AbstractWebdavServlet</code>
@@ -290,13 +294,15 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
             // JCR-4165: reject any content-coding in request until we can
             // support it (see JCR-4166)
-            List<String> ces = getContentCodings(request);
-            if (!ces.isEmpty()) {
-                webdavResponse.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
-                webdavResponse.setHeader("Accept-Encoding", "identity");
-                webdavResponse.setContentType("text/plain; charset=UTF-8");
-                webdavResponse.getWriter().println("Content-Encodings not supported, but received: " + ces);
-                webdavResponse.getWriter().flush();
+            if (!(webdavRequest instanceof ContentCodingAwareRequest)) {
+                List<String> ces = getContentCodings(request);
+                if (!ces.isEmpty()) {
+                    webdavResponse.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
+                    webdavResponse.setHeader("Accept-Encoding", "identity");
+                    webdavResponse.setContentType("text/plain; charset=UTF-8");
+                    webdavResponse.getWriter().println("Content-Encodings not supported, but received: " + ces);
+                    webdavResponse.getWriter().flush();
+                }
             }
 
             // check matching if=header for lock-token relevant operations
@@ -308,16 +314,33 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             if (!execute(webdavRequest, webdavResponse, methodCode, resource)) {
                 super.service(request, response);
             }
-
         } catch (DavException e) {
-            if (e.getErrorCode() == HttpServletResponse.SC_UNAUTHORIZED) {
-                sendUnauthorized(webdavRequest, webdavResponse, e);
+            handleDavException(webdavRequest, webdavResponse, e);
+        } catch (IOException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof DavException) {
+                handleDavException(webdavRequest, webdavResponse, (DavException) cause);
             } else {
-                webdavResponse.sendError(e);
+                throw ex;
             }
         } finally {
             WebdavRequestContextHolder.clearContext();
             getDavSessionProvider().releaseSession(webdavRequest);
+        }
+    }
+
+    private void handleDavException(WebdavRequest webdavRequest, WebdavResponse webdavResponse, DavException ex)
+            throws IOException {
+        if (ex.getErrorCode() == HttpServletResponse.SC_UNAUTHORIZED) {
+            sendUnauthorized(webdavRequest, webdavResponse, ex);
+        } else {
+            Element condition = ex.getErrorCondition();
+            if (DomUtil.matches(condition, ContentCodingAwareRequest.PRECONDITION_SUPPORTED)) {
+                if (webdavRequest instanceof ContentCodingAwareRequest) {
+                    webdavResponse.setHeader("accept", ((ContentCodingAwareRequest) webdavRequest).getAcceptableCodings());
+                }
+            }
+            webdavResponse.sendError(ex);
         }
     }
 
@@ -1415,7 +1438,11 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         return new OutputContextImpl(response, out);
     }
 
-    private List<String> getContentCodings(HttpServletRequest request) {
+    /**
+     * Obtain the (ordered!) list of content codings that have been used in the
+     * request
+     */
+    public static List<String> getContentCodings(HttpServletRequest request) {
         List<String> result = Collections.emptyList();
         for (@SuppressWarnings("unchecked")
         Enumeration<String> ceh = request.getHeaders("Content-Encoding"); ceh.hasMoreElements();) {
@@ -1424,7 +1451,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                     if (result.isEmpty()) {
                         result = new ArrayList<String>();
                     }
-                    result.add(h.trim());
+                    result.add(h.trim().toLowerCase(Locale.ENGLISH));
                 }
             }
         }
