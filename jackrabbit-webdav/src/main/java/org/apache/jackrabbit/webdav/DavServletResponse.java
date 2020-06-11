@@ -21,6 +21,7 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * <code>WebdavResponse</code> extends the HttpServletResponse by
@@ -96,6 +97,21 @@ public interface DavServletResponse extends HttpServletResponse {
     public void sendMultiStatus(MultiStatus multistatus) throws IOException;
 
     /**
+     * Send the multistatus response to the client. A multistatus response
+     * is returned in response to a successful PROPFIND and PROPPATCH request.
+     * In addition multistatus response is required response in case a COPY,
+     * MOVE, DELETE, LOCK or PROPPATCH request fails.
+     *
+     * @param multistatus
+     * @param acceptableContentCodings content codings accepted by the client
+     * @throws IOException
+     * @see #SC_MULTI_STATUS
+     */
+    default void sendMultiStatus(MultiStatus multistatus, List<String> acceptableContentCodings) throws IOException {
+        sendMultiStatus(multistatus);
+    }
+
+    /**
      * Send the lock response for a successful LOCK request, that was intended
      * to refresh an existing lock. The locks array must contain at least
      * a single element; the <code>ActiveLock</code> objects are then
@@ -117,4 +133,17 @@ public interface DavServletResponse extends HttpServletResponse {
      * @throws IOException
      */
     public void sendXmlResponse(XmlSerializable serializable, int status) throws IOException;
+
+    /**
+     * Generic method to return an Xml response body.
+     *
+     * @param serializable object that can be converted to the root Xml element
+     * of the document to be sent as response body.
+     * @param status Status code to be used with {@link #setStatus(int)}.
+     * @param acceptableContentCodings content codings accepted by the client
+     * @throws IOException
+     */
+    default void sendXmlResponse(XmlSerializable serializable, int status, List<String> acceptableContentCodings) throws IOException {
+        sendXmlResponse(serializable, status);
+    }
 }
