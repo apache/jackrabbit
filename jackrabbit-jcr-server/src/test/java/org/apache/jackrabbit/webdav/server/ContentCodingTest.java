@@ -213,7 +213,7 @@ public class ContentCodingTest extends WebDAVTestBase {
 
     private static List<String> getContentCodings(HttpResponse response) {
         List<String> result = Collections.emptyList();
-        for (Header l : response.getHeaders("Accept")) {
+        for (Header l : response.getHeaders("Accept-Encoding")) {
             for (String h : l.getValue().split(",")) {
                 if (!h.trim().isEmpty()) {
                     if (result.isEmpty()) {

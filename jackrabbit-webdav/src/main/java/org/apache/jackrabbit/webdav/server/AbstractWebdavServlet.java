@@ -337,7 +337,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             Element condition = ex.getErrorCondition();
             if (DomUtil.matches(condition, ContentCodingAwareRequest.PRECONDITION_SUPPORTED)) {
                 if (webdavRequest instanceof ContentCodingAwareRequest) {
-                    webdavResponse.setHeader("accept", ((ContentCodingAwareRequest) webdavRequest).getAcceptableCodings());
+                    webdavResponse.setHeader("Accept-Encoding", ((ContentCodingAwareRequest) webdavRequest).getAcceptableCodings());
                 }
             }
             webdavResponse.sendError(ex);
