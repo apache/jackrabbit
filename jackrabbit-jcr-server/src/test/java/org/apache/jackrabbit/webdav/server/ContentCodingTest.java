@@ -101,6 +101,9 @@ public class ContentCodingTest extends WebDAVTestBase {
         HttpResponse response = this.client.execute(propfind, this.context);
         int status = response.getStatusLine().getStatusCode();
         assertEquals(207, status);
+        List<String> encodings = getContentCodings(response);
+        assertTrue("Accept should list 'gzip' but did not: " + encodings, encodings.contains("gzip"));
+        assertTrue("Accept should list 'deflate' but did not: " + encodings, encodings.contains("deflate"));
     }
 
     public void testPropfindAcceptReponseEncoding() throws IOException, DavException {
