@@ -579,6 +579,12 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             if (modTime != UNDEFINED_TIME && (modTime / 1000 * 1000) <= modSince) {
                 // resource has not been modified since the time indicated in the
                 // 'If-Modified-Since' header.
+
+                DavProperty<?> etagProp = resource.getProperty(DavPropertyName.GETETAG);
+                if (etagProp != null) {
+                    // 304 response MUST contain Etag when available
+                    response.setHeader("etag", etagProp.getValue().toString());
+                }
                 response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
             }
