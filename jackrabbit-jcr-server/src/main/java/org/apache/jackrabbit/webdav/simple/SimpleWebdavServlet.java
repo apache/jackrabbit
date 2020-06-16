@@ -194,6 +194,21 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     @Override
     protected boolean isPreconditionValid(WebdavRequest request,
                                           DavResource resource) {
+
+
+        long ifUnmodifiedSince = UNDEFINED_TIME;
+        try {
+            ifUnmodifiedSince = request.getDateHeader("if-unmodified-since");
+        } catch (IllegalArgumentException ex) {
+            log.trace("illegal value for if-unmodified-since ignored: " + request.getHeader("if-unmodified-since"));
+        }
+
+        if (ifUnmodifiedSince > UNDEFINED_TIME && resource.exists()) {
+            if (resource.getModificationTime() / 1000 > ifUnmodifiedSince / 1000) {
+                return false;
+            }
+        }
+
         return !resource.exists() || request.matchesIfHeader(resource);
     }
 

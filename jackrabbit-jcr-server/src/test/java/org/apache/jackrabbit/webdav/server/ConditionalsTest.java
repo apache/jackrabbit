@@ -126,15 +126,15 @@ public class ConditionalsTest extends WebDAVTestBase {
                 assertEquals(204, status);
             }
 
-            // // conditional PUT once more should fail
-            // {
-            // HttpPut put = new HttpPut(testUri);
-            // put.setHeader("If-Unmodified-Since", lm.getValue());
-            // put.setEntity(new StringEntity("lazydog"));
-            // HttpResponse response = this.client.execute(put, this.context);
-            // int status = response.getStatusLine().getStatusCode();
-            // assertEquals(412, status);
-            // }
+            // conditional PUT once more should fail
+            {
+                HttpPut put = new HttpPut(testUri);
+                put.setHeader("If-Unmodified-Since", lm.getValue());
+                put.setEntity(new StringEntity("lazydog"));
+                HttpResponse response = this.client.execute(put, this.context);
+                int status = response.getStatusLine().getStatusCode();
+                assertEquals(412, status);
+            }
         } finally {
             delete(testUri);
         }
