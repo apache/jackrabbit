@@ -571,7 +571,13 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             return;
         }
 
-        long modSince = request.getDateHeader("If-Modified-Since");
+        long modSince = UNDEFINED_TIME;
+        try {
+            modSince = request.getDateHeader("If-Modified-Since");
+        } catch (IllegalArgumentException ex) {
+            log.trace("illegal value for if-modified-since ignored: " + request.getHeader("If-Modified-Since"));
+        }
+
         if (modSince > UNDEFINED_TIME) {
             long modTime = resource.getModificationTime();
             // test if resource has been modified. note that formatted modification

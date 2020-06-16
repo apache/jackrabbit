@@ -88,14 +88,14 @@ public class ConditionalsTest extends WebDAVTestBase {
                 }
             }
 
-//            // conditional HEAD with broken date
-//            {
-//                HttpHead head = new HttpHead(testUri);
-//                head.setHeader("If-Modified-Since", "broken");
-//                HttpResponse response = this.client.execute(head, this.context);
-//                int status = response.getStatusLine().getStatusCode();
-//                assertEquals(200, status);
-//            }
+            // conditional HEAD with broken date (MUST ignore header field)
+            {
+                HttpHead head = new HttpHead(testUri);
+                head.setHeader("If-Modified-Since", "broken");
+                HttpResponse response = this.client.execute(head, this.context);
+                int status = response.getStatusLine().getStatusCode();
+                assertEquals(200, status);
+            }
 
             // let one sec elapse
             while (System.currentTimeMillis() < created + 1000) {
