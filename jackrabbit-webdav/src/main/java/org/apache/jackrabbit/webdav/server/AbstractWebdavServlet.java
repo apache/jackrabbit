@@ -573,9 +573,13 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         long modSince = UNDEFINED_TIME;
         try {
-            modSince = request.getDateHeader("If-Modified-Since");
+            // will throw if multiple field lines present
+            String value = getSingletonField(request, "If-Modified-Since");
+            if (value != null) {
+                modSince = request.getDateHeader("If-Modified-Since");
+            }
         } catch (IllegalArgumentException ex) {
-            log.trace("illegal value for if-modified-since ignored: " + request.getHeader("If-Modified-Since"));
+            log.debug("illegal value for if-modified-since ignored: " + ex.getMessage());
         }
 
         if (modSince > UNDEFINED_TIME) {
@@ -1517,4 +1521,32 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         return result;
     }
+
+    /**
+     * Get field value of a singleton field
+     * @param request HTTP request
+     * @param fieldName field name
+     * @return the field value (when there is indeed a single field line) or {@code null} when field not present
+     * @throws IllegalArgumentException when multiple field lines present
+     */
+    private static String getSingletonField(HttpServletRequest request, String fieldName) {
+        @SuppressWarnings("unchecked")
+        Enumeration<String> lines = request.getHeaders(fieldName);
+        if (!lines.hasMoreElements()) {
+            return null;
+        } else {
+            String value = lines.nextElement();
+            if (!lines.hasMoreElements()) {
+                return value;
+            } else {
+                List<String> v = new ArrayList<>();
+                v.add(value);
+                while (lines.hasMoreElements()) {
+                    v.add(lines.nextElement());
+                }
+                throw new IllegalArgumentException("Multiple field lines for '" + fieldName + "' header field: " + v);
+            }
+        }
+    }
 }
+
