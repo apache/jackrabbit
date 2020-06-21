@@ -195,12 +195,15 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     protected boolean isPreconditionValid(WebdavRequest request,
                                           DavResource resource) {
 
-
         long ifUnmodifiedSince = UNDEFINED_TIME;
         try {
-            ifUnmodifiedSince = request.getDateHeader("if-unmodified-since");
+            // will throw if multiple field lines present
+            String value = AbstractWebdavServlet.getSingletonField(request, "If-Unmodified-Since");
+            if (value != null) {
+                ifUnmodifiedSince = request.getDateHeader("If-Unmodified-Since");
+            }
         } catch (IllegalArgumentException ex) {
-            log.trace("illegal value for if-unmodified-since ignored: " + request.getHeader("if-unmodified-since"));
+            log.debug("illegal value for if-unmodified-since ignored: " + ex.getMessage());
         }
 
         if (ifUnmodifiedSince > UNDEFINED_TIME && resource.exists()) {
