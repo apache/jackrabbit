@@ -64,6 +64,7 @@ import org.apache.jackrabbit.webdav.security.AclResource;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.util.CSRFUtil;
+import org.apache.jackrabbit.webdav.util.HttpDateTimeFormatter;
 import org.apache.jackrabbit.webdav.version.ActivityResource;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
@@ -90,6 +91,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -576,9 +578,9 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             // will throw if multiple field lines present
             String value = getSingletonField(request, "If-Modified-Since");
             if (value != null) {
-                modSince = request.getDateHeader("If-Modified-Since");
+                modSince = HttpDateTimeFormatter.parse(value);
             }
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | DateTimeParseException ex) {
             log.debug("illegal value for if-modified-since ignored: " + ex.getMessage());
         }
 

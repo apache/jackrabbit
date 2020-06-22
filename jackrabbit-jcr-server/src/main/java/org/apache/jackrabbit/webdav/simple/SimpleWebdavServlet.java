@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.server.AbstractWebdavServlet;
+import org.apache.jackrabbit.webdav.util.HttpDateTimeFormatter;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypesFactory;
@@ -41,6 +42,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.format.DateTimeParseException;
 
 /**
  * WebdavServlet provides WebDAV support (level
@@ -200,9 +202,9 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
             // will throw if multiple field lines present
             String value = AbstractWebdavServlet.getSingletonField(request, "If-Unmodified-Since");
             if (value != null) {
-                ifUnmodifiedSince = request.getDateHeader("If-Unmodified-Since");
+                ifUnmodifiedSince = HttpDateTimeFormatter.parse(value);
             }
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | DateTimeParseException ex) {
             log.debug("illegal value for if-unmodified-since ignored: " + ex.getMessage());
         }
 
