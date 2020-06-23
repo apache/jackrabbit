@@ -336,6 +336,14 @@
           <artifactId>maven-bundle-plugin</artifactId>
           <version>4.2.1</version>
           <inherited>true</inherited>
+          <dependencies>
+            <!-- see JCR-4569, to be removed when bundle-plugin > 4.2.1 is released -->
+            <dependency>
+              <groupId>biz.aQute.bnd</groupId>
+              <artifactId>biz.aQute.bndlib</artifactId>
+              <version>5.1.1</version>
+            </dependency>
+          </dependencies>
           <configuration>
             <instructions>
               <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
