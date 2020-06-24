@@ -19,15 +19,25 @@ package org.apache.jackrabbit.server;
 import junit.framework.TestCase;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.jcr.LoginException;
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.GuestCredentials;
+
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Locale;
@@ -116,11 +126,11 @@ public class BasicCredentialsProviderTest extends TestCase {
             return authHeader;
         }
 
-        public Enumeration<?> getHeaders(String name) {
+        public Enumeration<String> getHeaders(String name) {
             return null;
         }
 
-        public Enumeration<?> getHeaderNames() {
+        public Enumeration<String> getHeaderNames() {
             return null;
         }
 
@@ -204,7 +214,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return null;
         }
 
-        public Enumeration<?> getAttributeNames() {
+        public Enumeration<String> getAttributeNames() {
             return null;
         }
 
@@ -231,7 +241,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return null;
         }
 
-        public Enumeration<?> getParameterNames() {
+        public Enumeration<String> getParameterNames() {
             return null;
         }
 
@@ -239,7 +249,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return new String[0];
         }
 
-        public Map<?,?> getParameterMap() {
+        public Map<String, String[]> getParameterMap() {
             return null;
         }
 
@@ -281,7 +291,7 @@ public class BasicCredentialsProviderTest extends TestCase {
             return null;
         }
 
-        public Enumeration<?> getLocales() {
+        public Enumeration<Locale> getLocales() {
             return null;
         }
 
@@ -311,6 +321,65 @@ public class BasicCredentialsProviderTest extends TestCase {
 
         public int getLocalPort() {
             return 0;
+        }
+
+        public long getContentLengthLong() {
+            return 0;
+        }
+
+        public ServletContext getServletContext() {
+            return null;
+        }
+
+        public AsyncContext startAsync() throws IllegalStateException {
+            return null;
+        }
+
+        public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse)
+                throws IllegalStateException {
+            return null;
+        }
+
+        public boolean isAsyncStarted() {
+            return false;
+        }
+
+        public boolean isAsyncSupported() {
+            return false;
+        }
+
+        public AsyncContext getAsyncContext() {
+            return null;
+        }
+
+        public DispatcherType getDispatcherType() {
+            return null;
+        }
+
+        public String changeSessionId() {
+            return null;
+        }
+
+        public boolean authenticate(HttpServletResponse response) throws IOException, ServletException {
+            return false;
+        }
+
+        public void login(String username, String password) throws ServletException {
+        }
+
+        public void logout() throws ServletException {
+        }
+
+        public Collection<Part> getParts() throws IOException, ServletException {
+            return null;
+        }
+
+        public Part getPart(String name) throws IOException, ServletException {
+            return null;
+        }
+
+        public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+            return null;
         }
     }
 }

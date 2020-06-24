@@ -23,6 +23,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 /**
@@ -46,6 +47,25 @@ public class OutputContextImplTest extends TestCase {
             }
             @Override
             public void setCharacterEncoding(String charset) {
+            }
+            @Override
+            public int getStatus() {
+                return 0;
+            }
+            @Override
+            public String getHeader(String name) {
+                return null;
+            }
+            @Override
+            public Collection<String> getHeaders(String name) {
+                return null;
+            }
+            @Override
+            public Collection<String> getHeaderNames() {
+                return null;
+            }
+            @Override
+            public void setContentLengthLong(long len) {
             }
         };
 

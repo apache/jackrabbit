@@ -1509,8 +1509,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
     private static List<String> getListElementsFromHeaderField(HttpServletRequest request, String fieldName) {
         List<String> result = Collections.emptyList();
-        for (@SuppressWarnings("unchecked")
-        Enumeration<String> ceh = request.getHeaders(fieldName); ceh.hasMoreElements();) {
+        for (Enumeration<String> ceh = request.getHeaders(fieldName); ceh.hasMoreElements();) {
             for (String h : ceh.nextElement().split(",")) {
                 if (!h.trim().isEmpty()) {
                     if (result.isEmpty()) {
@@ -1532,7 +1531,6 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @throws IllegalArgumentException when multiple field lines present
      */
     protected static String getSingletonField(HttpServletRequest request, String fieldName) {
-        @SuppressWarnings("unchecked")
         Enumeration<String> lines = request.getHeaders(fieldName);
         if (!lines.hasMoreElements()) {
             return null;
