@@ -45,6 +45,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Supplier;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -378,5 +380,28 @@ public class WebdavResponseImpl implements WebdavResponse {
     @Override
     public void setContentLengthLong(long len) {
         httpResponse.setContentLengthLong(len);
+    }
+
+    // Servlet 4.0 API support for trailers, for now using reflection
+
+    public void setTrailerFields(Supplier<Map<String, String>> supplier) {
+        try {
+            java.lang.reflect.Method stf = httpResponse.getClass().getDeclaredMethod("setTrailerFields", Supplier.class);
+            stf.invoke(httpResponse, supplier);
+        } catch (IllegalAccessException | java.lang.reflect.InvocationTargetException | NoSuchMethodException
+                | SecurityException ex) {
+            throw new UnsupportedOperationException("no servlet 4.0 support on: " + httpResponse.getClass(), ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Supplier<Map<String, String>> getTrailerFields() {
+        try {
+            java.lang.reflect.Method stf = httpResponse.getClass().getDeclaredMethod("getTrailerFields");
+            return (Supplier<Map<String, String>>) stf.invoke(httpResponse);
+        } catch (IllegalAccessException | java.lang.reflect.InvocationTargetException | NoSuchMethodException
+                | SecurityException ex) {
+            throw new UnsupportedOperationException("no servlet 4.0 support on: " + httpResponse.getClass(), ex);
+        }
     }
 }

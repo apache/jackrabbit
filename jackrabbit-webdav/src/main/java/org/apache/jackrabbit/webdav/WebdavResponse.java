@@ -16,15 +16,27 @@
  */
 package org.apache.jackrabbit.webdav;
 
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.apache.jackrabbit.webdav.observation.ObservationDavServletResponse;
 
 /**
  * The empty <code>WebdavResponse</code> interface collects the functionality
- * defined by {@link org.apache.jackrabbit.webdav.DavServletResponse} encapsulating
- * for the core WebDAV specification (RFC 2518) as well as the various extensions
- * used for observation and transaction support, ordering of collections, search
- * and versioning.
+ * defined by {@link org.apache.jackrabbit.webdav.DavServletResponse}
+ * encapsulating for the core WebDAV specification (RFC 2518) as well as the
+ * various extensions used for observation and transaction support, ordering of
+ * collections, search and versioning.
  */
-public interface WebdavResponse extends DavServletResponse,
-        ObservationDavServletResponse {
+public interface WebdavResponse extends DavServletResponse, ObservationDavServletResponse {
+
+    // can be removed when we move to Servlet API 4.0
+    public default void setTrailerFields(Supplier<Map<String, String>> supplier) {
+        // nop
+    }
+
+    // can be removed when we move to Servlet API 4.0
+    public default Supplier<Map<String, String>> getTrailerFields() {
+        return null;
+    }
 }
