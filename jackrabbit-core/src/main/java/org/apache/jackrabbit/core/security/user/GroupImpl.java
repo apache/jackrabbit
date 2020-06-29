@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Predicate;
+
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -678,9 +680,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
     private Iterator<Authorizable> unique(Iterator<Authorizable> authorizables) {
         final HashSet<String> seenAuthorizables = new HashSet<String>();
         return Iterators.filterIterator(authorizables,
-                new org.apache.jackrabbit.spi.commons.iterator.Predicate<Authorizable>() {
+                new Predicate<Authorizable>() {
 
-            public boolean evaluate(Authorizable authorizable) {
+            public boolean test(Authorizable authorizable) {
                 try {
                     return seenAuthorizables.add(authorizable.getID());
                 }

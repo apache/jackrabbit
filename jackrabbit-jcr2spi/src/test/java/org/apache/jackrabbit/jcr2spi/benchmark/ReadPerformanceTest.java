@@ -31,7 +31,6 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.PropertyInfoBuilder;
 import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
-import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
@@ -46,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 
 import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
 import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
@@ -305,7 +305,7 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
 
     private Iterator<ItemInfo> getBatch() {
         return filterIterator(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
-            public boolean evaluate(ItemInfo value) {
+            public boolean test(ItemInfo value) {
                 return rnd.nextInt(batchRatio) == 0;
             }
         });

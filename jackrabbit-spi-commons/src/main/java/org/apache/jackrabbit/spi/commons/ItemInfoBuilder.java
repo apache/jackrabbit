@@ -30,7 +30,6 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
-import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Transformer;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -49,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Utility class providing a {@link NodeInfoBuilder} for building {@link NodeInfo}.
@@ -450,7 +450,7 @@ public final class ItemInfoBuilder {
         private Iterator<ChildInfo> getChildInfos() {
             return transformIterator(filterIterator(itemInfos.iterator(),
                     new Predicate<ItemInfo>(){
-                        public boolean evaluate(ItemInfo info) {
+                        public boolean test(ItemInfo info) {
                             return info.denotesNode();
                         }
                     }),
@@ -466,7 +466,7 @@ public final class ItemInfoBuilder {
         private Iterator<PropertyId> getPropertyIds() {
             return transformIterator(filterIterator(itemInfos.iterator(),
                     new Predicate<ItemInfo>(){
-                        public boolean evaluate(ItemInfo info) {
+                        public boolean test(ItemInfo info) {
                             return !info.denotesNode();
                         }
                     }),
