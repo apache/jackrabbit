@@ -533,7 +533,7 @@ public class DomUtil {
      * Create a new DOM element with the specified local name and namespace.
      *
      * @param factory
-     * @param qName
+     * @param elementName
      * @return a new DOM element
      * @see Document#createElement(String)
      * @see Document#createElementNS(String, String)
@@ -787,7 +787,7 @@ public class DomUtil {
      * NOTE, that this is the value to be used for the 'qualified Name' parameter
      * expected with the namespace sensitive factory methods.
      *
-     * @param qName
+     * @param name
      * @return qualified name consisting of prefix, ':' and local name.
      * @see Document#createAttributeNS(String, String)
      * @see Document#createElementNS(String, String)
