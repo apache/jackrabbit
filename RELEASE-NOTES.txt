@@ -1,51 +1,66 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.1
+Release Notes -- Apache Jackrabbit -- Version 2.21.2
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.1, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.1 is an unstable release cut directly from
+Apache Jackrabbit 2.21.2 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.1
+Changes in Jackrabbit 2.21.2
 ----------------------------
 
 Bug
 
-    [JCR-3942] - Content-Length header field may be set twice
-    [JCR-4549] - backup with RepositoryCopier.copy() fails on second method call
-    [JCR-4551] - Use the normalized MediaType to check if the given MediaType should be indexed
+    [JCR-4537] - MalformedURLException: Nested JAR URLs are not supported
+    [JCR-4579] - In rare situations we see "Closed Statement; nested exception is java.sql.SQLException: Closed Statement"
+    [JCR-4590] - jcr-server: DirListingExportHandler sets empty Etag
+    [JCR-4603] - spi-commons: Iterators - incorrect method signature
 
 Improvement
 
-    [JCR-4541] - reduce classpath lookups for SaxParserFactory
+    [JCR-4577] - Define org.apache.derby as Test-Dependency
+    [JCR-4578] - IndexMerger should log more debug informations about the internal IndexBuckets
+    [JCR-4583] - remove XML serialization workaround for ancient Java versions
+    [JCR-4589] - upgrade to servlet-api 3.10
+    [JCR-4591] - basic trailer field support
 
 Task
 
-    [JCR-4531] - Update tomcat dependency to 8.5.51/7.0.100
-    [JCR-4539] - Update Jackrabbit trunk and 2.20 to Oak 1.26.0
-    [JCR-4543] - Update Tika dependency to 1.24
-    [JCR-4544] - Update slf4j dependency to 1.7.30
-    [JCR-4545] - Update httpclient/mime dependencies to 4.5.12
-    [JCR-4546] - Update aws java sdk version to 1.11.700 (consistent with Oak)
-    [JCR-4547] - Update tomcat dependency to 8.5.53/7.0.103
-    [JCR-4548] - update javadoc-plugin dependency to 3.2.0
-    [JCR-4554] - Update Tika dependency to 1.24.1
-    [JCR-4555] - Update mockito dependency to 3.3.3
-    [JCR-4556] - Update tomcat dependency to 8.5.54
-    [JCR-4557] - update junit dependency to 4.13
-    [JCR-4558] - update Apache parent pom to version 23
-    [JCR-4559] - Update commons file-upload dependency to 1.4
-    [JCR-4560] - Update h2db dependency to 1.4.200
-    [JCR-4561] - webapp: update htmlunit dependency to 2.40.0
-    [JCR-4562] - Remove workaround for FELIX-2492
-    [JCR-4563] - test OSGi bundles
-    [JCR-4564] - jackrabbit-jcr-server: remove obsolete workaround for scr-plugin
+    [JCR-4572] - Update Jackrabbit trunk to oak 1.30.0
+    [JCR-4573] - Update Jetty dependency to 9.2.30.v20200428
+    [JCR-4575] - Update tomcat dependency to 8.5.55/7.0.104
+    [JCR-4580] - switch bundle comparisonVersion for 2.20.1
+    [JCR-4592] - Update maven-assembly-plugin to 3.3.0
+    [JCR-4593] - update war-plugin dependency to 3.3.0
+    [JCR-4594] - update pmd-plugin dependency to 3.13.0
+    [JCR-4595] - update checkstyle-plugin dependency to 3.1.1
+    [JCR-4596] - update build-helper-maven-plugin to version 3.2.0
+    [JCR-4597] - Update commons-io dependency to 2.7
+    [JCR-4598] - Update easymock dependency to 4.2
+    [JCR-4599] - webapp: update htmlunit dependency to 2.41.0
+    [JCR-4600] - Update tomcat dependency to 8.5.56
+    [JCR-4601] - jackrabbit-jcr-commons: update cglib dependency to 3.3.0
+    [JCR-4602] - jackrabbit-core: remove unused commons-collections dependency
+    [JCR-4604] - deprecate Iterators.Predicate
+    [JCR-4605] - standalone: fix deprecation warning wrt GnuParser
+
+Sub-task
+
+    [JCR-4166] - support GZIP content coding in requests
+    [JCR-4167] - signal support for GZIP content coding as per RFC 7694
+    [JCR-4169] - make WebdavServerTests run automatically
+    [JCR-4581] - use GZIP encoding in XML responses when client signals support
+    [JCR-4582] - support 'deflate' encoding in requests
+    [JCR-4585] - jackrabbit-webdav: return Etag with 304 response
+    [JCR-4586] - jackrabbit-webdav: must ignore if-modified-since with broken date
+    [JCR-4587] - jackrabbit-webdav: include if-unmodified-since in precondition check
+    [JCR-4588] - jackrabbit-webdav/server: add parsers for http dates and use them in conditional eval
 
 
 For more detailed information about all the changes in this and other
