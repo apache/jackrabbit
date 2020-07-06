@@ -163,41 +163,6 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         this(jcrServerURI, null, batchReadConfig, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE, ConnectionOptions.DEFAULT);
     }
 
-    /**
-     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int)}
-     * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client.
-     *
-     * @param jcrServerURI The server uri.
-     * @param defaultWorkspaceName The default workspace name.
-     * @param batchReadConfig The batch read configuration.
-     * @param itemInfoCacheSize The size of the item info cache.
-     * @param ConnectionOption advanced connection options.
-     * @throws RepositoryException If an exception occurs.
-     */
-    public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
-                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize, ConnectionOptions connectionOption) throws RepositoryException {
-        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT, connectionOption);
-    }
-
-    /**
-     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int, ConnectionOptions)}
-     * using {@link ConnectionOptions.DEFAULT}.
-     *
-     * @param jcrServerURI The server uri.
-     * @param defaultWorkspaceName The default workspace name.
-     * @param batchReadConfig The batch read configuration.
-     * @param itemInfoCacheSize The size of the item info cache.
-     * @param maximumHttpConnections maximumHttpConnections A int &gt;0 defining
-     * the maximum number of connections per host to be configured on
-     * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
-     * @throws RepositoryException If an exception occurs.
-     */
-    public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
-                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize,
-                                 int maximumHttpConnections) throws RepositoryException {
-        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, maximumHttpConnections, ConnectionOptions.DEFAULT);
-    }
 
     /**
      * Creates a new instance of this repository service.
@@ -213,11 +178,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @throws RepositoryException If an exception occurs.
      */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
-                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize,
-                                 int maximumHttpConnections, ConnectionOptions connectionOptions) throws RepositoryException {
+                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize, ConnectionOptions connectionOptions) throws RepositoryException {
 
         super(jcrServerURI, IdFactoryImpl.getInstance(), NameFactoryImpl.getInstance(),
-                PathFactoryImpl.getInstance(), new QValueFactoryImpl(), itemInfoCacheSize, maximumHttpConnections, connectionOptions);
+                PathFactoryImpl.getInstance(), new QValueFactoryImpl(), itemInfoCacheSize, connectionOptions);
 
         try {
             URI repositoryUri = computeRepositoryUri(jcrServerURI);

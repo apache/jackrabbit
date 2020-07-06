@@ -16,7 +16,10 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 /**
  * Advanced connection options to use for connections to a remote repository.
@@ -25,6 +28,7 @@ import java.util.Map;
 public final class ConnectionOptions {
 
     private final boolean isUseSystemPropertes;
+    private final int maxConnections;
     private final boolean isAllowSelfSignedCertificates;
     private final boolean isDisableHostnameVerification;
     private final String proxyHost;
@@ -32,6 +36,9 @@ public final class ConnectionOptions {
     private final String proxyProtocol;
     private final String proxyUsername;
     private final String proxyPassword;
+    private final int connectionTimeoutMs;
+    private final int requestTimeoutMs;
+    private final int socketTimeoutMs;
 
     /**
      * Boolean flag whether to use the default Java system properties for setting proxy, TLS and further options.
@@ -45,7 +52,7 @@ public final class ConnectionOptions {
      * Boolean flag whether to allow self-signed certificates of remote repositories.
      * Default = {@code false}.
      */
-    public static final String PARAM_ALLOW_SELF_SIGNED_CERTIFICATS = "connection.allowSelfSignedCertificates";
+    public static final String PARAM_ALLOW_SELF_SIGNED_CERTIFICATES = "connection.allowSelfSignedCertificates";
     
     /**
      * Boolean flag whether to disable the host name verification against the common name of the server's certificate.
@@ -59,7 +66,7 @@ public final class ConnectionOptions {
     public static final String PARAM_PROXY_HOST = "connection.proxyHost";
     
     /**
-     * Integer value for the proxy's port. Only effective if {@link #PARAM_PROXY_HOST} is used as well.
+     * Integer value for the proxy's port. Only effective if {@link #PARAM_PROXY_HOST} is used as well. If -1 or not set the default for the scheme will be used.
      */
     public static final String PARAM_PROXY_PORT = "connection.proxyPort";
     
@@ -78,18 +85,58 @@ public final class ConnectionOptions {
      */
     public static final String PARAM_PROXY_PASSWORD = "connection.proxyPassword";
 
+    /**
+     * The connection timeout in milliseconds as Integer. -1 for default, 0 for infinite.
+     */
+    public static final String PARAM_CONNECTION_TIMEOUT_MS = "connection.connectionTimeoutMs";
+
+    /**
+     * The request timeout in milliseconds as Integer. -1 for default, 0 for infinite.
+     */
+    public static final String PARAM_REQUEST_TIMEOUT_MS = "connection.requestTimeoutMs";
     
+    /**
+     * The request timeout in milliseconds as Integer. -1 for default, 0 for infinite.
+     */
+    public static final String PARAM_SOCKET_TIMEOUT_MS = "connection.socketTimeoutMs";
     
+    /**
+     * Optional configuration parameter: Its value defines the
+     * maximumConnectionsPerHost value on the HttpClient configuration and
+     * must be an int greater than zero.
+     * @deprecated Use {@link #PARAM_MAX_CONNECTIONS} instead.
+     */
+    @Deprecated
+    private static final String PARAM_MAX_CONNECTIONS_LEGACY = "MaxConnections";
+
+    /**
+     * Optional configuration parameter: Its value defines the
+     * maximumConnectionsPerHost value on the HttpClient configuration and
+     * must be an int greater than zero.
+     */
+    public static final String PARAM_MAX_CONNECTIONS = "connection.maxConnections";
+
+
+    /**
+     * Default value for the maximum number of connections per host such as
+     * configured with {@link PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
+     */
+    public static final int MAX_CONNECTIONS_DEFAULT = 20;
+
     /**
      * The default connection options with regular TLS settings, without proxy and not leveraging system properties
      */
-    public static final ConnectionOptions DEFAULT = new ConnectionOptions(false, false, false, null, 0, null, null, null);
+    public static final ConnectionOptions DEFAULT = new ConnectionOptions.Builder().build();
 
-    private ConnectionOptions(boolean isUseSystemPropertes, boolean isAllowSelfSignedCertificates, boolean isDisableHostnameVerification, String proxyHost, int proxyPort, String proxyProtocol, String proxyUsername, String proxyPassword) {
+    private ConnectionOptions(boolean isUseSystemPropertes, int maxConnections, boolean isAllowSelfSignedCertificates, boolean isDisableHostnameVerification, int connectionTimeoutMs,  int requestTimeoutMs, int socketTimeoutMs, String proxyHost, int proxyPort, String proxyProtocol, String proxyUsername, String proxyPassword) {
         super();
         this.isUseSystemPropertes = isUseSystemPropertes;
+        this.maxConnections = maxConnections;
         this.isAllowSelfSignedCertificates = isAllowSelfSignedCertificates;
         this.isDisableHostnameVerification = isDisableHostnameVerification;
+        this.connectionTimeoutMs = connectionTimeoutMs;
+        this.requestTimeoutMs = requestTimeoutMs;
+        this.socketTimeoutMs = socketTimeoutMs;
         this.proxyHost = proxyHost;
         this.proxyPort = proxyPort;
         this.proxyProtocol = proxyProtocol;
@@ -107,6 +154,22 @@ public final class ConnectionOptions {
 
     public boolean isDisableHostnameVerification() {
         return isDisableHostnameVerification;
+    }
+
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    public int getConnectionTimeoutMs() {
+        return connectionTimeoutMs;
+    }
+
+    public int getRequestTimeoutMs() {
+        return requestTimeoutMs;
+    }
+
+    public int getSocketTimeoutMs() {
+        return socketTimeoutMs;
     }
 
     public String getProxyHost() {
@@ -130,22 +193,255 @@ public final class ConnectionOptions {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + connectionTimeoutMs;
+        result = prime * result + (isAllowSelfSignedCertificates ? 1231 : 1237);
+        result = prime * result + (isDisableHostnameVerification ? 1231 : 1237);
+        result = prime * result + (isUseSystemPropertes ? 1231 : 1237);
+        result = prime * result + maxConnections;
+        result = prime * result + ((proxyHost == null) ? 0 : proxyHost.hashCode());
+        result = prime * result + ((proxyPassword == null) ? 0 : proxyPassword.hashCode());
+        result = prime * result + proxyPort;
+        result = prime * result + ((proxyProtocol == null) ? 0 : proxyProtocol.hashCode());
+        result = prime * result + ((proxyUsername == null) ? 0 : proxyUsername.hashCode());
+        result = prime * result + requestTimeoutMs;
+        result = prime * result + socketTimeoutMs;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ConnectionOptions other = (ConnectionOptions) obj;
+        if (connectionTimeoutMs != other.connectionTimeoutMs)
+            return false;
+        if (isAllowSelfSignedCertificates != other.isAllowSelfSignedCertificates)
+            return false;
+        if (isDisableHostnameVerification != other.isDisableHostnameVerification)
+            return false;
+        if (isUseSystemPropertes != other.isUseSystemPropertes)
+            return false;
+        if (maxConnections != other.maxConnections)
+            return false;
+        if (proxyHost == null) {
+            if (other.proxyHost != null)
+                return false;
+        } else if (!proxyHost.equals(other.proxyHost))
+            return false;
+        if (proxyPassword == null) {
+            if (other.proxyPassword != null)
+                return false;
+        } else if (!proxyPassword.equals(other.proxyPassword))
+            return false;
+        if (proxyPort != other.proxyPort)
+            return false;
+        if (proxyProtocol == null) {
+            if (other.proxyProtocol != null)
+                return false;
+        } else if (!proxyProtocol.equals(other.proxyProtocol))
+            return false;
+        if (proxyUsername == null) {
+            if (other.proxyUsername != null)
+                return false;
+        } else if (!proxyUsername.equals(other.proxyUsername))
+            return false;
+        if (requestTimeoutMs != other.requestTimeoutMs)
+            return false;
+        if (socketTimeoutMs != other.socketTimeoutMs)
+            return false;
+        return true;
+    }
+
+    @Override
     public String toString() {
-        return "ConnectionOptions [isUseSystemPropertes=" + isUseSystemPropertes + ", isAllowSelfSignedCertificates="
-                + isAllowSelfSignedCertificates + ", isDisableHostnameVerification=" + isDisableHostnameVerification + ", proxyHost="
-                + proxyHost + ", proxyPort=" + proxyPort + ", proxyProtocol=" + proxyProtocol + ", proxyUsername=" + proxyUsername
-                + ", proxyPassword=" + proxyPassword + "]";
+        return "ConnectionOptions [isUseSystemPropertes=" + isUseSystemPropertes + ", maxConnections=" + maxConnections
+                + ", isAllowSelfSignedCertificates=" + isAllowSelfSignedCertificates + ", isDisableHostnameVerification="
+                + isDisableHostnameVerification + ", proxyHost=" + proxyHost + ", proxyPort=" + proxyPort + ", proxyProtocol="
+                + proxyProtocol + ", proxyUsername=" + proxyUsername + ", proxyPassword=" + proxyPassword + ", connectionTimeoutMs="
+                + connectionTimeoutMs + ", requestTimeoutMs=" + requestTimeoutMs + ", socketTimeoutMs=" + socketTimeoutMs + "]";
+    }
+
+    public Map<String, String> toServiceFactoryParameters(String parameterPrefix) {
+        Map<String, String> parameters = new HashMap<>();
+        if (isUseSystemPropertes) {
+            parameters.put(parameterPrefix + PARAM_USE_SYSTEM_PROPERTIES, Boolean.toString(isUseSystemPropertes));
+        }
+        if (maxConnections != MAX_CONNECTIONS_DEFAULT) {
+            parameters.put(parameterPrefix + PARAM_MAX_CONNECTIONS, Integer.toString(maxConnections));
+        }
+        if (isAllowSelfSignedCertificates) {
+            parameters.put(parameterPrefix + PARAM_ALLOW_SELF_SIGNED_CERTIFICATES, Boolean.toString(isAllowSelfSignedCertificates));
+        }
+        if (isDisableHostnameVerification) {
+            parameters.put(parameterPrefix + PARAM_DISABLE_HOSTNAME_VERIFICATION, Boolean.toString(isDisableHostnameVerification));
+        }
+        if (connectionTimeoutMs != -1) {
+            parameters.put(parameterPrefix + PARAM_CONNECTION_TIMEOUT_MS, Integer.toString(connectionTimeoutMs));
+        }
+        if (requestTimeoutMs != -1) {
+            parameters.put(parameterPrefix + PARAM_REQUEST_TIMEOUT_MS, Integer.toString(requestTimeoutMs));
+        }
+        if (socketTimeoutMs != -1) {
+            parameters.put(parameterPrefix + PARAM_SOCKET_TIMEOUT_MS, Integer.toString(socketTimeoutMs));
+        }
+        if (proxyHost != null) {
+            parameters.put(parameterPrefix + PARAM_PROXY_HOST, proxyHost);
+        }
+        if (proxyPort != -1) {
+            parameters.put(parameterPrefix + PARAM_PROXY_PORT, Integer.toString(proxyPort));
+        }
+        if (proxyProtocol != null) {
+            parameters.put(parameterPrefix + PARAM_PROXY_PROTOCOL, proxyProtocol);
+        }
+        if (proxyUsername != null) {
+            parameters.put(parameterPrefix + PARAM_PROXY_USERNAME, proxyUsername);
+        }
+        if (proxyPassword != null) {
+            parameters.put(parameterPrefix + PARAM_PROXY_PASSWORD, proxyPassword);
+        }
+        return parameters;
     }
 
     public static ConnectionOptions fromServiceFactoryParameters(String parameterPrefix, Map<?, ?> parameters) {
         return new ConnectionOptions(
-                Boolean.parseBoolean(parameters.get(parameterPrefix+PARAM_USE_SYSTEM_PROPERTIES).toString()), 
-                Boolean.parseBoolean(parameters.get(parameterPrefix+PARAM_ALLOW_SELF_SIGNED_CERTIFICATS).toString()), 
-                Boolean.parseBoolean(parameters.get(parameterPrefix+PARAM_DISABLE_HOSTNAME_VERIFICATION).toString()), 
-                parameters.get(parameterPrefix+PARAM_PROXY_HOST).toString(),
-                Integer.parseInt(parameters.get(parameterPrefix+PARAM_PROXY_PORT).toString()),
-                parameters.get(parameterPrefix+PARAM_PROXY_PROTOCOL).toString(),
-                parameters.get(parameterPrefix+PARAM_PROXY_USERNAME).toString(),
-                parameters.get(parameterPrefix+PARAM_PROXY_PASSWORD).toString());
+                getBooleanValueFromParameter(parameterPrefix, parameters, false, PARAM_USE_SYSTEM_PROPERTIES),
+                getIntegerValueFromParameter(parameterPrefix, parameters, MAX_CONNECTIONS_DEFAULT, PARAM_MAX_CONNECTIONS, PARAM_MAX_CONNECTIONS_LEGACY),
+                getBooleanValueFromParameter(parameterPrefix, parameters, false, PARAM_ALLOW_SELF_SIGNED_CERTIFICATES),
+                getBooleanValueFromParameter(parameterPrefix, parameters, false, PARAM_DISABLE_HOSTNAME_VERIFICATION),
+                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_CONNECTION_TIMEOUT_MS),
+                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_REQUEST_TIMEOUT_MS),
+                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_SOCKET_TIMEOUT_MS),
+                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_HOST),
+                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_PROXY_PORT),
+                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_PROTOCOL),
+                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_USERNAME),
+                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_PASSWORD));
+    }
+
+    private static int getIntegerValueFromParameter(String parameterPrefix, Map<?, ?> parameters, int defaultValue, String... parameterKeys) {
+        for (String key : parameterKeys) {
+            Object value = parameters.get(parameterPrefix+key);
+            if (value != null) {
+                try {
+                    return Integer.parseInt(value.toString());
+                } catch ( NumberFormatException e ) {
+                    // using default
+                }
+            }
+        }
+        return defaultValue;
+    }
+
+    private static boolean getBooleanValueFromParameter(String parameterPrefix, Map<?, ?> parameters, boolean defaultValue, String... parameterKeys) {
+        for (String key : parameterKeys) {
+            Object value = parameters.get(parameterPrefix+key);
+            if (value != null) {
+                return Boolean.parseBoolean(value.toString());
+            }
+        }
+        return defaultValue;
+    }
+
+    private static String getStringValueFromParameter(String parameterPrefix, Map<?, ?> parameters, String defaultValue, String... parameterKeys) {
+        for (String key : parameterKeys) {
+            Object value = parameters.get(parameterPrefix+key);
+            if (value != null) {
+                return value.toString();
+            }
+        }
+        return defaultValue;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private boolean isUseSystemPropertes;
+        private int maxConnections = MAX_CONNECTIONS_DEFAULT;
+        private boolean isAllowSelfSignedCertificates;
+        private boolean isDisableHostnameVerification;
+        private String proxyHost;
+        private int proxyPort = -1;
+        private String proxyProtocol;
+        private String proxyUsername;
+        private String proxyPassword;
+        private int connectionTimeoutMs = -1;
+        private int requestTimeoutMs = -1;
+        private int socketTimeoutMs = -1;
+
+        public Builder useSystemProperties(boolean isUseSystemPropertes) {
+            this.isUseSystemPropertes = isUseSystemPropertes;
+            return this;
+        }
+
+        public Builder maxConnections(int maxConnections) {
+            this.maxConnections = maxConnections;
+            return this;
+        }
+
+        public Builder allowSelfSignedCertificates(boolean isAllowSelfSignedCertificates) {
+            this.isAllowSelfSignedCertificates = isAllowSelfSignedCertificates;
+            return this;
+        }
+
+        public Builder disableHostnameVerification(boolean isDisableHostnameVerification) {
+            this.isDisableHostnameVerification = isDisableHostnameVerification;
+            return this;
+        }
+
+        public Builder connectionTimeoutMs(int connectionTimeoutMs) {
+            this.connectionTimeoutMs = connectionTimeoutMs;
+            return this;
+        }
+
+        public Builder requestTimeoutMs(int requestTimeoutMs) {
+            this.requestTimeoutMs = requestTimeoutMs;
+            return this;
+        }
+
+        public Builder socketTimeoutMs(int socketTimeoutMs) {
+            this.socketTimeoutMs = socketTimeoutMs;
+            return this;
+        }
+
+        public Builder proxyHost(String proxyHost) {
+            this.proxyHost = proxyHost;
+            return this;
+        }
+
+        public Builder proxyPort(int proxyPort) {
+            this.proxyPort = proxyPort;
+            return this;
+        }
+
+        public Builder proxyProtocol(String proxyProtocol) {
+            this.proxyProtocol = proxyProtocol;
+            return this;
+        }
+
+        public Builder proxyUsername(String proxyUsername) {
+            this.proxyUsername = proxyUsername;
+            return this;
+        }
+
+        public Builder proxyPassword(String proxyPassword) {
+            this.proxyPassword = proxyPassword;
+            return this;
+        }
+
+        public ConnectionOptions build() {
+            return new ConnectionOptions(isUseSystemPropertes, maxConnections, 
+                    isAllowSelfSignedCertificates, isDisableHostnameVerification,
+                    connectionTimeoutMs, requestTimeoutMs, socketTimeoutMs,
+                    proxyHost, proxyPort, proxyProtocol, proxyUsername, proxyPassword);
+        }
     }
 }

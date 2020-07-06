@@ -38,9 +38,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skip>true</skip>
           <includes>
-            <include>**/TestAll.java</include>
+            <include>**/ConnectionOptionsTest.java</include>
+            <!-- https://issues.apache.org/jira/browse/JCR-4610 -->
+            <!-- <include>**/TestAll.java</include>  -->
           </includes>
           <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
