@@ -23,16 +23,16 @@ import java.net.URISyntaxException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.jackrabbit.webdav.DavException;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.jackrabbit.webdav.client.methods.HttpMove;
 
 /**
  * Test cases for RFC 4918 Destination header functionality
  * (see <a href="http://www.webdav.org/specs/rfc4918.html#rfc.section.10.3">RFC 4918, Section 10.3</a>
  */
-public class RFC4918DestinationHeaderTest extends WebDAVTest {
+public class RFC4918DestinationHeaderTest extends WebDAVTestBase {
 
-    public void testMove() throws IOException, DavException, URISyntaxException {
+    public void testMove() throws IOException, URISyntaxException {
 
         String testuri = this.root + "movetest";
         String destinationuri = testuri + "2";
@@ -40,40 +40,48 @@ public class RFC4918DestinationHeaderTest extends WebDAVTest {
         // make sure the scheme is removed
         assertFalse(destinationpath.contains(":"));
 
+        HttpRequestBase requestBase = null;
         try {
-            HttpPut put = new HttpPut(testuri);
-            int status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpPut(testuri);
+            int status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
+            requestBase.releaseConnection();
 
             // try to move outside the servlet's name space
-            HttpMove move = new HttpMove(testuri, "/foobar", true);
-            status = this.client.execute(move, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpMove(testuri, "/foobar", true);
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 502);
+            requestBase.releaseConnection();
 
             // try a relative path
-            move = new HttpMove(testuri, "foobar", true);
-            status = this.client.execute(move, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpMove(testuri, "foobar", true);
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 400);
+            requestBase.releaseConnection();
 
-            move = new HttpMove(testuri, destinationpath, true);
-            status = this.client.execute(move, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpMove(testuri, destinationpath, true);
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
+            requestBase.releaseConnection();
 
-            HttpHead head = new HttpHead(destinationuri);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpHead(destinationuri);
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200);
+            requestBase.releaseConnection();
 
-            head = new HttpHead(testuri);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            requestBase = new HttpHead(testuri);
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 404);
-
         } finally {
-            HttpDelete delete = new HttpDelete(testuri);
-            int status = this.client.execute(delete, this.context).getStatusLine().getStatusCode();
+            requestBase.releaseConnection();
+            requestBase = new HttpDelete(testuri);
+            int status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
-            delete = new HttpDelete(destinationuri);
-            status = this.client.execute(delete, this.context).getStatusLine().getStatusCode();
+            requestBase.releaseConnection();
+            requestBase = new HttpDelete(destinationuri);
+            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+            requestBase.releaseConnection();
         }
     }
 }

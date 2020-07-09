@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.webdav.server;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
@@ -37,15 +36,15 @@ import org.apache.jackrabbit.webdav.version.DeltaVConstants;
  * (see <a href="http://www.webdav.org/specs/rfc4918.html#rfc.section.9.1">RFC 4918, Section 9.1</a>
  */
 
-public class RFC4918PropfindTest extends WebDAVTest {
+public class RFC4918PropfindTest extends WebDAVTestBase {
 
-    public void testOptions() throws IOException, DavException, URISyntaxException {
+    public void testOptions() throws IOException {
         HttpOptions options = new HttpOptions(this.root);
         HttpResponse response = this.client.execute(options, this.context);
         assertTrue(options.getDavComplianceClasses(response).contains("3"));
     }
 
-    public void testPropfindInclude() throws IOException, DavException, URISyntaxException {
+    public void testPropfindInclude() throws IOException, DavException {
 
         String testuri = this.root + "iftest";
 

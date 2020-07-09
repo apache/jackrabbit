@@ -55,7 +55,7 @@ import org.w3c.dom.Node;
 /**
  * Test cases for WebDAV BIND functionality (see <a href="http://greenbytes.de/tech/webdav/rfc5842.html">RFC 5842</a>
  */
-public class BindTest extends WebDAVTest {
+public class BindTest extends WebDAVTestBase {
 
     // http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
     public void testOptions() throws IOException {

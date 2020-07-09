@@ -31,7 +31,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
 
-public class ContentCodingTest extends WebDAVTest {
+public class ContentCodingTest extends WebDAVTestBase {
 
     public void testPutNoContentCoding() throws IOException {
         String testUri = this.uri.toString() + (this.uri.toString().endsWith("/") ? "" : "/") + "testPutNoContentCoding";

@@ -20,9 +20,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-<!-- ====================================================================== -->
-<!-- P R O J E C T  D E S C R I P T I O N                                   -->
-<!-- ====================================================================== -->
+  <!-- ====================================================================== -->
+  <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+  <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
@@ -148,20 +148,6 @@
   <build>
     <plugins>
       <plugin>
-         <groupId>org.eclipse.jetty</groupId>
-         <artifactId>maven-jetty-plugin</artifactId>
-         <version>${jetty.version}</version>
-         <configuration>
-           <scanIntervalSeconds>10</scanIntervalSeconds>
-           <connectors>
-             <connector implementation="org.eclipse.jetty.nio.SelectChannelConnector">
-               <port>8080</port>
-               <maxIdleTime>60000</maxIdleTime>
-             </connector>
-           </connectors>
-         </configuration>
-      </plugin>
-      <plugin>
         <!-- create a jar in addition to our war, to make our servlets reusable -->
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
@@ -190,12 +176,12 @@
               <goal>attach-artifact</goal>
             </goals>
             <configuration>
-                <artifacts>
-                  <artifact>
-                    <file>${project.build.directory}/jackrabbit-webapp-${project.version}.jar</file>
-                    <type>jar</type>
-                  </artifact>
-                </artifacts>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.directory}/jackrabbit-webapp-${project.version}.jar</file>
+                  <type>jar</type>
+                </artifact>
+              </artifacts>
             </configuration>
           </execution>
         </executions>

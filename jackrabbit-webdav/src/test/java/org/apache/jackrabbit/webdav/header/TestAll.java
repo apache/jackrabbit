@@ -14,22 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.webdav.server;
+package org.apache.jackrabbit.webdav.header;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-public class WebdavServerTests extends TestCase {
+public class TestAll extends TestCase {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("WebDAV Server Tests");
+        TestSuite suite = new TestSuite("WebDAV header tests");
 
-        suite.addTestSuite(BindTest.class);
-        suite.addTestSuite(ContentCodingTest.class);
-        suite.addTestSuite(RFC4918DestinationHeaderTest.class);
-        suite.addTestSuite(RFC4918IfHeaderTest.class);
-        suite.addTestSuite(RFC4918PropfindTest.class);
+        suite.addTestSuite(FieldValueParserTest.class);
 
         return suite;
     }

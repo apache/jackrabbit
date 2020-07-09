@@ -38,5 +38,5 @@ public class FieldValueParserTest extends TestCase {
 
         l = FieldValueParser.tokenizeList("1,2,<http://example.com/foo,bar>");
         assertArrayEquals(new String[]{"1","2","<http://example.com/foo,bar>"}, l.toArray());
-}
+    }
 }

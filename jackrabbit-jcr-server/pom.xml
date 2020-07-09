@@ -20,9 +20,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-<!-- ====================================================================== -->
-<!-- P R O J E C T  D E S C R I P T I O N                                   -->
-<!-- ====================================================================== -->
+  <!-- ====================================================================== -->
+  <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+  <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
@@ -57,14 +57,14 @@
         <artifactId>maven-scr-plugin</artifactId>
         <version>1.26.4</version>
         <executions>
-            <execution>
-              <id>generate-scr-scrdescriptor</id>
-              <goals>
-                <goal>scr</goal>
-              </goals>
-              <configuration>
-                <properties>
-                  <service.vendor>The Apache Software Foundation</service.vendor>
+          <execution>
+            <id>generate-scr-scrdescriptor</id>
+            <goals>
+              <goal>scr</goal>
+            </goals>
+            <configuration>
+              <properties>
+                <service.vendor>The Apache Software Foundation</service.vendor>
               </properties>
             </configuration>
           </execution>
@@ -84,37 +84,37 @@
       </plugin>
     </plugins>
     <pluginManagement>
-    	<plugins>
-    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-    		<plugin>
-    			<groupId>org.eclipse.m2e</groupId>
-    			<artifactId>lifecycle-mapping</artifactId>
-    			<version>1.0.0</version>
-    			<configuration>
-    				<lifecycleMappingMetadata>
-    					<pluginExecutions>
-    						<pluginExecution>
-    							<pluginExecutionFilter>
-    								<groupId>org.apache.felix</groupId>
-    								<artifactId>
-    									maven-scr-plugin
-    								</artifactId>
-    								<versionRange>
-    									[1.7.2,)
-    								</versionRange>
-    								<goals>
-    									<goal>scr</goal>
-    								</goals>
-    							</pluginExecutionFilter>
-    							<action>
-    								<ignore />
-    							</action>
-    						</pluginExecution>
-    					</pluginExecutions>
-    				</lifecycleMappingMetadata>
-    			</configuration>
-    		</plugin>
-    	</plugins>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>
+                      maven-scr-plugin
+                    </artifactId>
+                    <versionRange>
+                      [1.7.2,)
+                    </versionRange>
+                    <goals>
+                      <goal>scr</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
     </pluginManagement>
   </build>
 
@@ -149,6 +149,15 @@
                 <property>
                   <name>derby.stream.error.file</name>
                   <value>target/derby.log</value>
+                </property>
+                <property>
+                  <name>known.issues</name>
+                  <value>
+                    <!-- JCR-4570 : WebdavRequestImpl does not check ETags if there is no resource or no exclusive write lock -->
+                    org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfEtag
+                    <!-- JCR-4571: WebdavRequestImpl stores If-Header values using either absolute URIs or absolute paths, but both may be used for lookup-->
+                    org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfLockToken
+                  </value>
                 </property>
               </systemProperties>
             </configuration>
@@ -195,7 +204,7 @@
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
     </dependency>
-    
+
     <!-- OSGi support -->
     <dependency>
       <groupId>org.osgi</groupId>
