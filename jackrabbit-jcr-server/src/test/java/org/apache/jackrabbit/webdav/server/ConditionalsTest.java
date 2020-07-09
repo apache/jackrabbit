@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 
 public class ConditionalsTest extends WebDAVTestBase {
 
@@ -88,14 +89,25 @@ public class ConditionalsTest extends WebDAVTestBase {
                 }
             }
 
-//            // conditional HEAD with broken date
-//            {
-//                HttpHead head = new HttpHead(testUri);
-//                head.setHeader("If-Modified-Since", "broken");
-//                HttpResponse response = this.client.execute(head, this.context);
-//                int status = response.getStatusLine().getStatusCode();
-//                assertEquals(200, status);
-//            }
+            // conditional HEAD with broken date (MUST ignore header field)
+            {
+                HttpHead head = new HttpHead(testUri);
+                head.setHeader("If-Modified-Since", "broken");
+                HttpResponse response = this.client.execute(head, this.context);
+                int status = response.getStatusLine().getStatusCode();
+                assertEquals(200, status);
+            }
+
+            // conditional GET with broken date (MUST ignore header field)
+            {
+                HttpGet req = new HttpGet(testUri);
+                req.addHeader("If-Modified-Since", lm.getValue());
+                req.addHeader("If-Modified-Since", "foo");
+                HttpResponse response = this.client.execute(req, this.context);
+                int status = response.getStatusLine().getStatusCode();
+                assertEquals(200, status);
+                EntityUtils.consume(response.getEntity());
+            }
 
             // let one sec elapse
             while (System.currentTimeMillis() < created + 1000) {
