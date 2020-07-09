@@ -41,6 +41,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -193,131 +194,189 @@ public class WebdavResponseImpl implements WebdavResponse {
     }
 
     //--------------------------------------< HttpServletResponse interface >---
+
+    @Override
     public void addCookie(Cookie cookie) {
         httpResponse.addCookie(cookie);
     }
 
+    @Override
     public boolean containsHeader(String s) {
         return httpResponse.containsHeader(s);
     }
 
+    @Override
     public String encodeURL(String s) {
         return httpResponse.encodeRedirectURL(s);
     }
 
+    @Override
     public String encodeRedirectURL(String s) {
         return httpResponse.encodeRedirectURL(s);
     }
 
+    @Override
     public String encodeUrl(String s) {
         return httpResponse.encodeUrl(s);
     }
 
+    @Override
     public String encodeRedirectUrl(String s) {
         return httpResponse.encodeRedirectURL(s);
     }
 
+    @Override
     public void sendError(int i, String s) throws IOException {
         httpResponse.sendError(i, s);
     }
 
+    @Override
     public void sendError(int i) throws IOException {
         httpResponse.sendError(i);
     }
 
+    @Override
     public void sendRedirect(String s) throws IOException {
         httpResponse.sendRedirect(s);
     }
 
+    @Override
     public void setDateHeader(String s, long l) {
         httpResponse.setDateHeader(s, l);
     }
 
+    @Override
     public void addDateHeader(String s, long l) {
         httpResponse.addDateHeader(s, l);
     }
 
+    @Override
     public void setHeader(String s, String s1) {
         httpResponse.setHeader(s, s1);
     }
 
+    @Override
     public void addHeader(String s, String s1) {
         httpResponse.addHeader(s, s1);
     }
 
+    @Override
     public void setIntHeader(String s, int i) {
         httpResponse.setIntHeader(s, i);
     }
 
+    @Override
     public void addIntHeader(String s, int i) {
         httpResponse.addIntHeader(s, i);
     }
 
+    @Override
     public void setStatus(int i) {
         httpResponse.setStatus(i);
     }
 
+    @Override
     public void setStatus(int i, String s) {
         httpResponse.setStatus(i, s);
     }
 
+    @Override
     public String getCharacterEncoding() {
         return httpResponse.getCharacterEncoding();
     }
 
+    @Override
     public ServletOutputStream getOutputStream() throws IOException {
         return httpResponse.getOutputStream();
     }
 
+    @Override
     public PrintWriter getWriter() throws IOException {
         return httpResponse.getWriter();
     }
 
+    @Override
     public void setContentLength(int i) {
         httpResponse.setContentLength(i);
     }
 
+    @Override
     public void setContentType(String s) {
         httpResponse.setContentType(s);
     }
 
+    @Override
     public void setBufferSize(int i) {
         httpResponse.setBufferSize(i);
     }
 
+    @Override
     public int getBufferSize() {
         return httpResponse.getBufferSize();
     }
 
+    @Override
     public void flushBuffer() throws IOException {
         httpResponse.flushBuffer();
     }
 
+    @Override
     public void resetBuffer() {
         httpResponse.resetBuffer();
     }
 
+    @Override
     public boolean isCommitted() {
         return httpResponse.isCommitted();
     }
 
+    @Override
     public void reset() {
         httpResponse.reset();
     }
 
+    @Override
     public void setLocale(Locale locale) {
         httpResponse.setLocale(locale);
     }
 
+    @Override
     public Locale getLocale() {
         return httpResponse.getLocale();
     }
 
+    @Override
     public String getContentType() {
         return httpResponse.getContentType();
     }
 
+    @Override
     public void setCharacterEncoding(String charset) {
         httpResponse.setCharacterEncoding(charset);
+    }
+
+    @Override
+    public int getStatus() {
+        return httpResponse.getStatus();
+    }
+
+    @Override
+    public String getHeader(String name) {
+        return httpResponse.getHeader(name);
+    }
+
+    @Override
+    public Collection<String> getHeaders(String name) {
+        return httpResponse.getHeaders(name);
+    }
+
+    @Override
+    public Collection<String> getHeaderNames() {
+        return httpResponse.getHeaderNames();
+    }
+
+    @Override
+    public void setContentLengthLong(long len) {
+        httpResponse.setContentLengthLong(len);
     }
 }

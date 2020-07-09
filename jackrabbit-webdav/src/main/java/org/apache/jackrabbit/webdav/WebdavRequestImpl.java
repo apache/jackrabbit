@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -33,12 +34,21 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
+import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.webdav.bind.BindInfo;
@@ -865,220 +875,350 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
     }
 
     //---------------------------------------< HttpServletRequest interface >---
+
+    @Override
     public String getAuthType() {
         return httpRequest.getAuthType();
     }
 
+    @Override
     public Cookie[] getCookies() {
         return httpRequest.getCookies();
     }
 
+    @Override
     public long getDateHeader(String s) {
         return httpRequest.getDateHeader(s);
     }
 
+    @Override
     public String getHeader(String s) {
         return httpRequest.getHeader(s);
     }
 
-    public Enumeration<?> getHeaders(String s) {
+    @Override
+    public Enumeration<String> getHeaders(String s) {
         return httpRequest.getHeaders(s);
     }
 
-    public Enumeration<?> getHeaderNames() {
+    @Override
+    public Enumeration<String> getHeaderNames() {
         return httpRequest.getHeaderNames();
     }
 
+    @Override
     public int getIntHeader(String s) {
         return httpRequest.getIntHeader(s);
     }
 
+    @Override
     public String getMethod() {
         return httpRequest.getMethod();
     }
 
+    @Override
     public String getPathInfo() {
         return httpRequest.getPathInfo();
     }
 
+    @Override
     public String getPathTranslated() {
         return httpRequest.getPathTranslated();
     }
 
+    @Override
     public String getContextPath() {
         return httpRequest.getContextPath();
     }
 
+    @Override
     public String getQueryString() {
         return httpRequest.getQueryString();
     }
 
+    @Override
     public String getRemoteUser() {
         return httpRequest.getRemoteUser();
     }
 
+    @Override
     public boolean isUserInRole(String s) {
         return httpRequest.isUserInRole(s);
     }
 
+    @Override
     public Principal getUserPrincipal() {
         return httpRequest.getUserPrincipal();
     }
 
+    @Override
     public String getRequestedSessionId() {
         return httpRequest.getRequestedSessionId();
     }
 
+    @Override
     public String getRequestURI() {
         return httpRequest.getRequestURI();
     }
 
+    @Override
     public StringBuffer getRequestURL() {
         return httpRequest.getRequestURL();
     }
 
+    @Override
     public String getServletPath() {
         return httpRequest.getServletPath();
     }
 
+    @Override
     public HttpSession getSession(boolean b) {
         return httpRequest.getSession(b);
     }
 
+    @Override
     public HttpSession getSession() {
         return httpRequest.getSession();
     }
 
+    @Override
     public boolean isRequestedSessionIdValid() {
         return httpRequest.isRequestedSessionIdValid();
     }
 
+    @Override
     public boolean isRequestedSessionIdFromCookie() {
         return httpRequest.isRequestedSessionIdFromCookie();
     }
 
+    @Override
     public boolean isRequestedSessionIdFromURL() {
         return httpRequest.isRequestedSessionIdFromURL();
     }
 
+    @Override
     public boolean isRequestedSessionIdFromUrl() {
         return httpRequest.isRequestedSessionIdFromUrl();
     }
 
+    @Override
     public Object getAttribute(String s) {
         return httpRequest.getAttribute(s);
     }
 
-    public Enumeration<?> getAttributeNames() {
+    @Override
+    public Enumeration<String> getAttributeNames() {
         return httpRequest.getAttributeNames();
     }
 
+    @Override
     public String getCharacterEncoding() {
         return httpRequest.getCharacterEncoding();
     }
 
+    @Override
     public void setCharacterEncoding(String s) throws UnsupportedEncodingException {
         httpRequest.setCharacterEncoding(s);
     }
 
+    @Override
     public int getContentLength() {
         return httpRequest.getContentLength();
     }
 
+    @Override
     public String getContentType() {
         return httpRequest.getContentType();
     }
 
+    @Override
     public ServletInputStream getInputStream() throws IOException {
         return new MyServletInputStream(getDecodedInputStream());
     }
 
+    @Override
     public String getParameter(String s) {
         return httpRequest.getParameter(s);
     }
 
-    public Enumeration<?> getParameterNames() {
+    @Override
+    public Enumeration<String> getParameterNames() {
         return httpRequest.getParameterNames();
     }
 
+    @Override
     public String[] getParameterValues(String s) {
         return httpRequest.getParameterValues(s);
     }
 
-    public Map<?,?> getParameterMap() {
+    @Override
+    public Map<String, String[]> getParameterMap() {
         return httpRequest.getParameterMap();
     }
 
+    @Override
     public String getProtocol() {
         return httpRequest.getProtocol();
     }
 
+    @Override
     public String getScheme() {
         return httpRequest.getScheme();
     }
 
+    @Override
     public String getServerName() {
         return httpRequest.getServerName();
     }
 
+    @Override
     public int getServerPort() {
         return httpRequest.getServerPort();
     }
 
+    @Override
     public BufferedReader getReader() throws IOException {
         return httpRequest.getReader();
     }
 
+    @Override
     public String getRemoteAddr() {
         return httpRequest.getRemoteAddr();
     }
 
+    @Override
     public String getRemoteHost() {
         return httpRequest.getRemoteHost();
     }
 
+    @Override
     public void setAttribute(String s, Object o) {
         httpRequest.setAttribute(s, o);
     }
 
+    @Override
     public void removeAttribute(String s) {
         httpRequest.removeAttribute(s);
     }
 
+    @Override
     public Locale getLocale() {
         return httpRequest.getLocale();
     }
 
-    public Enumeration<?> getLocales() {
+    @Override
+    public Enumeration<Locale> getLocales() {
         return httpRequest.getLocales();
     }
 
+    @Override
     public boolean isSecure() {
         return httpRequest.isSecure();
     }
 
+    @Override
     public RequestDispatcher getRequestDispatcher(String s) {
         return httpRequest.getRequestDispatcher(s);
     }
 
+    @Override
     public String getRealPath(String s) {
         return httpRequest.getRealPath(s);
     }
 
+    @Override
     public int getRemotePort() {
         return httpRequest.getRemotePort();
     }
 
+    @Override
     public String getLocalName() {
         return httpRequest.getLocalName();
     }
 
+    @Override
     public String getLocalAddr() {
         return httpRequest.getLocalAddr();
     }
 
+    @Override
     public int getLocalPort() {
         return httpRequest.getLocalPort();
+    }
+
+    @Override
+    public String changeSessionId() {
+        return httpRequest.changeSessionId();
+    }
+
+    @Override
+    public boolean authenticate(HttpServletResponse response) throws IOException, ServletException {
+        return httpRequest.authenticate(response);
+    }
+
+    @Override
+    public void login(String username, String password) throws ServletException {
+        httpRequest.login(username, password);
+    }
+
+    @Override
+    public void logout() throws ServletException {
+        httpRequest.logout();
+    }
+
+    @Override
+    public Collection<Part> getParts() throws IOException, ServletException {
+        return httpRequest.getParts();
+    }
+
+    @Override
+    public Part getPart(String name) throws IOException, ServletException {
+        return httpRequest.getPart(name);
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+        return httpRequest.upgrade(handlerClass);
+    }
+
+    @Override
+    public long getContentLengthLong() {
+        return httpRequest.getContentLengthLong();
+    }
+
+    @Override
+    public ServletContext getServletContext() {
+        return httpRequest.getServletContext();
+    }
+
+    @Override
+    public AsyncContext startAsync() throws IllegalStateException {
+        return httpRequest.startAsync();
+    }
+
+    @Override
+    public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) throws IllegalStateException {
+        return httpRequest.startAsync(servletRequest, servletResponse);
+    }
+
+    @Override
+    public boolean isAsyncStarted() {
+        return httpRequest.isAsyncStarted();
+    }
+
+    @Override
+    public boolean isAsyncSupported() {
+        return httpRequest.isAsyncSupported();
+    }
+
+    @Override
+    public AsyncContext getAsyncContext() {
+        return httpRequest.getAsyncContext();
+    }
+
+    @Override
+    public DispatcherType getDispatcherType() {
+        return httpRequest.getDispatcherType();
     }
 
     private static class MyServletInputStream extends ServletInputStream {
@@ -1152,6 +1292,21 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
         @Override
         public String toString() {
             return delegate.toString();
+        }
+
+        @Override
+        public boolean isFinished() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isReady() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setReadListener(ReadListener readListener) {
+            throw new UnsupportedOperationException();
         }
     }
 }
