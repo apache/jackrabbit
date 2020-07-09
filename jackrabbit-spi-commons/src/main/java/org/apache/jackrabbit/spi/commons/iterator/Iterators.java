@@ -125,6 +125,7 @@ public final class Iterators {
      * @param iterator
      * @param predicate
      * @return
+     * @deprecated use {@link #filterIterator(Iterator, java.util.function.Predicate)} instead
      */
     @SuppressWarnings("unchecked")
     public static <T> Iterator<T> filterIterator(Iterator<? extends T> iterator,
@@ -133,6 +134,26 @@ public final class Iterators {
         return new FilterIterator(iterator, new org.apache.commons.collections.Predicate() {
             public boolean evaluate(Object object) {
                 return predicate.evaluate((T) object);
+            }
+        });
+    }
+
+    /**
+     * Returns an iterator with elements from an original <code>iterator</code> where the
+     * given <code>predicate</code> matches removed.
+     *
+     * @param <T>
+     * @param iterator
+     * @param predicate
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Iterator<T> filterIterator(Iterator<? extends T> iterator,
+            final java.util.function.Predicate<? super T> predicate) {
+
+        return new FilterIterator(iterator, new org.apache.commons.collections.Predicate() {
+            public boolean evaluate(Object object) {
+                return predicate.test((T) object);
             }
         });
     }

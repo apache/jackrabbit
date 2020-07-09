@@ -23,7 +23,6 @@ import static org.apache.jackrabbit.spi.commons.iterator.Iterators.transformIter
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.flat.TreeTraverser;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
-import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Transformer;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -40,6 +39,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import junit.framework.AssertionFailedError;
 
@@ -195,7 +195,7 @@ public class TreeTraverserTest extends AbstractJCRTest {
 
     private static Iterator<Property> removeIgnored(Iterator<Property> properties) {
         return filterIterator(properties, new Predicate<Property>() {
-            public boolean evaluate(Property property) {
+            public boolean test(Property property) {
                 try {
                     return !JcrConstants.JCR_PRIMARYTYPE.equals(property.getName());
                 }

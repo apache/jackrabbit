@@ -27,7 +27,6 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
-import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
@@ -37,6 +36,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
 import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
@@ -152,11 +152,11 @@ public class GetItemsTest extends AbstractJCR2SPITest {
     @Override
     public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, final ItemId itemId)
             throws RepositoryException {
-        
+
         return iteratorChain(
                 singleton(itemInfoStore.getItemInfo(itemId)),
                 filterIterator(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
-                    public boolean evaluate(ItemInfo info) {
+                    public boolean test(ItemInfo info) {
                         return !itemId.equals(info.getId());
                     }
                 }));

@@ -19,6 +19,7 @@ package org.apache.jackrabbit.spi.commons.iterator;
 
 /**
  * Utility class containing pre defined {@link Predicate}s
+ * @deprecated use instances of {@link java.util.function.Predicate} instead
  */
 public final class Predicates {
 

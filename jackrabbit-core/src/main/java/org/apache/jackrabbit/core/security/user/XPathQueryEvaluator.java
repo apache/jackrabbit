@@ -18,6 +18,8 @@
 package org.apache.jackrabbit.core.security.user;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
+
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -35,8 +37,6 @@ import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
 import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.RelationOp;
 import org.apache.jackrabbit.spi.commons.iterator.BoundedIterator;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
-import org.apache.jackrabbit.spi.commons.iterator.Predicate;
-import org.apache.jackrabbit.spi.commons.iterator.Predicates;
 import org.apache.jackrabbit.spi.commons.iterator.Transformer;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -320,12 +320,12 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         Predicate<Authorizable> predicate;
         Authorizable groupAuth = userManager.getAuthorizable(groupName);
         if (groupAuth == null || !groupAuth.isGroup()) {
-            predicate = Predicates.FALSE();
+            predicate = x -> false;
         } else {
             final Group group = (Group) groupAuth;
             if (declaredMembersOnly) {
                 predicate = new Predicate<Authorizable>() {
-                    public boolean evaluate(Authorizable authorizable) {
+                    public boolean test(Authorizable authorizable) {
                         try {
                             return authorizable != null && group.isDeclaredMember(authorizable);
                         } catch (RepositoryException e) {
@@ -338,7 +338,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
             } else {
                 predicate = new Predicate<Authorizable>() {
-                    public boolean evaluate(Authorizable authorizable) {
+                    public boolean test(Authorizable authorizable) {
                         try {
                             return authorizable != null && group.isMember(authorizable);
                         } catch (RepositoryException e) {
