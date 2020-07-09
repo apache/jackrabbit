@@ -1529,7 +1529,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @return the field value (when there is indeed a single field line) or {@code null} when field not present
      * @throws IllegalArgumentException when multiple field lines present
      */
-    private static String getSingletonField(HttpServletRequest request, String fieldName) {
+    protected static String getSingletonField(HttpServletRequest request, String fieldName) {
         @SuppressWarnings("unchecked")
         Enumeration<String> lines = request.getHeaders(fieldName);
         if (!lines.hasMoreElements()) {
