@@ -39,8 +39,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * WebdavResponseImpl implements the <code>WebdavResponse</code> interface.
@@ -94,15 +98,14 @@ public class WebdavResponseImpl implements WebdavResponse {
         }
     }
 
-    /**
-     * Send a multistatus response.
-     *
-     * @param multistatus
-     * @throws IOException
-     * @see DavServletResponse#sendMultiStatus(org.apache.jackrabbit.webdav.MultiStatus)
-     */
+    @Override
     public void sendMultiStatus(MultiStatus multistatus) throws IOException {
         sendXmlResponse(multistatus, SC_MULTI_STATUS);
+    }
+
+    @Override
+    public void sendMultiStatus(MultiStatus multistatus, List<String> acceptableContentCodings) throws IOException {
+        sendXmlResponse(multistatus, SC_MULTI_STATUS, acceptableContentCodings);
     }
 
     /**
@@ -119,28 +122,35 @@ public class WebdavResponseImpl implements WebdavResponse {
         sendXmlResponse(propSet, SC_OK);
     }
 
-    /**
-     * Send Xml response body.
-     *
-     * @param serializable
-     * @param status
-     * @throws IOException
-     * @see DavServletResponse#sendXmlResponse(XmlSerializable, int)
-     */
+    @Override
     public void sendXmlResponse(XmlSerializable serializable, int status) throws IOException {
+        sendXmlResponse(serializable, status, Collections.emptyList());
+    }
+
+    @Override
+    public void sendXmlResponse(XmlSerializable serializable, int status, List<String> acceptableContentCodings) throws IOException {
         httpResponse.setStatus(status);
 
         if (serializable != null) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
             try {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
                 Document doc = DomUtil.createDocument();
                 doc.appendChild(serializable.toXml(doc));
                 DomUtil.transformDocument(doc, out);
+                out.close();
 
-                // TODO: Should this be application/xml? See JCR-1621
                 httpResponse.setContentType("text/xml; charset=UTF-8");
-                httpResponse.setContentLength(out.size());
-                out.writeTo(httpResponse.getOutputStream());
+
+                // use GZIP iff accepted by client and content size >= 256 octets
+                if (out.size() < 256 || !acceptableContentCodings.contains("gzip")) {
+                    httpResponse.setContentLength(out.size());
+                    out.writeTo(httpResponse.getOutputStream());
+                } else {
+                    httpResponse.setHeader("Content-Encoding", "gzip");
+                    try (OutputStream os = new GZIPOutputStream(httpResponse.getOutputStream())) {
+                        out.writeTo(os);
+                    }
+                }
             } catch (ParserConfigurationException e) {
                 log.error(e.getMessage());
                 throw new IOException(e.getMessage());

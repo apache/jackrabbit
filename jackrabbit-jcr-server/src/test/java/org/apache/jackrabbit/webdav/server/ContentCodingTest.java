@@ -34,6 +34,8 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
 
 public class ContentCodingTest extends WebDAVTestBase {
@@ -94,10 +96,21 @@ public class ContentCodingTest extends WebDAVTestBase {
         }
     }
 
-    public void testPropfindNoContentCoding() throws IOException {
+    public void testPropfindNoContentCoding() throws IOException, DavException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        HttpResponse response = this.client.execute(propfind, this.context);
+        int status = response.getStatusLine().getStatusCode();
         assertEquals(207, status);
+    }
+
+    public void testPropfindAcceptReponseEncoding() throws IOException, DavException {
+        HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
+        propfind.setHeader(new BasicHeader("Accept-Encoding", "gzip;q=0.555"));
+        HttpResponse response = this.client.execute(propfind, this.context);
+        int status = response.getStatusLine().getStatusCode();
+        assertEquals(207, status);
+        MultiStatusResponse[] responses = propfind.getResponseBodyAsMultiStatus(response).getResponses();
+        assertEquals(1, responses.length);
     }
 
     private static String PF = "<D:propfind xmlns:D=\"DAV:\"><D:prop><D:resourcetype/></D:prop></D:propfind>";

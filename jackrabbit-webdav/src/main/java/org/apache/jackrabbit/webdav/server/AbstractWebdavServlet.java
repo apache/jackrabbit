@@ -599,7 +599,8 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         MultiStatus mstatus = new MultiStatus();
         mstatus.addResourceProperties(resource, requestProperties, propfindType, depth);
-        response.sendMultiStatus(mstatus);
+        response.sendMultiStatus(mstatus,
+                acceptsGzipEncoding(request) ? Collections.singletonList("gzip") : Collections.emptyList());
     }
 
     /**
@@ -1150,7 +1151,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         int statusCode = (report.isMultiStatusReport()) ? DavServletResponse.SC_MULTI_STATUS : DavServletResponse.SC_OK;
-        response.sendXmlResponse(report, statusCode);
+        response.sendXmlResponse(report, statusCode, acceptsGzipEncoding(request) ? Collections.singletonList("gzip") : Collections.emptyList());
     }
 
     /**
@@ -1443,9 +1444,35 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * request
      */
     public static List<String> getContentCodings(HttpServletRequest request) {
+        return getListElementsFromHeaderField(request, "Content-Encoding");
+    }
+
+    /**
+     * Check whether recipient accepts GZIP content coding
+     */
+    private static boolean acceptsGzipEncoding(HttpServletRequest request) {
+        List<String> result = getListElementsFromHeaderField(request, "Accept-Encoding");
+        for (String s : result) {
+            s = s.replace(" ", "");
+            int semi = s.indexOf(';');
+            if ("gzip".equals(s)) {
+                return true;
+            } else if (semi > 0) {
+                String enc = s.substring(0, semi);
+                String parm = s.substring(semi + 1);
+                if ("gzip".equals(enc) && parm.startsWith("q=")) {
+                    float q = Float.valueOf(parm.substring(2));
+                    return q > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static List<String> getListElementsFromHeaderField(HttpServletRequest request, String fieldName) {
         List<String> result = Collections.emptyList();
         for (@SuppressWarnings("unchecked")
-        Enumeration<String> ceh = request.getHeaders("Content-Encoding"); ceh.hasMoreElements();) {
+        Enumeration<String> ceh = request.getHeaders(fieldName); ceh.hasMoreElements();) {
             for (String h : ceh.nextElement().split(",")) {
                 if (!h.trim().isEmpty()) {
                     if (result.isEmpty()) {
