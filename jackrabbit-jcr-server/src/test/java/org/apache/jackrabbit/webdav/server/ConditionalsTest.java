@@ -162,4 +162,16 @@ public class ConditionalsTest extends WebDAVTestBase {
             delete(testUri);
         }
     }
+
+    public void testGetCollectionEtag() throws IOException, ParseException {
+        String testUri = this.uri.toString() + (this.uri.toString().endsWith("/") ? "" : "/");
+        HttpGet get = new HttpGet(testUri);
+        HttpResponse response = this.client.execute(get, this.context);
+        int status = response.getStatusLine().getStatusCode();
+        assertEquals(200, status);
+        Header etag = response.getFirstHeader("etag");
+        if (etag != null) {
+            assertFalse("etag must not be empty", "".equals(etag.getValue()));
+        }
+    }
 }

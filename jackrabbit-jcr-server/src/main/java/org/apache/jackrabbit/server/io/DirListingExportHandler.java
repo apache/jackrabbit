@@ -135,7 +135,6 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
         // properties (content length undefined)
         context.setModificationTime(new Date().getTime());
         context.setContentType("text/html", "UTF-8");
-        context.setETag("");
 
         // data
         if (context.hasStream()) {
@@ -199,7 +198,6 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
         // properties (content length undefined)
         context.setModificationTime(new Date().getTime());
         context.setContentType("text/html", "UTF-8");
-        context.setETag("");
 
         // data
         if (context.hasStream()) {
