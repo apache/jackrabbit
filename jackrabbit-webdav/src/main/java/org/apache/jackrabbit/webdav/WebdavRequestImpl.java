@@ -30,12 +30,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.webdav.bind.BindInfo;
@@ -62,6 +65,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
+import org.apache.jackrabbit.webdav.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.version.LabelInfo;
@@ -80,7 +84,7 @@ import org.xml.sax.SAXException;
 /**
  * <code>WebdavRequestImpl</code>...
  */
-public class WebdavRequestImpl implements WebdavRequest, DavConstants {
+public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCodingAwareRequest {
 
     private static Logger log = LoggerFactory.getLogger(WebdavRequestImpl.class);
 
@@ -308,7 +312,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         }
         // try to parse the request body
         try {
-            InputStream in = httpRequest.getInputStream();
+            InputStream in = getDecodedInputStream(httpRequest);
             if (in != null) {
                 // use a buffered input stream to find out whether there actually
                 // is a request body
@@ -324,7 +328,8 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             if (log.isDebugEnabled()) {
                 log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
             }
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST);
+            Throwable cause = e.getCause();
+            throw (cause instanceof DavException) ? (DavException) cause : new DavException(DavServletResponse.SC_BAD_REQUEST);
         } catch (ParserConfigurationException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Unable to build an XML Document from the request body: " + e.getMessage());
@@ -365,6 +370,39 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             parsePropFindRequest();
         }
         return propfindProps;
+    }
+
+    private static InputStream getDecodedInputStream(HttpServletRequest request) throws IOException {
+        List<String> contentCodings = AbstractWebdavServlet.getContentCodings(request);
+        int len = contentCodings.size();
+
+        log.trace("content codings: " + contentCodings);
+        InputStream result = request.getInputStream();
+ 
+        for (int i = 1; i <= len; i++) {
+            String s = contentCodings.get(len - i);
+            log.trace("decoding: " + s);
+            if ("gzip".equals(s)) {
+                result = new GZIPInputStream(result);
+            } else {
+                String message = "Unsupported content coding: " + s;
+                try {
+                    Element condition = DomUtil.createElement(
+                            DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument(), PRECONDITION_SUPPORTED);
+                    throw new IOException(
+                            new DavException(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, message, null, condition));
+                } catch (ParserConfigurationException ex) {
+                    throw new IOException(message);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public String getAcceptableCodings() {
+        return "gzip";
     }
 
     /**
@@ -940,7 +978,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     public ServletInputStream getInputStream() throws IOException {
-        return httpRequest.getInputStream();
+        return new MyServletInputStream(getDecodedInputStream(httpRequest));
     }
 
     public String getParameter(String s) {
@@ -1029,5 +1067,79 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     public int getLocalPort() {
         return httpRequest.getLocalPort();
+    }
+
+    private static class MyServletInputStream extends ServletInputStream {
+
+        private final InputStream delegate;
+
+        public MyServletInputStream(InputStream delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public int available() throws IOException {
+            return delegate.available();
+        }
+
+        @Override
+        public void close() throws IOException {
+            delegate.close();
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return delegate.equals(other);
+        }
+
+        @Override
+        public int hashCode() {
+            return delegate.hashCode();
+        }
+
+        @Override
+        public void mark(int readlimit) {
+            delegate.mark(readlimit);
+        }
+
+        @Override
+        public boolean markSupported() {
+            return delegate.markSupported();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return delegate.read();
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return delegate.read(b, off, len);
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return delegate.read(b);
+        }
+
+        @Override
+        public int readLine(byte[] b, int off, int len) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void reset() throws IOException {
+            delegate.reset();
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return delegate.skip(n);
+        }
+
+        @Override
+        public String toString() {
+            return delegate.toString();
+        }
     }
 }

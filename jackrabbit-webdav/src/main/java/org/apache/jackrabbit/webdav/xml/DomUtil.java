@@ -530,6 +530,19 @@ public class DomUtil {
     }
 
     /**
+     * Create a new DOM element with the specified local name and namespace.
+     *
+     * @param factory
+     * @param qName
+     * @return a new DOM element
+     * @see Document#createElement(String)
+     * @see Document#createElementNS(String, String)
+     */
+    public static Element createElement(Document factory, QName elementName) {
+        return factory.createElementNS(elementName.getNamespaceURI(), getPrefixedName(elementName));
+    }
+
+    /**
      * Create a new DOM element with the specified local name and namespace and
      * add the specified text as Text node to it.
      *
@@ -764,15 +777,34 @@ public class DomUtil {
      * @see Document#createElementNS(String, String)
      */
     public static String getPrefixedName(String localName, Namespace namespace) {
-        if (namespace == null
-            || Namespace.EMPTY_NAMESPACE.equals(namespace)
-            || Namespace.EMPTY_NAMESPACE.getPrefix().equals(namespace.getPrefix())) {
+        return getPrefixName(namespace.getURI(), namespace.getPrefix(), localName);
+    }
+
+    /**
+     * Return the qualified name of a DOM node consisting of
+     * namespace prefix + ":" + local name. If the specified namespace is <code>null</code>
+     * or contains an empty prefix, the local name is returned.<br>
+     * NOTE, that this is the value to be used for the 'qualified Name' parameter
+     * expected with the namespace sensitive factory methods.
+     *
+     * @param qName
+     * @return qualified name consisting of prefix, ':' and local name.
+     * @see Document#createAttributeNS(String, String)
+     * @see Document#createElementNS(String, String)
+     */
+    public static String getPrefixedName(QName name) {
+        return getPrefixName(name.getNamespaceURI(), name.getPrefix(), name.getLocalPart());
+    }
+
+    private static String getPrefixName(String namespaceURI, String prefix, String localName) {
+        if (namespaceURI == null || prefix == null || "".equals(namespaceURI) || "".equals(prefix)) {
             return localName;
+        } else {
+            StringBuffer buf = new StringBuffer(prefix);
+            buf.append(":");
+            buf.append(localName);
+            return buf.toString();
         }
-        StringBuffer buf = new StringBuffer(namespace.getPrefix());
-        buf.append(":");
-        buf.append(localName);
-        return buf.toString();
     }
 
     /**

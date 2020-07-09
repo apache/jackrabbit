@@ -14,5 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@org.osgi.annotation.versioning.Version("1.2.0")
-package org.apache.jackrabbit.webdav.xml;
+package org.apache.jackrabbit.webdav;
+
+import javax.xml.namespace.QName;
+
+public interface ContentCodingAwareRequest {
+
+    /**
+     * Element name for signaling "must be supported content coding"
+     */
+    public final QName PRECONDITION_SUPPORTED = new QName("http://www.day.com/jcr/webdav/1.0", "supported-content-coding", "dcr");
+
+    /**
+     * @return value suitable for Accept response field
+     */
+    public String getAcceptableCodings();
+}
