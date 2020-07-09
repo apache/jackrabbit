@@ -312,7 +312,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
         }
         // try to parse the request body
         try {
-            InputStream in = getDecodedInputStream(httpRequest);
+            InputStream in = getDecodedInputStream();
             if (in != null) {
                 // use a buffered input stream to find out whether there actually
                 // is a request body
@@ -372,12 +372,12 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
         return propfindProps;
     }
 
-    private static InputStream getDecodedInputStream(HttpServletRequest request) throws IOException {
-        List<String> contentCodings = AbstractWebdavServlet.getContentCodings(request);
+    private InputStream getDecodedInputStream() throws IOException {
+        List<String> contentCodings = getRequestContentCodings();
         int len = contentCodings.size();
 
         log.trace("content codings: " + contentCodings);
-        InputStream result = request.getInputStream();
+        InputStream result = httpRequest.getInputStream();
  
         for (int i = 1; i <= len; i++) {
             String s = contentCodings.get(len - i);
@@ -399,6 +399,17 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
         }
 
         return result;
+    }
+
+    private List<String> requestContentCodings = null;
+
+    @Override
+    public List<String> getRequestContentCodings() {
+        if (requestContentCodings == null) {
+            requestContentCodings = AbstractWebdavServlet.getContentCodings(httpRequest);
+        }
+
+        return requestContentCodings;
     }
 
     @Override
@@ -979,7 +990,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
     }
 
     public ServletInputStream getInputStream() throws IOException {
-        return new MyServletInputStream(getDecodedInputStream(httpRequest));
+        return new MyServletInputStream(getDecodedInputStream());
     }
 
     public String getParameter(String s) {

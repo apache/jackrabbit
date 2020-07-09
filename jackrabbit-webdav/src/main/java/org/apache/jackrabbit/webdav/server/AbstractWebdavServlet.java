@@ -345,6 +345,19 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     }
 
     /**
+     * If request payload was uncompressed, hint about acceptable content codings (RFC 7694)
+     */
+    private void addHintAboutPotentialRequestEncodings(WebdavRequest webdavRequest, WebdavResponse webdavResponse) {
+        if (webdavRequest instanceof ContentCodingAwareRequest) {
+            ContentCodingAwareRequest ccr = (ContentCodingAwareRequest)webdavRequest;
+            List<String> ces = ccr.getRequestContentCodings();
+            if (ces.isEmpty()) {
+                webdavResponse.setHeader("Accept-Encoding", ccr.getAcceptableCodings());
+            }
+        }
+    }
+
+    /**
      * Sets the "WWW-Authenticate" header and writes the appropriate error
      * to the given webdav response.
      *
@@ -599,6 +612,9 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         MultiStatus mstatus = new MultiStatus();
         mstatus.addResourceProperties(resource, requestProperties, propfindType, depth);
+
+        addHintAboutPotentialRequestEncodings(request, response);
+
         response.sendMultiStatus(mstatus,
                 acceptsGzipEncoding(request) ? Collections.singletonList("gzip") : Collections.emptyList());
     }
@@ -624,6 +640,9 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         MultiStatus ms = new MultiStatus();
         MultiStatusResponse msr = resource.alterProperties(changeList);
         ms.addResponse(msr);
+
+        addHintAboutPotentialRequestEncodings(request, response);
+
         response.sendMultiStatus(ms);
     }
 
@@ -1151,6 +1170,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         int statusCode = (report.isMultiStatusReport()) ? DavServletResponse.SC_MULTI_STATUS : DavServletResponse.SC_OK;
+        addHintAboutPotentialRequestEncodings(request, response);
         response.sendXmlResponse(report, statusCode, acceptsGzipEncoding(request) ? Collections.singletonList("gzip") : Collections.emptyList());
     }
 

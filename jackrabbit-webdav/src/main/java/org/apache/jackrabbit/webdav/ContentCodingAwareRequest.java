@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.webdav;
 
+import java.util.List;
+
 import javax.xml.namespace.QName;
 
 public interface ContentCodingAwareRequest {
@@ -29,4 +31,9 @@ public interface ContentCodingAwareRequest {
      * @return value suitable for Accept response field
      */
     public String getAcceptableCodings();
+
+    /**
+     * @return content codings used in request
+     */
+    public List<String> getRequestContentCodings();
 }
