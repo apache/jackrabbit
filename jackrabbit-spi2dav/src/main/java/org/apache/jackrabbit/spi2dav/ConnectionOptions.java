@@ -19,13 +19,19 @@ package org.apache.jackrabbit.spi2dav;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Advanced connection options to use for connections to a remote repository.
  *
  */
 public final class ConnectionOptions {
+
+    private static Logger log = LoggerFactory.getLogger(ConnectionOptions.class);
 
     private final boolean isUseSystemPropertes;
     private final int maxConnections;
@@ -41,73 +47,62 @@ public final class ConnectionOptions {
     private final int socketTimeoutMs;
 
     /**
-     * Boolean flag whether to use the default Java system properties for setting proxy, TLS and further options.
+     * Boolean flag whether to use the default Java system properties for setting proxy, TLS and further options as defined by {@link HttpClientBuilder}.
      * Default = {@code false}.
-     * 
-     * @see <a href="https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/client/HttpClientBuilder.html">HttpClientBuilder</a> 
      */
-    public static final String PARAM_USE_SYSTEM_PROPERTIES = "connection.useSystemProperties";
+    public static final String PARAM_USE_SYSTEM_PROPERTIES = "org.apache.jackrabbit.spi2dav.connection.useSystemProperties";
 
     /**
      * Boolean flag whether to allow self-signed certificates of remote repositories.
      * Default = {@code false}.
      */
-    public static final String PARAM_ALLOW_SELF_SIGNED_CERTIFICATES = "connection.allowSelfSignedCertificates";
+    public static final String PARAM_ALLOW_SELF_SIGNED_CERTIFICATES = "org.apache.jackrabbit.spi2dav.connection.allowSelfSignedCertificates";
     
     /**
      * Boolean flag whether to disable the host name verification against the common name of the server's certificate.
      * Default = {@code false}.
      */
-    public static final String PARAM_DISABLE_HOSTNAME_VERIFICATION = "connection.disableHostnameVerification";
+    public static final String PARAM_DISABLE_HOSTNAME_VERIFICATION = "org.apache.jackrabbit.spi2dav.connection.disableHostnameVerification";
     
     /**
      * The host of a proxy server.
      */
-    public static final String PARAM_PROXY_HOST = "connection.proxyHost";
+    public static final String PARAM_PROXY_HOST = "org.apache.jackrabbit.spi2dav.connection.proxyHost";
     
     /**
      * Integer value for the proxy's port. Only effective if {@link #PARAM_PROXY_HOST} is used as well. If -1 or not set the default for the scheme will be used.
      */
-    public static final String PARAM_PROXY_PORT = "connection.proxyPort";
+    public static final String PARAM_PROXY_PORT = "org.apache.jackrabbit.spi2dav.connection.proxyPort";
     
     /**
      * The protocol for which to use the proxy. Only effective if {@link #PARAM_PROXY_HOST} is used as well.
      */
-    public static final String PARAM_PROXY_PROTOCOL = "connection.proxyProtocol";
+    public static final String PARAM_PROXY_PROTOCOL = "org.apache.jackrabbit.spi2dav.connection.proxyProtocol";
 
     /**
      * The user name to authenticate at the proxy. Only effective if {@link #PARAM_PROXY_HOST} is used as well.
      */
-    public static final String PARAM_PROXY_USERNAME = "connection.proxyUsername";
+    public static final String PARAM_PROXY_USERNAME = "org.apache.jackrabbit.spi2dav.connection.proxyUsername";
 
     /**
      * The password to authenticate at the proxy. Only effective if {@link #PARAM_PROXY_HOST} and {@link #PARAM_PROXY_USERNAME} are used as well.
      */
-    public static final String PARAM_PROXY_PASSWORD = "connection.proxyPassword";
+    public static final String PARAM_PROXY_PASSWORD = "org.apache.jackrabbit.spi2dav.connection.proxyPassword";
 
     /**
      * The connection timeout in milliseconds as Integer. -1 for default, 0 for infinite.
      */
-    public static final String PARAM_CONNECTION_TIMEOUT_MS = "connection.connectionTimeoutMs";
+    public static final String PARAM_CONNECTION_TIMEOUT_MS = "org.apache.jackrabbit.spi2dav.connection.connectionTimeoutMs";
 
     /**
      * The request timeout in milliseconds as Integer. -1 for default, 0 for infinite.
      */
-    public static final String PARAM_REQUEST_TIMEOUT_MS = "connection.requestTimeoutMs";
+    public static final String PARAM_REQUEST_TIMEOUT_MS = "org.apache.jackrabbit.spi2dav.connection.requestTimeoutMs";
     
     /**
      * The request timeout in milliseconds as Integer. -1 for default, 0 for infinite.
      */
-    public static final String PARAM_SOCKET_TIMEOUT_MS = "connection.socketTimeoutMs";
-    
-    /**
-     * Optional configuration parameter: Its value defines the
-     * maximumConnectionsPerHost value on the HttpClient configuration and
-     * must be an int greater than zero.
-     * @deprecated Use {@link #PARAM_MAX_CONNECTIONS} instead.
-     */
-    @Deprecated
-    private static final String PARAM_MAX_CONNECTIONS_LEGACY = "MaxConnections";
+    public static final String PARAM_SOCKET_TIMEOUT_MS = "org.apache.jackrabbit.spi2dav.connection.socketTimeoutMs";
 
     /**
      * Optional configuration parameter: Its value defines the
@@ -268,70 +263,71 @@ public final class ConnectionOptions {
                 + connectionTimeoutMs + ", requestTimeoutMs=" + requestTimeoutMs + ", socketTimeoutMs=" + socketTimeoutMs + "]";
     }
 
-    public Map<String, String> toServiceFactoryParameters(String parameterPrefix) {
+    public Map<String, String> toServiceFactoryParameters() {
         Map<String, String> parameters = new HashMap<>();
         if (isUseSystemPropertes) {
-            parameters.put(parameterPrefix + PARAM_USE_SYSTEM_PROPERTIES, Boolean.toString(isUseSystemPropertes));
+            parameters.put(PARAM_USE_SYSTEM_PROPERTIES, Boolean.toString(isUseSystemPropertes));
         }
         if (maxConnections != MAX_CONNECTIONS_DEFAULT) {
-            parameters.put(parameterPrefix + PARAM_MAX_CONNECTIONS, Integer.toString(maxConnections));
+            parameters.put(PARAM_MAX_CONNECTIONS, Integer.toString(maxConnections));
         }
         if (isAllowSelfSignedCertificates) {
-            parameters.put(parameterPrefix + PARAM_ALLOW_SELF_SIGNED_CERTIFICATES, Boolean.toString(isAllowSelfSignedCertificates));
+            parameters.put(PARAM_ALLOW_SELF_SIGNED_CERTIFICATES, Boolean.toString(isAllowSelfSignedCertificates));
         }
         if (isDisableHostnameVerification) {
-            parameters.put(parameterPrefix + PARAM_DISABLE_HOSTNAME_VERIFICATION, Boolean.toString(isDisableHostnameVerification));
+            parameters.put(PARAM_DISABLE_HOSTNAME_VERIFICATION, Boolean.toString(isDisableHostnameVerification));
         }
         if (connectionTimeoutMs != -1) {
-            parameters.put(parameterPrefix + PARAM_CONNECTION_TIMEOUT_MS, Integer.toString(connectionTimeoutMs));
+            parameters.put(PARAM_CONNECTION_TIMEOUT_MS, Integer.toString(connectionTimeoutMs));
         }
         if (requestTimeoutMs != -1) {
-            parameters.put(parameterPrefix + PARAM_REQUEST_TIMEOUT_MS, Integer.toString(requestTimeoutMs));
+            parameters.put(PARAM_REQUEST_TIMEOUT_MS, Integer.toString(requestTimeoutMs));
         }
         if (socketTimeoutMs != -1) {
-            parameters.put(parameterPrefix + PARAM_SOCKET_TIMEOUT_MS, Integer.toString(socketTimeoutMs));
+            parameters.put(PARAM_SOCKET_TIMEOUT_MS, Integer.toString(socketTimeoutMs));
         }
         if (proxyHost != null) {
-            parameters.put(parameterPrefix + PARAM_PROXY_HOST, proxyHost);
+            parameters.put(PARAM_PROXY_HOST, proxyHost);
         }
         if (proxyPort != -1) {
-            parameters.put(parameterPrefix + PARAM_PROXY_PORT, Integer.toString(proxyPort));
+            parameters.put(PARAM_PROXY_PORT, Integer.toString(proxyPort));
         }
         if (proxyProtocol != null) {
-            parameters.put(parameterPrefix + PARAM_PROXY_PROTOCOL, proxyProtocol);
+            parameters.put(PARAM_PROXY_PROTOCOL, proxyProtocol);
         }
         if (proxyUsername != null) {
-            parameters.put(parameterPrefix + PARAM_PROXY_USERNAME, proxyUsername);
+            parameters.put(PARAM_PROXY_USERNAME, proxyUsername);
         }
         if (proxyPassword != null) {
-            parameters.put(parameterPrefix + PARAM_PROXY_PASSWORD, proxyPassword);
+            parameters.put(PARAM_PROXY_PASSWORD, proxyPassword);
         }
         return parameters;
     }
 
-    public static ConnectionOptions fromServiceFactoryParameters(String parameterPrefix, Map<?, ?> parameters) {
+    public static ConnectionOptions fromServiceFactoryParameters(Map<?, ?> parameters) {
         return new ConnectionOptions(
-                getBooleanValueFromParameter(parameterPrefix, parameters, false, PARAM_USE_SYSTEM_PROPERTIES),
-                getIntegerValueFromParameter(parameterPrefix, parameters, MAX_CONNECTIONS_DEFAULT, PARAM_MAX_CONNECTIONS, PARAM_MAX_CONNECTIONS_LEGACY),
-                getBooleanValueFromParameter(parameterPrefix, parameters, false, PARAM_ALLOW_SELF_SIGNED_CERTIFICATES),
-                getBooleanValueFromParameter(parameterPrefix, parameters, false, PARAM_DISABLE_HOSTNAME_VERIFICATION),
-                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_CONNECTION_TIMEOUT_MS),
-                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_REQUEST_TIMEOUT_MS),
-                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_SOCKET_TIMEOUT_MS),
-                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_HOST),
-                getIntegerValueFromParameter(parameterPrefix, parameters, -1, PARAM_PROXY_PORT),
-                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_PROTOCOL),
-                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_USERNAME),
-                getStringValueFromParameter(parameterPrefix, parameters, null, PARAM_PROXY_PASSWORD));
+                getBooleanValueFromParameter(parameters, false, PARAM_USE_SYSTEM_PROPERTIES),
+                getIntegerValueFromParameter(parameters, MAX_CONNECTIONS_DEFAULT, PARAM_MAX_CONNECTIONS, Spi2davRepositoryServiceFactory.PARAM_MAX_CONNECTIONS, Spi2davexRepositoryServiceFactory.PARAM_MAX_CONNECTIONS),
+                getBooleanValueFromParameter(parameters, false, PARAM_ALLOW_SELF_SIGNED_CERTIFICATES),
+                getBooleanValueFromParameter(parameters, false, PARAM_DISABLE_HOSTNAME_VERIFICATION),
+                getIntegerValueFromParameter(parameters, -1, PARAM_CONNECTION_TIMEOUT_MS),
+                getIntegerValueFromParameter(parameters, -1, PARAM_REQUEST_TIMEOUT_MS),
+                getIntegerValueFromParameter(parameters, -1, PARAM_SOCKET_TIMEOUT_MS),
+                getStringValueFromParameter(parameters, null, PARAM_PROXY_HOST),
+                getIntegerValueFromParameter(parameters, -1, PARAM_PROXY_PORT),
+                getStringValueFromParameter(parameters, null, PARAM_PROXY_PROTOCOL),
+                getStringValueFromParameter(parameters, null, PARAM_PROXY_USERNAME),
+                getStringValueFromParameter(parameters, null, PARAM_PROXY_PASSWORD));
     }
 
-    private static int getIntegerValueFromParameter(String parameterPrefix, Map<?, ?> parameters, int defaultValue, String... parameterKeys) {
+    private static int getIntegerValueFromParameter(Map<?, ?> parameters, int defaultValue, String... parameterKeys) {
         for (String key : parameterKeys) {
-            Object value = parameters.get(parameterPrefix+key);
+            Object value = parameters.get(key);
             if (value != null) {
                 try {
                     return Integer.parseInt(value.toString());
-                } catch ( NumberFormatException e ) {
+                } catch (NumberFormatException e) {
+                    log.warn("Invalid integer value '{}' given for parameter '{}'. Using default '{}' instead.",  value, key, defaultValue);
                     // using default
                 }
             }
@@ -339,9 +335,9 @@ public final class ConnectionOptions {
         return defaultValue;
     }
 
-    private static boolean getBooleanValueFromParameter(String parameterPrefix, Map<?, ?> parameters, boolean defaultValue, String... parameterKeys) {
+    private static boolean getBooleanValueFromParameter(Map<?, ?> parameters, boolean defaultValue, String... parameterKeys) {
         for (String key : parameterKeys) {
-            Object value = parameters.get(parameterPrefix+key);
+            Object value = parameters.get(key);
             if (value != null) {
                 return Boolean.parseBoolean(value.toString());
             }
@@ -349,9 +345,9 @@ public final class ConnectionOptions {
         return defaultValue;
     }
 
-    private static String getStringValueFromParameter(String parameterPrefix, Map<?, ?> parameters, String defaultValue, String... parameterKeys) {
+    private static String getStringValueFromParameter(Map<?, ?> parameters, String defaultValue, String... parameterKeys) {
         for (String key : parameterKeys) {
-            Object value = parameters.get(parameterPrefix+key);
+            Object value = parameters.get(key);
             if (value != null) {
                 return value.toString();
             }

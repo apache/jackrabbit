@@ -243,9 +243,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * Default value for the maximum number of connections per host such as
      * configured with {@link PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
-     * @deprecated Use {@link ConnectionOptions#MAX_CONNECTIONS_DEFAULT} instead
      */
-    @Deprecated
     public static final int MAX_CONNECTIONS_DEFAULT = 20;
 
     private final IdFactory idFactory;

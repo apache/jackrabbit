@@ -1,24 +1,17 @@
 package org.apache.jackrabbit.spi2dav;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.CertPathBuilderException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.servlet.Servlet;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory;
 import org.apache.jackrabbit.webdav.server.WebDAVTestBase;
@@ -29,17 +22,6 @@ import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 public class ConnectionIT extends WebDAVTestBase {
 
     private Spi2davexRepositoryServiceFactory repositoryServiceFactory;
-    
-    /** Make sure to use JcrRemotingServlet instead of SimpleWebDavServlet to properly support enhanced properties like DAV:workspace! */
-    @Override
-    protected Servlet getWebDavServlet() {
-        return new JcrRemotingServlet() {
-            @Override
-            protected Repository getRepository() {
-                return repoContext.getRepository();
-            }
-        };
-    }
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -50,10 +32,9 @@ public class ConnectionIT extends WebDAVTestBase {
         Map<String, String> parameters = new HashMap<>();
         if (isViaHttps) {
             parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI,
-                    new URI(httpsUri.getScheme(), httpsUri.getUserInfo(), httpsUri.getHost(), httpsUri.getPort(), null, null, null).toString());
+                    new URI("https", remotingUri.getSchemeSpecificPart(), null).toString());
         } else {
-            parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI,
-                    new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null).toString());
+            parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI, remotingUri.toString());
         }
         if (additionalParameters != null) {
             parameters.putAll(additionalParameters);
@@ -83,7 +64,7 @@ public class ConnectionIT extends WebDAVTestBase {
         Map<String, String> parameters = new HashMap<>();
         ConnectionOptions.Builder builder = ConnectionOptions.builder();
         builder.allowSelfSignedCertificates(true);
-        parameters.putAll(builder.build().toServiceFactoryParameters("org.apache.jackrabbit.spi2davex"));
+        parameters.putAll(builder.build().toServiceFactoryParameters());
         RepositoryService repositoryService = createRepositoryService(true, parameters);
         try {
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
@@ -101,7 +82,7 @@ public class ConnectionIT extends WebDAVTestBase {
         ConnectionOptions.Builder builder = ConnectionOptions.builder();
         builder.allowSelfSignedCertificates(true);
         builder.disableHostnameVerification(true);
-        parameters.putAll(builder.build().toServiceFactoryParameters("org.apache.jackrabbit.spi2davex"));
+        parameters.putAll(builder.build().toServiceFactoryParameters());
         RepositoryService repositoryService = createRepositoryService(true, parameters);
         repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
     }
@@ -115,7 +96,7 @@ public class ConnectionIT extends WebDAVTestBase {
             ConnectionOptions.Builder builder = ConnectionOptions.builder();
             builder.proxyHost("127.0.0.1");
             builder.proxyPort(8080);
-            parameters.putAll(builder.build().toServiceFactoryParameters("org.apache.jackrabbit.spi2davex"));
+            parameters.putAll(builder.build().toServiceFactoryParameters());
             RepositoryService repositoryService = createRepositoryService(false, parameters);
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
         } finally {
@@ -147,7 +128,7 @@ public class ConnectionIT extends WebDAVTestBase {
             builder.proxyPort(8080);
             builder.proxyUsername("test");
             builder.proxyPassword("invalid");
-            parameters.putAll(builder.build().toServiceFactoryParameters("org.apache.jackrabbit.spi2davex"));
+            parameters.putAll(builder.build().toServiceFactoryParameters());
             RepositoryService repositoryService = createRepositoryService(false, parameters);
             try {
                 repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
@@ -187,7 +168,7 @@ public class ConnectionIT extends WebDAVTestBase {
             builder.proxyPort(8080);
             builder.proxyUsername("test");
             builder.proxyPassword("valid");
-            parameters.putAll(builder.build().toServiceFactoryParameters("org.apache.jackrabbit.spi2davex"));
+            parameters.putAll(builder.build().toServiceFactoryParameters());
             RepositoryService repositoryService = createRepositoryService(false, parameters);
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
         } finally {
@@ -201,33 +182,10 @@ public class ConnectionIT extends WebDAVTestBase {
         ConnectionOptions.Builder builder = ConnectionOptions.builder();
         int connectionTimeoutMs = 1000;
         builder.connectionTimeoutMs(connectionTimeoutMs);
-        parameters.putAll(builder.build().toServiceFactoryParameters("org.apache.jackrabbit.spi2davex"));
-        int port = uri.getPort()-1;
+        parameters.putAll(builder.build().toServiceFactoryParameters());
         // overwrite URI (use non-routable IP to run into connection timeout)
         parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI, "http://10.0.0.0");
         RepositoryService repositoryService = createRepositoryService(true, parameters);
-        
-        Runnable simpleServer = new Runnable() {
-            @Override
-            public void run() {
-                // run a simple server on that port to timeout
-                try(ServerSocket serverSocket = new ServerSocket(port)) {
-                    Socket connectionSocket = serverSocket.accept();
-
-                    //Create Input&Outputstreams for the connection
-                    InputStream inputToServer = connectionSocket.getInputStream();
-
-                    while(inputToServer.read() != -1) {
-                        ;
-                    }
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        };
-        
-        //Thread thread = new Thread(simpleServer);
-        //thread.start();
         
         long beforeTimeMs = System.currentTimeMillis();
         try {

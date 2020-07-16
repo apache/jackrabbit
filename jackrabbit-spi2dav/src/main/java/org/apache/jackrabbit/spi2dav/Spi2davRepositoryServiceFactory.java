@@ -37,7 +37,7 @@ import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
  * This {@link RepositoryServiceFactory} implementation is responsible
  * for creating {@link RepositoryServiceImpl} instances which communicate via WebDAV.
  * All parameter keys defined in this class and in addition the ones from {@link ConnectionOptions} 
- * with the prefix "org.apache.jackrabbit.spi2dav" are supported as arguments for {@link #createRepositoryService(Map)}.
+ * are supported as arguments for {@link #createRepositoryService(Map)}.
  */
 public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory {
 
@@ -81,9 +81,8 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
      * Optional configuration parameter: It's value defines the
      * maximumConnectionsPerHost value on the HttpClient configuration and
      * must be an int greater than zero.
-     * @deprecated Use {@link ConnectionOptions#PARAM_MAX_CONNECTIONS} instead.
+     * Rather use {@link ConnectionOptions#PARAM_MAX_CONNECTIONS} instead.
      */
-    @Deprecated
     public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2dav.MaxConnections";
 
     public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
@@ -140,6 +139,6 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
                 // ignore, use default
             }
         }
-        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, ConnectionOptions.fromServiceFactoryParameters("org.apache.jackrabbit.spi2dav", parameters));
+        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, ConnectionOptions.fromServiceFactoryParameters(parameters));
     }
 }

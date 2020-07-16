@@ -27,28 +27,26 @@ public class ConnectionOptionsTest {
     @Test
     public void testFromServiceParameterToServiceParameters() {
         Map<String, String> serviceParameters = new HashMap<>();
-        String prefix = "prefix.";
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_USE_SYSTEM_PROPERTIES, "true");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_MAX_CONNECTIONS, "10");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_ALLOW_SELF_SIGNED_CERTIFICATES, "true");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_DISABLE_HOSTNAME_VERIFICATION, "true");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_CONNECTION_TIMEOUT_MS, "100");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_REQUEST_TIMEOUT_MS, "200");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_SOCKET_TIMEOUT_MS, "300");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_PROXY_HOST, "somehost");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_PROXY_PORT, "111");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_PROXY_USERNAME, "user");
-        serviceParameters.put(prefix + ConnectionOptions.PARAM_PROXY_PASSWORD, "password");
-        Assert.assertEquals(serviceParameters, ConnectionOptions.fromServiceFactoryParameters(prefix, serviceParameters).toServiceFactoryParameters(prefix));
+        serviceParameters.put(ConnectionOptions.PARAM_USE_SYSTEM_PROPERTIES, "true");
+        serviceParameters.put(ConnectionOptions.PARAM_MAX_CONNECTIONS, "10");
+        serviceParameters.put(ConnectionOptions.PARAM_ALLOW_SELF_SIGNED_CERTIFICATES, "true");
+        serviceParameters.put(ConnectionOptions.PARAM_DISABLE_HOSTNAME_VERIFICATION, "true");
+        serviceParameters.put(ConnectionOptions.PARAM_CONNECTION_TIMEOUT_MS, "100");
+        serviceParameters.put(ConnectionOptions.PARAM_REQUEST_TIMEOUT_MS, "200");
+        serviceParameters.put(ConnectionOptions.PARAM_SOCKET_TIMEOUT_MS, "300");
+        serviceParameters.put(ConnectionOptions.PARAM_PROXY_HOST, "somehost");
+        serviceParameters.put(ConnectionOptions.PARAM_PROXY_PORT, "111");
+        serviceParameters.put(ConnectionOptions.PARAM_PROXY_USERNAME, "user");
+        serviceParameters.put(ConnectionOptions.PARAM_PROXY_PASSWORD, "password");
+        Assert.assertEquals(serviceParameters, ConnectionOptions.fromServiceFactoryParameters(serviceParameters).toServiceFactoryParameters());
     }
 
     @Test
     public void testLegacyMaxConnectionsParameter() {
         Map<String, String> serviceParameters = new HashMap<>();
-        String prefix = "org.apache.jackrabbit.spi2davex.";
         serviceParameters.put("org.apache.jackrabbit.spi2davex.MaxConnections", "30");
         ConnectionOptions connectionOptions = ConnectionOptions.builder().maxConnections(30).build();
-        Assert.assertEquals(connectionOptions, ConnectionOptions.fromServiceFactoryParameters(prefix, serviceParameters));
+        Assert.assertEquals(connectionOptions, ConnectionOptions.fromServiceFactoryParameters(serviceParameters));
     }
 
     @Test
@@ -60,7 +58,11 @@ public class ConnectionOptionsTest {
         builder.connectionTimeoutMs(100);
         builder.requestTimeoutMs(200);
         builder.socketTimeoutMs(300);
-        
+        builder.proxyHost("proxyHost");
+        builder.proxyPort(1234);
+        builder.proxyUsername("proxyUser");
+        builder.proxyPassword("proxyPassword");
+        builder.proxyProtocol("https:");
         ConnectionOptions options = builder.build();
         Assert.assertEquals(true, options.isAllowSelfSignedCertificates());
         Assert.assertEquals(false, options.isDisableHostnameVerification());
@@ -68,5 +70,10 @@ public class ConnectionOptionsTest {
         Assert.assertEquals(100, options.getConnectionTimeoutMs());
         Assert.assertEquals(200, options.getRequestTimeoutMs());
         Assert.assertEquals(300, options.getSocketTimeoutMs());
+        Assert.assertEquals("proxyHost", options.getProxyHost());
+        Assert.assertEquals(1234, options.getProxyPort());
+        Assert.assertEquals("proxyUser", options.getProxyHost());
+        Assert.assertEquals("proxyPassword", options.getProxyPassword());
+        Assert.assertEquals("https:", options.getProxyProtocol());
     }
 }

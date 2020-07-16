@@ -31,7 +31,7 @@ import org.apache.jackrabbit.spi2dav.ConnectionOptions;
  * This {@link RepositoryServiceFactory} implementation is responsible
  * for creating {@link RepositoryServiceImpl} instances which communicate via <a href="https://jackrabbit.apache.org/archive/wiki/JCR/RemoteAccess_115513494.html#RemoteAccess-DavEx">DavEx</a>.
  * All parameter keys defined in this class and in addition the ones from {@link ConnectionOptions} 
- * with the prefix "org.apache.jackrabbit.spi2davex" are supported as arguments for {@link #createRepositoryService(Map)}.
+ * are supported as arguments for {@link #createRepositoryService(Map)}.
  */
 public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFactory {
 
@@ -65,9 +65,8 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      * Optional configuration parameter: It's value defines the
      * maximumConnectionsPerHost value on the HttpClient configuration and 
      * must be an int greater than zero.
-     * @deprecated Use {@link ConnectionOptions#PARAM_MAX_CONNECTIONS} instead
+     * Rather use {@link ConnectionOptions#PARAM_MAX_CONNECTIONS} instead.
      */
-    @Deprecated
     public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2davex.MaxConnections";
 
     /** 
@@ -123,7 +122,7 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
             }
         }
 
-        return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, ConnectionOptions.fromServiceFactoryParameters("org.apache.jackrabbit.spi2davex", parameters));
+        return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, ConnectionOptions.fromServiceFactoryParameters(parameters));
     }
 
 }
