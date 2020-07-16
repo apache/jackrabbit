@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.server;
 
-import static org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet.INIT_PARAM_RESOURCE_CONFIG;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,6 +42,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
@@ -65,7 +64,8 @@ import junit.framework.TestResult;
  */
 public class WebDAVTestBase extends AbstractJCRTest {
 
-    private static final String WEBDAV_SERVLET_PATH_MAPPING = "/*";
+    private static final String SIMPLE_WEBDAV_SERVLET_PATH_MAPPING = "/*";
+    private static final String REMOTING_WEBDAV_SERVLET_PATH_MAPPING = "/remoting/*";
 
     private static ServerConnector httpConnector;
     private static ServerConnector httpsConnector;
@@ -73,6 +73,7 @@ public class WebDAVTestBase extends AbstractJCRTest {
     private static RepositoryContext repoContext;
 
     public URI uri;
+    public URI remotingUri;
     public URI httpsUri;
     public String root;
 
@@ -107,15 +108,27 @@ public class WebDAVTestBase extends AbstractJCRTest {
         if (server == null) {
             server = new Server();
 
-            ServletHolder holder = new ServletHolder(new SimpleWebdavServlet() {
+            ServletHolder simple = new ServletHolder(new SimpleWebdavServlet() {
+                private static final long serialVersionUID = 8638589328461138178L;
+
                 public Repository getRepository() {
                     return repoContext.getRepository();
                 }
             });
-            holder.setInitParameter(INIT_PARAM_RESOURCE_CONFIG, "/config.xml");
+            simple.setInitParameter(SimpleWebdavServlet.INIT_PARAM_RESOURCE_CONFIG, "/config.xml");
+
+            ServletHolder remoting = new ServletHolder(new JcrRemotingServlet() {
+                private static final long serialVersionUID = -2969534124090379387L;
+
+                public Repository getRepository() {
+                    return repoContext.getRepository();
+                }
+            });
+            remoting.setInitParameter(JcrRemotingServlet.INIT_PARAM_RESOURCE_PATH_PREFIX, "/remoting");
 
             ServletContextHandler schandler = new ServletContextHandler(server, "/");
-            schandler.addServlet(holder, WEBDAV_SERVLET_PATH_MAPPING);
+            schandler.addServlet(simple, SIMPLE_WEBDAV_SERVLET_PATH_MAPPING);
+            schandler.addServlet(remoting, REMOTING_WEBDAV_SERVLET_PATH_MAPPING);
             schandler.setBaseResource(Resource.newClassPathResource("/"));
 
             server.setHandler(schandler);
@@ -151,6 +164,7 @@ public class WebDAVTestBase extends AbstractJCRTest {
         }
 
         this.uri = new URI("http", null, "localhost", httpConnector.getLocalPort(), "/default/", null, null);
+        this.remotingUri = new URI("http", null, "localhost", httpConnector.getLocalPort(), "/remoting/default/", null, null);
         this.httpsUri = new URI("https", null, "localhost", httpsConnector.getLocalPort(), "/default/", null, null);
         this.root = this.uri.toASCIIString();
 
