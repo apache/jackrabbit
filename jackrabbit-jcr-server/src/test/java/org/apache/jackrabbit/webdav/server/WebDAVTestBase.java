@@ -65,7 +65,8 @@ import junit.framework.TestResult;
 public class WebDAVTestBase extends AbstractJCRTest {
 
     private static final String SIMPLE_WEBDAV_SERVLET_PATH_MAPPING = "/*";
-    private static final String REMOTING_WEBDAV_SERVLET_PATH_MAPPING = "/remoting/*";
+    private static final String REMOTING_PREFIX = "/remoting";
+    private static final String REMOTING_WEBDAV_SERVLET_PATH_MAPPING = REMOTING_PREFIX + "/*";
 
     private static ServerConnector httpConnector;
     private static ServerConnector httpsConnector;
@@ -73,9 +74,11 @@ public class WebDAVTestBase extends AbstractJCRTest {
     private static RepositoryContext repoContext;
 
     public URI uri;
-    public URI remotingUri;
     public URI httpsUri;
     public String root;
+
+    // URI for remoting servlet, does not include workspace name
+    public URI remotingUri;
 
     public HttpClient client;
     public HttpClientContext context;
@@ -164,7 +167,7 @@ public class WebDAVTestBase extends AbstractJCRTest {
         }
 
         this.uri = new URI("http", null, "localhost", httpConnector.getLocalPort(), "/default/", null, null);
-        this.remotingUri = new URI("http", null, "localhost", httpConnector.getLocalPort(), "/remoting/default/", null, null);
+        this.remotingUri = new URI("http", null, "localhost", httpConnector.getLocalPort(), REMOTING_PREFIX + "/", null, null);
         this.httpsUri = new URI("https", null, "localhost", httpsConnector.getLocalPort(), "/default/", null, null);
         this.root = this.uri.toASCIIString();
 

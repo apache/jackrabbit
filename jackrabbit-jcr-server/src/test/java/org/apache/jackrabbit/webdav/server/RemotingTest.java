@@ -37,7 +37,7 @@ public class RemotingTest extends WebDAVTestBase {
     // simple test the verifies that we are indeed talking to the remoting
     // servlet
     public void testRoot() throws IOException, DavException {
-        String testuri = this.remotingUri.toASCIIString() + "jcr:root";
+        String testuri = this.remotingUri.toASCIIString() + "default/jcr:root";
         DavPropertyName pntn = DavPropertyName.create("primarynodetype", ObservationConstants.NAMESPACE);
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(pntn);
