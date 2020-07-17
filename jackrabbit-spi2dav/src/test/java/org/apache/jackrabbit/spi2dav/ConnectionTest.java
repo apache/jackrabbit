@@ -104,13 +104,13 @@ public class ConnectionTest extends WebDAVTestBase {
 
     public void testObtainViaProxy() throws URISyntaxException, RepositoryException {
         HttpProxyServer proxyServer = DefaultHttpProxyServer.bootstrap()
-                .withPort(8080)
+                .withPort(0) // use arbitrary port
                 .start();
         try {
             Map<String, String> parameters = new HashMap<>();
             ConnectionOptions.Builder builder = ConnectionOptions.builder();
             builder.proxyHost("127.0.0.1");
-            builder.proxyPort(8080);
+            builder.proxyPort(proxyServer.getListenAddress().getPort());
             parameters.putAll(builder.build().toServiceFactoryParameters());
             RepositoryService repositoryService = createRepositoryService(false, parameters);
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
@@ -133,14 +133,14 @@ public class ConnectionTest extends WebDAVTestBase {
             }
         };
         HttpProxyServer proxyServer = DefaultHttpProxyServer.bootstrap()
-                .withPort(8080)
+                .withPort(0) // use arbitrary port
                 .withProxyAuthenticator(authenticator)
                 .start();
         try {
             Map<String, String> parameters = new HashMap<>();
             ConnectionOptions.Builder builder = ConnectionOptions.builder();
             builder.proxyHost("127.0.0.1");
-            builder.proxyPort(8080);
+            builder.proxyPort(proxyServer.getListenAddress().getPort());
             builder.proxyUsername("test");
             builder.proxyPassword("invalid");
             parameters.putAll(builder.build().toServiceFactoryParameters());
@@ -172,14 +172,14 @@ public class ConnectionTest extends WebDAVTestBase {
             }
         };
         HttpProxyServer proxyServer = DefaultHttpProxyServer.bootstrap()
-                .withPort(8080)
+                .withPort(0) // use arbitrary port
                 .withProxyAuthenticator(authenticator)
                 .start();
         try {
             Map<String, String> parameters = new HashMap<>();
             ConnectionOptions.Builder builder = ConnectionOptions.builder();
             builder.proxyHost("127.0.0.1");
-            builder.proxyPort(8080);
+            builder.proxyPort(proxyServer.getListenAddress().getPort());
             builder.proxyUsername("test");
             builder.proxyPassword("valid");
             parameters.putAll(builder.build().toServiceFactoryParameters());
