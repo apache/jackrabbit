@@ -84,7 +84,6 @@ public class ConnectionTest extends WebDAVTestBase {
         RepositoryService repositoryService = createRepositoryService(true, parameters);
         try {
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
-            
         } catch (RepositoryException e) {
             Throwable cause = ExceptionUtils.getRootCause(e);
             if (!(cause instanceof SSLPeerUnverifiedException)) {
@@ -149,8 +148,7 @@ public class ConnectionTest extends WebDAVTestBase {
             try {
                 repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
                 fail("should have failed with proxy authentication failure!");
-            } catch (RepositoryException e) {
-                
+            } catch (RepositoryException expected) {
             }
         } finally {
             proxyServer.stop();
@@ -202,7 +200,7 @@ public class ConnectionTest extends WebDAVTestBase {
         // overwrite URI (use non-routable IP to run into connection timeout)
         parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI, "http://10.0.0.0");
         RepositoryService repositoryService = createRepositoryService(true, parameters);
-        
+
         long beforeTimeMs = System.currentTimeMillis();
         try {
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
