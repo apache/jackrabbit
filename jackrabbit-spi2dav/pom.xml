@@ -130,6 +130,10 @@
                   <name>jackrabbit.test.integration</name>
                   <value>true</value>
                 </property>
+                <property>
+                  <name>derby.stream.error.file</name>
+                  <value>target/derby.log</value>
+                </property>
               </systemProperties>
             </configuration>
           </plugin>
