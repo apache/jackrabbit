@@ -23,6 +23,9 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,21 +53,32 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.lock.LockException;
+import javax.net.ssl.SSLContext;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
@@ -73,8 +87,11 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.ProxyAuthenticationStrategy;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.jackrabbit.commons.webdav.AtomFeedConstants;
 import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
@@ -243,6 +260,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final HttpHost httpHost;
     private final ConcurrentMap<Object, HttpClient> clients;
     private final HttpClientBuilder httpClientBuilder;
+    private final Map<AuthScope, org.apache.http.auth.Credentials> commonCredentials;
 
     private final Map<Name, QNodeTypeDefinition> nodeTypeDefinitions = new HashMap<Name, QNodeTypeDefinition>();
 
@@ -258,10 +276,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private Set<String> remoteDavComplianceClasses = null;
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, ConnectionOptions)}
      * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
      * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client.
+     * connections on the client and {@link ConnectionOptions.DEFAULT}.
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -277,9 +295,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, boolean)}
      * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client.
+     * connections on the client and {@link ConnectionOptions.DEFAULT}..
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -292,7 +310,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize) throws RepositoryException {
-        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT);
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, ConnectionOptions.DEFAULT);
     }
 
     /**
@@ -307,12 +325,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @param maximumHttpConnections A int &gt;0 defining the maximum number of
      * connections per host to be configured on
      * {@link PoolingHttpClientConnectionManager#setMaxTotal(int)}.
+     * @param connectionOptions The advanced connection options.
      * @throws RepositoryException If an error occurs.
      */
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
                                  NameFactory nameFactory, PathFactory pathFactory,
                                  QValueFactory qValueFactory, int itemInfoCacheSize,
-                                 int maximumHttpConnections ) throws RepositoryException {
+                                 ConnectionOptions connectionOptions) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
             throw new RepositoryException("Invalid repository uri '" + uri + "'.");
         }
@@ -325,6 +344,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         this.pathFactory = pathFactory;
         this.qValueFactory = qValueFactory;
         this.itemInfoCacheSize = itemInfoCacheSize;
+        this.commonCredentials = new HashMap<>();
 
         try {
             URI repositoryUri = computeRepositoryUri(uri);
@@ -341,15 +361,71 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         }
 
-        PoolingHttpClientConnectionManager cmgr = new PoolingHttpClientConnectionManager();
-        if (maximumHttpConnections > 0) {
-            cmgr.setDefaultMaxPerRoute(maximumHttpConnections);
-            cmgr.setMaxTotal(maximumHttpConnections);
-        }
-        HttpClientBuilder hcb = HttpClients.custom().setConnectionManager(cmgr);
-        if (Boolean.getBoolean("jackrabbit.client.useSystemProperties")) {
+        
+        HttpClientBuilder hcb = HttpClients.custom();
+
+        // request config
+        RequestConfig requestConfig = RequestConfig.custom().
+                setConnectTimeout(connectionOptions.getConnectionTimeoutMs()).
+                setConnectionRequestTimeout(connectionOptions.getRequestTimeoutMs()).
+                setSocketTimeout(connectionOptions.getSocketTimeoutMs()).build();
+        hcb.setDefaultRequestConfig(requestConfig);
+        if (Boolean.getBoolean("jackrabbit.client.useSystemProperties") || connectionOptions.isUseSystemPropertes()) {
+            log.debug("Using system properties for establishing connection!");
             // support Java system proxy? (JCR-3211)
-            hcb = hcb.useSystemProperties();
+            hcb.useSystemProperties();
+        }
+        
+        // TLS settings (via connection manager)
+        final SSLContext sslContext;
+        try {
+            if (connectionOptions.isAllowSelfSignedCertificates()) {
+                log.warn("Nonsecure TLS setting: Accepting self-signed certificates!");
+                    sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
+                    hcb.setSSLContext(sslContext);
+            } else {
+                sslContext = SSLContextBuilder.create().build();
+            }
+        } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+            throw new RepositoryException(e);
+        }
+        final SSLConnectionSocketFactory sslSocketFactory;
+        if (connectionOptions.isDisableHostnameVerification()) {
+            log.warn("Nonsecure TLS setting: Host name verification of TLS certificates disabled!");
+            // we can optionally disable hostname verification.
+            sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        } else {
+            sslSocketFactory = new SSLConnectionSocketFactory(sslContext);
+        }
+        
+        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("http", PlainConnectionSocketFactory.getSocketFactory())
+            .register("https", sslSocketFactory)
+            .build();
+        
+        PoolingHttpClientConnectionManager cmgr = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+        int maxConnections = connectionOptions.getMaxConnections();
+        if (maxConnections > 0) {
+            cmgr.setDefaultMaxPerRoute(connectionOptions.getMaxConnections());
+            cmgr.setMaxTotal(connectionOptions.getMaxConnections());
+        } else {
+            maxConnections = ConnectionOptions.MAX_CONNECTIONS_DEFAULT;
+        }
+        hcb.setConnectionManager(cmgr);
+
+        if (connectionOptions.getProxyHost() != null) {
+            // https://hc.apache.org/httpcomponents-client-4.5.x/tutorial/html/connmgmt.html#d5e485
+            HttpHost proxy = new HttpHost(connectionOptions.getProxyHost(), connectionOptions.getProxyPort(), connectionOptions.getProxyProtocol());
+            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+            hcb.setRoutePlanner(routePlanner);
+            log.debug("Connection via proxy {}", proxy);
+            if (connectionOptions.getProxyUsername() != null) {
+                log.debug("Proxy connection with credentials {}", proxy);
+                commonCredentials.put(
+                        new AuthScope(proxy),
+                        new UsernamePasswordCredentials(connectionOptions.getProxyUsername(), connectionOptions.getProxyPassword()));
+                hcb.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+            }
         }
         httpClientBuilder = hcb;
 
@@ -357,13 +433,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // concurrency on this map will be equal to the default number of maximum
         // connections allowed on the httpClient level.
         // TODO: review again
-        int concurrencyLevel = MAX_CONNECTIONS_DEFAULT;
-        int initialCapacity = MAX_CONNECTIONS_DEFAULT;
-        if (maximumHttpConnections > 0) {
-            concurrencyLevel = maximumHttpConnections;
-            initialCapacity = maximumHttpConnections;
-        }
-        clients = new ConcurrentHashMap<Object, HttpClient>(concurrencyLevel, .75f, initialCapacity);
+        clients = new ConcurrentHashMap<Object, HttpClient>(maxConnections, .75f, maxConnections);
     }
 
     private static void checkSessionInfo(SessionInfo sessionInfo) throws RepositoryException {
@@ -544,16 +614,20 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     protected HttpContext getContext(SessionInfo sessionInfo) throws RepositoryException {
         HttpClientContext result = HttpClientContext.create();
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        result.setCredentialsProvider(credsProvider);
+        // take over default credentials (e.g. for proxy)
+        for (Map.Entry<AuthScope, org.apache.http.auth.Credentials> entry : commonCredentials.entrySet()) {
+            credsProvider.setCredentials(entry.getKey(), entry.getValue());
+        }
         if (sessionInfo != null) {
             checkSessionInfo(sessionInfo);
             org.apache.http.auth.Credentials creds = ((SessionInfoImpl) sessionInfo).getCredentials().getHttpCredentials();
             if (creds != null) {
-                CredentialsProvider credsProvider = new BasicCredentialsProvider();
                 credsProvider.setCredentials(new org.apache.http.auth.AuthScope(httpHost.getHostName(), httpHost.getPort()), creds);
                 BasicScheme basicAuth = new BasicScheme();
                 AuthCache authCache = new BasicAuthCache();
                 authCache.put(httpHost, basicAuth);
-                result.setCredentialsProvider(credsProvider);
                 result.setAuthCache(authCache);
             }
         }
@@ -806,7 +880,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new LoginException("Login failed: Unknown workspace '" + workspaceName + "'.");
             }
         } catch (IOException e) {
-            throw new RepositoryException(e.getMessage());
+            throw new RepositoryException(e.getMessage(), e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         } finally {

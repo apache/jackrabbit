@@ -35,7 +35,9 @@ import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
  * This {@link RepositoryServiceFactory} implementation is responsible
- * for creating {@link RepositoryServiceImpl} instances.
+ * for creating {@link RepositoryServiceImpl} instances which communicate via WebDAV.
+ * All parameter keys defined in this class and in addition the ones from {@link ConnectionOptions} 
+ * are supported as arguments for {@link #createRepositoryService(Map)}.
  */
 public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory {
 
@@ -79,6 +81,7 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
      * Optional configuration parameter: It's value defines the
      * maximumConnectionsPerHost value on the HttpClient configuration and
      * must be an int greater than zero.
+     * Rather use {@link ConnectionOptions#PARAM_MAX_CONNECTIONS} instead.
      */
     public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2dav.MaxConnections";
 
@@ -136,22 +139,6 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
                 // ignore, use default
             }
         }
-
-        // max connections config
-        int maximumHttpConnections = 0;
-        param = parameters.get(PARAM_MAX_CONNECTIONS);
-        if (param != null) {
-            try {
-                maximumHttpConnections = Integer.parseInt(param.toString());
-            } catch ( NumberFormatException e ) {
-                // using default
-            }
-        }
-        
-        if (maximumHttpConnections > 0) {
-            return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, maximumHttpConnections);
-        } else {
-            return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize);
-        }
+        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, ConnectionOptions.fromServiceFactoryParameters(parameters));
     }
 }

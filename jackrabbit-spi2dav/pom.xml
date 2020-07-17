@@ -38,10 +38,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skip>true</skip>
           <includes>
-            <include>**/TestAll.java</include>
+            <include>**/ConnectionOptionsTest.java</include>
+            <include>**/spi2dav/ConnectionTest.java</include>
+            <!-- https://issues.apache.org/jira/browse/JCR-4610 -->
+            <!-- <include>**/TestAll.java</include> -->
           </includes>
+          <trimStackTrace>false</trimStackTrace>
           <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
           <systemProperties>
@@ -114,6 +117,26 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>integrationTesting</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemProperties>
+                <property>
+                  <name>jackrabbit.test.integration</name>
+                  <value>true</value>
+                </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
   <dependencies>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
@@ -184,6 +207,54 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <!-- testing classes provided by jcr-server -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-server</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-server</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- transitive dependencies of jackrabbit-jcr-server -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- for testing connection via a proxy -->
+     <dependency>
+        <groupId>org.littleshoot</groupId>
+        <artifactId>littleproxy</artifactId>
+        <version>1.1.2</version>
+        <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

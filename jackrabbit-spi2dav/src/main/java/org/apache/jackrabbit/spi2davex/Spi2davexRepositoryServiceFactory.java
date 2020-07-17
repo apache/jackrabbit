@@ -25,10 +25,13 @@ import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.RepositoryServiceFactory;
 import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
+import org.apache.jackrabbit.spi2dav.ConnectionOptions;
 
 /**
  * This {@link RepositoryServiceFactory} implementation is responsible
- * for creating {@link RepositoryServiceImpl} instances.
+ * for creating {@link RepositoryServiceImpl} instances which communicate via <a href="https://jackrabbit.apache.org/archive/wiki/JCR/RemoteAccess_115513494.html#RemoteAccess-DavEx">DavEx</a>.
+ * All parameter keys defined in this class and in addition the ones from {@link ConnectionOptions} 
+ * are supported as arguments for {@link #createRepositoryService(Map)}.
  */
 public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFactory {
 
@@ -62,6 +65,7 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      * Optional configuration parameter: It's value defines the
      * maximumConnectionsPerHost value on the HttpClient configuration and 
      * must be an int greater than zero.
+     * Rather use {@link ConnectionOptions#PARAM_MAX_CONNECTIONS} instead.
      */
     public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2davex.MaxConnections";
 
@@ -90,7 +94,6 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
         // load other optional configuration parameters
         BatchReadConfig brc = null;
         int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
-        int maximumHttpConnections = 0;
 
         // since JCR-4120 the default workspace name is no longer set to 'default'
         // note: if running with JCR Server < 1.5 a default workspace name must therefore be configured
@@ -113,27 +116,13 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
                 }
             }
 
-            // max connections config
-            param = parameters.get(PARAM_MAX_CONNECTIONS);
-            if (param != null) {
-                try {
-                    maximumHttpConnections = Integer.parseInt(param.toString());
-                } catch ( NumberFormatException e ) {
-                    // using default
-                }
-            }
-
             param = parameters.get(PARAM_WORKSPACE_NAME_DEFAULT);
             if (param != null) {
                 workspaceNameDefault = param.toString();
             }
         }
 
-        if (maximumHttpConnections > 0) {
-            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, maximumHttpConnections);
-        } else {
-            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize);
-        }
+        return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, ConnectionOptions.fromServiceFactoryParameters(parameters));
     }
 
 }
