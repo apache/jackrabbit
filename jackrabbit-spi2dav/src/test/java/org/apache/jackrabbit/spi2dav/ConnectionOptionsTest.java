@@ -72,7 +72,7 @@ public class ConnectionOptionsTest {
         Assert.assertEquals(300, options.getSocketTimeoutMs());
         Assert.assertEquals("proxyHost", options.getProxyHost());
         Assert.assertEquals(1234, options.getProxyPort());
-        Assert.assertEquals("proxyUser", options.getProxyHost());
+        Assert.assertEquals("proxyUser", options.getProxyUsername());
         Assert.assertEquals("proxyPassword", options.getProxyPassword());
         Assert.assertEquals("https:", options.getProxyProtocol());
     }

@@ -35,7 +35,7 @@ import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.ProxyAuthenticator;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 
-public class ConnectionIT extends WebDAVTestBase {
+public class ConnectionTest extends WebDAVTestBase {
 
     private Spi2davexRepositoryServiceFactory repositoryServiceFactory;
 
@@ -48,7 +48,7 @@ public class ConnectionIT extends WebDAVTestBase {
         Map<String, String> parameters = new HashMap<>();
         if (isViaHttps) {
             parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI,
-                    new URI("https", remotingUri.getSchemeSpecificPart(), null).toString());
+                    new URI("https", null, remotingUri.getHost(), httpsUri.getPort(), remotingUri.getPath(), null, null).toString());
         } else {
             parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI, remotingUri.toString());
         }
