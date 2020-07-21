@@ -150,10 +150,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     private final Map<SessionInfo, QValueFactoryImpl> qvFactories = new HashMap<SessionInfo, QValueFactoryImpl>();
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int)}
+     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, ConnectionOptions)}
      * using <code>null</code> workspace name, {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE}
      * as size for the item cache, {@link #MAX_CONNECTIONS_DEFAULT} for the
-     * maximum number of connections on the client and {@link ConnectionOptions.DEFAULT}.
+     * maximum number of connections on the client and {@link ConnectionOptions#DEFAULT}.
      *
      * @param jcrServerURI The server uri.
      * @param batchReadConfig The batch read configuration.
@@ -171,10 +171,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @param defaultWorkspaceName The default workspace name.
      * @param batchReadConfig The batch read configuration.
      * @param itemInfoCacheSize The size of the item info cache.
-     * @param maximumHttpConnections maximumHttpConnections A int &gt;0 defining
-     * the maximum number of connections per host to be configured on
-     * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
-     * @param ConnectionOptions advanced connection options.
+     * @param connectionOptions advanced connection options.
      * @throws RepositoryException If an exception occurs.
      */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,

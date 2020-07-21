@@ -276,10 +276,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private Set<String> remoteDavComplianceClasses = null;
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, ConnectionOptions)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, ConnectionOptions)}
      * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
      * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client and {@link ConnectionOptions.DEFAULT}.
+     * connections on the client and {@link ConnectionOptions#DEFAULT}.
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -295,9 +295,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int, boolean)}
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, ConnectionOptions)}
      * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
-     * connections on the client and {@link ConnectionOptions.DEFAULT}..
+     * connections on the client and {@link ConnectionOptions#DEFAULT}.
      *
      * @param uri The server uri.
      * @param idFactory The id factory.
@@ -322,9 +322,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @param pathFactory The path factory.
      * @param qValueFactory The value factory.
      * @param itemInfoCacheSize The size of the item info cache.
-     * @param maximumHttpConnections A int &gt;0 defining the maximum number of
-     * connections per host to be configured on
-     * {@link PoolingHttpClientConnectionManager#setMaxTotal(int)}.
      * @param connectionOptions The advanced connection options.
      * @throws RepositoryException If an error occurs.
      */
