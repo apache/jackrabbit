@@ -34,7 +34,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.21.3-SNAPSHOT</version>
+  <version>2.21.3</version>
   <packaging>pom</packaging>
 
   <issueManagement>
@@ -696,4 +696,10 @@
 
         https://svn.apache.org/repos/asf/jackrabbit/site/trunk/src/site/markdown/jackrabbit-team.md
   -->
+
+  <scm>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-apache-parent.git/jackrabbit-parent/tags/jackrabbit-2.21.3/jackrabbit-parent</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-apache-parent.git/jackrabbit-parent/tags/jackrabbit-2.21.3/jackrabbit-parent</developerConnection>
+    <url>https://github.com/apache/maven-apache-parent/tree/apache-23/jackrabbit-parent/tags/jackrabbit-2.21.3/jackrabbit-parent</url>
+  </scm>
 </project>
