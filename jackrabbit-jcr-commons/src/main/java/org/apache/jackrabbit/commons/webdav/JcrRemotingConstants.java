@@ -98,7 +98,7 @@ public interface JcrRemotingConstants {
      */
     public static final String XML_RELPATH = "relpath";
 
-    // oroperty local name of the workspace for which the repository session has been created.
+    // property local name of the workspace for which the repository session has been created.
     public static final String JCR_WORKSPACE_NAME_LN = "workspaceName";
 
     // general property local names
