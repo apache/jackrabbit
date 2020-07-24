@@ -22,6 +22,8 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -204,12 +206,11 @@ public class JcrUtils {
                 }
             } catch (Exception e) {
                 log.append(": failed");
-                for (Throwable c = e; c != null; c = c.getCause()) {
-                    log.append(newline);
-                    log.append("        because of ");
-                    log.append(c.getClass().getSimpleName());
-                    log.append(": ");
-                    log.append(c.getMessage());
+                try (StringWriter writer = new StringWriter(); PrintWriter printWriter = new PrintWriter(writer)) {
+                    e.printStackTrace(printWriter);
+                    log.append(newline).append(writer.getBuffer());
+                } catch (IOException e1) {
+                    log.append("Could not determine root cause due to ").append(e.getMessage());
                 }
             }
         }
