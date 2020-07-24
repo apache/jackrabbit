@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.webdav.server;
 
+import static org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet.INIT_PARAM_RESOURCE_CONFIG;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,7 +25,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
-import junit.framework.TestResult;
+import javax.jcr.Repository;
+import javax.servlet.ServletException;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -37,26 +42,23 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-
 import org.apache.jackrabbit.core.RepositoryContext;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
-
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-import org.apache.jackrabbit.test.RepositoryStubException;
-
-import javax.jcr.Repository;
-import javax.servlet.ServletException;
-
-import static org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet.INIT_PARAM_RESOURCE_CONFIG;
+import junit.framework.TestResult;
 
 /**
  * Base class for WebDAV tests.
@@ -65,15 +67,20 @@ public class WebDAVTestBase extends AbstractJCRTest {
 
     private static final String WEBDAV_SERVLET_PATH_MAPPING = "/*";
 
-    private static ServerConnector connector;
+    private static ServerConnector httpConnector;
+    private static ServerConnector httpsConnector;
     private static Server server;
     private static RepositoryContext repoContext;
 
     public URI uri;
+    public URI httpsUri;
     public String root;
 
     public HttpClient client;
     public HttpClientContext context;
+
+    private static final String KEYSTORE = "keystore";
+    private static final String KEYSTOREPW = "geheimer";
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -86,6 +93,11 @@ public class WebDAVTestBase extends AbstractJCRTest {
         File config = new File(home, "repository.xml");
         if (!config.exists()) {
             createDefaultConfiguration(config);
+        }
+
+        File keystore = new File(home, KEYSTORE);
+        if (!keystore.exists()) {
+            createKeystore(keystore);
         }
 
         if (repoContext == null) {
@@ -109,12 +121,28 @@ public class WebDAVTestBase extends AbstractJCRTest {
             server.setHandler(schandler);
         }
 
-        if (connector == null) {
-            connector = new ServerConnector(server);
-            connector.setHost("localhost");
-            connector.setPort(0);
-            server.addConnector(connector);
+        if (httpConnector == null) {
+            httpConnector = new ServerConnector(server);
+            httpConnector.setHost("localhost");
+            httpConnector.setPort(0);
+            server.addConnector(httpConnector);
+        }
 
+        if (httpsConnector == null) {
+            SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setKeyStorePath(keystore.getPath());
+            sslContextFactory.setKeyStorePassword(KEYSTOREPW);
+            sslContextFactory.setKeyManagerPassword(KEYSTOREPW);
+            sslContextFactory.setTrustStorePath(keystore.getPath());
+            sslContextFactory.setTrustStorePassword(KEYSTOREPW);
+            SslConnectionFactory cfac = new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString());
+            httpsConnector = new ServerConnector(server, cfac, new HttpConnectionFactory(new HttpConfiguration()));
+            httpsConnector.setHost("localhost");
+            httpsConnector.setPort(0);
+            server.addConnector(httpsConnector);
+        }
+
+        if (!server.isStarted()) {
             try {
                 server.start();
             } catch (Exception e) {
@@ -122,7 +150,8 @@ public class WebDAVTestBase extends AbstractJCRTest {
             }
         }
 
-        this.uri = new URI("http", null, "localhost", connector.getLocalPort(), "/default/", null, null);
+        this.uri = new URI("http", null, "localhost", httpConnector.getLocalPort(), "/default/", null, null);
+        this.httpsUri = new URI("https", null, "localhost", httpsConnector.getLocalPort(), "/default/", null, null);
         this.root = this.uri.toASCIIString();
 
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
@@ -165,29 +194,21 @@ public class WebDAVTestBase extends AbstractJCRTest {
      * @param config path of the configuration file
      * @throws ServletException if the configuration file could not be copied
      */
-    private void createDefaultConfiguration(File config)
-            throws ServletException {
-        try {
-            OutputStream output = new FileOutputStream(config);
-            try {
-                InputStream input =
-                        RepositoryImpl.class.getResourceAsStream("repository.xml");
-                try {
-                    byte[] buffer = new byte[8192];
-                    int n = input.read(buffer);
-                    while (n != -1) {
-                        output.write(buffer, 0, n);
-                        n = input.read(buffer);
-                    }
-                } finally {
-                    input.close();
-                }
-            } finally {
-                output.close();
-            }
+    private void createDefaultConfiguration(File config) throws ServletException {
+        try (OutputStream output = new FileOutputStream(config);
+                InputStream input = WebDAVTestBase.class.getResourceAsStream("/repository.xml")) {
+            IOUtils.copy(input, output);
         } catch (IOException e) {
-            throw new ServletException(
-                    "Failed to copy default configuration: " + config, e);
+            throw new ServletException("Failed to copy default configuration: " + config, e);
+        }
+    }
+
+    private void createKeystore(File keystore) throws ServletException {
+        try (OutputStream output = new FileOutputStream(keystore);
+                InputStream input = WebDAVTestBase.class.getResourceAsStream("/" + KEYSTORE)) {
+            IOUtils.copy(input, output);
+        } catch (IOException e) {
+            throw new ServletException("Failed to copy keystore: " + keystore, e);
         }
     }
 
