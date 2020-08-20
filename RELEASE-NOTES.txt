@@ -13,19 +13,55 @@ and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 
 The minimum Java version for this release is Java 8. See
 
-  http://jackrabbit.apache.org/jcr/downloads.html
+  https://jackrabbit.apache.org/jcr/downloads.html
   
 for maintenance versions that support earlier Java versions.
 
 Note that an "end of life" date has already been planned for this branch. See
-<http://jackrabbit.apache.org/jcr/jackrabbit-roadmap.html> for details.
+<https://jackrabbit.apache.org/jcr/jackrabbit-roadmap.html> for details.
 
 
 Changes in Jackrabbit 2.18.6
 ----------------------------
 
-(TICKETS GO HERE)
+Bug
 
+    [JCR-3942] - Content-Length header field may be set twice
+    [JCR-4549] - backup with RepositoryCopier.copy() fails on second method call
+    [JCR-4551] - Use the normalized MediaType to check if the given MediaType should be indexed
+    [JCR-4626] - CI build fail because org.glassfish:javax.el:jar:3.0.1-b06-SNAPSHOT can't be retrieved
+
+Improvement
+
+    [JCR-4541] - reduce classpath lookups for SaxParserFactory
+
+Task
+
+    [JCR-4519] - Update httpcore dependency to 4.4.13
+    [JCR-4522] - Update httpclient/mime dependencies to 4.5.11
+    [JCR-4530] - jackrabbit-core: avoid use of deprecated commons-collections Buffers
+    [JCR-4543] - Update Tika dependency to 1.24
+    [JCR-4544] - Update slf4j dependency to 1.7.30
+    [JCR-4545] - Update httpclient/mime dependencies to 4.5.12
+    [JCR-4546] - Update aws java sdk version to 1.11.700 (consistent with Oak)
+    [JCR-4547] - Update tomcat dependency to 8.5.53/7.0.103
+    [JCR-4548] - update javadoc-plugin dependency to 3.2.0
+    [JCR-4554] - Update Tika dependency to 1.24.1
+    [JCR-4555] - Update mockito dependency to 3.3.3
+    [JCR-4556] - Update tomcat dependency to 8.5.54
+    [JCR-4557] - update junit dependency to 4.13
+    [JCR-4558] - update Apache parent pom to version 23
+    [JCR-4559] - Update commons file-upload dependency to 1.4
+    [JCR-4560] - Update h2db dependency to 1.4.200
+    [JCR-4561] - webapp: update htmlunit dependency to 2.40.0
+    [JCR-4562] - Remove workaround for FELIX-2492
+    [JCR-4563] - test OSGi bundles
+    [JCR-4564] - jackrabbit-jcr-server: remove obsolete workaround for scr-plugin
+    [JCR-4575] - Update tomcat dependency to 8.5.55/7.0.104
+    [JCR-4600] - Update tomcat dependency to 8.5.56
+    [JCR-4612] - Update tomcat dependency to 8.5.57/7.0.105
+    [JCR-4621] - add 'javadoc' profile for Jenkins matrix builds
+    [JCR-4622] - add 'rat' profile for Jenkins matrix builds
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
