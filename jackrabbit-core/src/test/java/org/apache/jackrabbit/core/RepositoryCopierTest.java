@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -49,7 +50,8 @@ public class RepositoryCopierTest extends TestCase {
 
     private static final File SOURCE = new File(BASE, "source");
 
-    private static final File TARGET = new File(BASE, "target");
+    private static final File TARGET1 = new File(BASE, "target1");
+    private static final File TARGET2 = new File(BASE, "target2");
 
     private static final Calendar DATE = Calendar.getInstance();
 
@@ -61,7 +63,8 @@ public class RepositoryCopierTest extends TestCase {
 
     private String identifier;
 
-    protected void setUp() {
+    protected void setUp() throws IOException {
+        FileUtils.deleteDirectory(BASE);
         BASE.mkdirs();
     }
 
@@ -70,80 +73,90 @@ public class RepositoryCopierTest extends TestCase {
     }
 
     public void testRepositoryCopy() throws Exception {
-        createSourceRepository();
-        RepositoryCopier.copy(SOURCE, TARGET);
-        verifyTargetRepository();
+        RepositoryImpl repository = createSourceRepository();
+        repository.shutdown();
+
+        RepositoryCopier.copy(SOURCE, TARGET1);
+        verifyTargetRepository(TARGET1);
     }
 
-    private void createSourceRepository() throws Exception {
-        RepositoryImpl repository = RepositoryImpl.create(
-                RepositoryConfig.install(SOURCE));
+    public void testRepositoryCopyWithDeleteTarget() throws Exception {
+        RepositoryImpl repository = createSourceRepository();
+
         try {
-            Session session = repository.login(CREDENTIALS);
-            try {
-                NamespaceRegistry registry =
-                    session.getWorkspace().getNamespaceRegistry();
-                registry.registerNamespace("test", "http://www.example.org/");
+            RepositoryCopier.copy(repository, TARGET1);
+            verifyTargetRepository(TARGET1);
 
-                NodeTypeManager manager =
-                    session.getWorkspace().getNodeTypeManager();
-                NodeTypeTemplate template = manager.createNodeTypeTemplate();
-                template.setName("test:unstructured");
-                template.setDeclaredSuperTypeNames(
-                        new String[] { "nt:unstructured" });
-                manager.registerNodeType(template, false);
+            FileUtils.deleteDirectory(TARGET1);
 
-                Node root = session.getRootNode();
-
-                Node referenceable =
-                    root.addNode("referenceable", "test:unstructured");
-                referenceable.addMixin(NodeType.MIX_REFERENCEABLE);
-                session.save();
-                identifier = referenceable.getIdentifier();
-
-                Node properties = root.addNode("properties", "test:unstructured");
-                properties.setProperty("boolean", true);
-                Binary binary = session.getValueFactory().createBinary(
-                        new ByteArrayInputStream(BINARY));
-                try {
-                    properties.setProperty("binary", binary);
-                } finally {
-                    binary.dispose();
-                }
-                properties.setProperty("date", DATE);
-                properties.setProperty("decimal", new BigDecimal(123));
-                properties.setProperty("double", Math.PI);
-                properties.setProperty("long", 9876543210L);
-                properties.setProperty("reference", referenceable);
-                properties.setProperty("string", "test");
-                properties.setProperty("multiple", "a,b,c".split(","));
-                session.save();
-
-                binary = properties.getProperty("binary").getBinary();
-                try {
-                    InputStream stream = binary.getStream();
-                    try {
-                        for (int i = 0; i < BINARY.length; i++) {
-                            assertEquals(BINARY[i], (byte) stream.read());
-                        }
-                        assertEquals(-1, stream.read());
-                    } finally {
-                        stream.close();
-                    }
-                } finally {
-                    binary.dispose();
-                }
-            } finally {
-                session.logout();
-            }
+            RepositoryCopier.copy(repository, TARGET2);
+            verifyTargetRepository(TARGET2);
         } finally {
             repository.shutdown();
         }
     }
 
-    private void verifyTargetRepository() throws Exception {
+    private RepositoryImpl createSourceRepository() throws Exception {
+        RepositoryImpl repository = RepositoryImpl.create(RepositoryConfig.install(SOURCE));
+
+        Session session = repository.login(CREDENTIALS);
+        try {
+            NamespaceRegistry registry = session.getWorkspace().getNamespaceRegistry();
+            registry.registerNamespace("test", "http://www.example.org/");
+
+            NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
+            NodeTypeTemplate template = manager.createNodeTypeTemplate();
+            template.setName("test:unstructured");
+            template.setDeclaredSuperTypeNames(new String[] { "nt:unstructured" });
+            manager.registerNodeType(template, false);
+
+            Node root = session.getRootNode();
+
+            Node referenceable = root.addNode("referenceable", "test:unstructured");
+            referenceable.addMixin(NodeType.MIX_REFERENCEABLE);
+            session.save();
+            identifier = referenceable.getIdentifier();
+
+            Node properties = root.addNode("properties", "test:unstructured");
+            properties.setProperty("boolean", true);
+            Binary binary = session.getValueFactory().createBinary(new ByteArrayInputStream(BINARY));
+            try {
+                properties.setProperty("binary", binary);
+            } finally {
+                binary.dispose();
+            }
+            properties.setProperty("date", DATE);
+            properties.setProperty("decimal", new BigDecimal(123));
+            properties.setProperty("double", Math.PI);
+            properties.setProperty("long", 9876543210L);
+            properties.setProperty("reference", referenceable);
+            properties.setProperty("string", "test");
+            properties.setProperty("multiple", "a,b,c".split(","));
+            session.save();
+
+            binary = properties.getProperty("binary").getBinary();
+            try {
+                InputStream stream = binary.getStream();
+                try {
+                    for (int i = 0; i < BINARY.length; i++) {
+                        assertEquals(BINARY[i], (byte) stream.read());
+                    }
+                    assertEquals(-1, stream.read());
+                } finally {
+                    stream.close();
+                }
+            } finally {
+                binary.dispose();
+            }
+        } finally {
+            session.logout();
+        }
+        return repository;
+    }
+
+    private void verifyTargetRepository(File target) throws Exception {
         RepositoryImpl repository = RepositoryImpl.create(
-                RepositoryConfig.create(TARGET));
+                RepositoryConfig.create(target));
         try {
             Session session = repository.login(CREDENTIALS);
             try {
