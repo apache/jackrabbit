@@ -91,7 +91,7 @@
     								<artifactId>
     									maven-antrun-plugin
     								</artifactId>
-    								<versionRange>[1.6,)</versionRange>
+    								<versionRange>[3,)</versionRange>
     								<goals>
     									<goal>run</goal>
     								</goals>
