@@ -99,7 +99,7 @@ public final class Iterators {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T> Iterator<T> iteratorChain(Collection<? extends T> iterators) {
+    public static <T> Iterator<T> iteratorChain(Collection<Iterator<? extends T>> iterators) {
         return new IteratorChain(iterators);
     }
 
