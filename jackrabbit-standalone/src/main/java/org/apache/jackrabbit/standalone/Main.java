@@ -246,7 +246,7 @@ public class Main {
     private void prepareWebapp(File file, File repository, File tmp) {
         webapp.setContextPath("/");
         webapp.setWar(file.getPath());
-        webapp.setExtractWAR(false);
+        webapp.setExtractWAR(true);
         webapp.setTempDirectory(tmp);
 
         ServletHolder servlet =
