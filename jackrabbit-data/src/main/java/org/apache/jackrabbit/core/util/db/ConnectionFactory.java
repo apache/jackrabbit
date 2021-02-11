@@ -34,7 +34,6 @@ import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.jackrabbit.core.config.DataSourceConfig;
 import org.apache.jackrabbit.core.config.DataSourceConfig.DataSourceDefinition;
-import org.apache.jackrabbit.core.util.db.DataSourceWrapper;
 import org.apache.jackrabbit.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +48,11 @@ import org.slf4j.LoggerFactory;
  */
 public final class ConnectionFactory {
 
+    /**
+     * System property to disable the pooling of PreparedStatements.
+     */
+    private static final String SYSTEM_PROPERTY_POOL_PREPARED_STATEMENTS = "org.apache.jackrabbit.core.util.db.driver.datasource.poolPreparedStatements";
+    
     private static final Logger log = LoggerFactory.getLogger(ConnectionFactory.class);
 
     /**
@@ -350,7 +354,7 @@ public final class ConnectionFactory {
         ds.setMaxIdle(GenericObjectPool.DEFAULT_MAX_IDLE + 10);
         ds.setValidationQuery(guessValidationQuery(url));
         ds.setAccessToUnderlyingConnectionAllowed(true);
-        ds.setPoolPreparedStatements(true);
+        ds.setPoolPreparedStatements(Boolean.valueOf(System.getProperty(SYSTEM_PROPERTY_POOL_PREPARED_STATEMENTS, "true")));
         ds.setMaxOpenPreparedStatements(-1); // unlimited
         return ds;
     }
