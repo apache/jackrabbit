@@ -28,7 +28,7 @@ import javax.jcr.Session;
 import org.apache.commons.chain.Context;
 import org.apache.commons.chain.impl.ContextBase;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -95,7 +95,7 @@ public class Main {
                 "C", "backup-conf", true,
                 "backup repository configuration file");
 
-        command = new GnuParser().parse(options, args);
+        command = new DefaultParser().parse(options, args);
     }
 
     public void run() throws Exception {
