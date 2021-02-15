@@ -73,7 +73,7 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         SUPERTYPES.put("nt:configuration", new String[]{"nt:base"});
         SUPERTYPES.put("nt:file", new String[]{"nt:hierarchyNode"});
         SUPERTYPES.put("nt:folder", new String[]{"nt:hierarchyNode"});
-        SUPERTYPES.put("nt:frozenNode", new String[]{"nt:base", "mix:referenceable"});
+        SUPERTYPES.put("nt:frozenNode", new String[]{"nt:base"});
         SUPERTYPES.put("nt:hierarchyNode", new String[]{"nt:base", "mix:created"});
         SUPERTYPES.put("nt:linkedFile", new String[]{"nt:hierarchyNode"});
         SUPERTYPES.put("nt:nodeType", new String[]{"nt:base"});
