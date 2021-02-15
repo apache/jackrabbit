@@ -267,6 +267,7 @@
           <excludes>
             <exclude>release.properties</exclude>
           </excludes>
+          <consoleOutput>true</consoleOutput>
         </configuration>
       </plugin>
       <plugin>
