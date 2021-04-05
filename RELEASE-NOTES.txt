@@ -1,40 +1,38 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.5
+Release Notes -- Apache Jackrabbit -- Version 2.21.6
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.5, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.5 is an unstable release cut directly from
+Apache Jackrabbit 2.21.6 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.5
+Changes in Jackrabbit 2.21.6
 ----------------------------
 
-Bug
+Improvement
 
-    [JCR-4663] - webdav: check Content-Range on PUT
+    [JCR-4683] - add test coverage for restore that removes a mixin
 
 Task
 
-    [JCR-4650] - set baseline comparisonVersion to latest stable (2.20.2)
-    [JCR-4651] - Update Jackrabbit trunk to Oak 1.36.0
-    [JCR-4652] - Update tomcat dependency to 8.5.60
-    [JCR-4653] - Update httpclient/mime dependencies to 4.5.13
-    [JCR-4654] - webapp: update htmlunit dependency to 2.45.0
-    [JCR-4655] - Update mockito dependency to 3.6.28
-    [JCR-4656] - Upgrade Commons VFS to 2.7.0
-    [JCR-4657] - Update Tika dependency to 1.25
-    [JCR-4658] - Update httpcore dependency to 4.4.14
-    [JCR-4659] - Update tomcat dependency to 8.5.61
-    [JCR-4660] - update pmd-plugin dependency to 3.14.0
-    [JCR-4661] - webapp: update htmlunit dependency to 2.46.0
-    [JCR-4662] - it-osgi: update felix.framework to 7.0.0
-
+    [JCR-4634] - Jackrabbit should build and test with Java 16
+    [JCR-4665] - Update Jackrabbit trunk to Oak 1.38.0
+    [JCR-4666] - Update mockito dependency to 3.7.7
+    [JCR-4668] - Update tomcat dependency to 8.5.63
+    [JCR-4669] - update checkstyle-plugin dependency to 3.1.2
+    [JCR-4672] - update junit dependency to 4.13.2
+    [JCR-4673] - webapp: update htmlunit dependency to 2.47.1
+    [JCR-4675] - Update mockito dependency to 3.8.0
+    [JCR-4678] - Update tomcat dependency to 8.5.64
+    [JCR-4682] - Upgrade Commons VFS to 2.8.0
+    [JCR-4684] - Update Tika dependency to 1.26
+    [JCR-4685] - webapp: update htmlunit dependency to 2.48.0
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
