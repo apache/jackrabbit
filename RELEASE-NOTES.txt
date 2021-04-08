@@ -15,6 +15,10 @@ release.
 Changes in Jackrabbit 2.21.6
 ----------------------------
 
+Bug
+
+    [JCR-4680] - ConstraintViolationException in VersionManagerImplRestore when target node has a property definition unknown by the frozen node
+
 Improvement
 
     [JCR-4683] - add test coverage for restore that removes a mixin
@@ -33,6 +37,7 @@ Task
     [JCR-4682] - Upgrade Commons VFS to 2.8.0
     [JCR-4684] - Update Tika dependency to 1.26
     [JCR-4685] - webapp: update htmlunit dependency to 2.48.0
+    [JCR-4687] - Update tomcat dependency to 8.5.65
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
