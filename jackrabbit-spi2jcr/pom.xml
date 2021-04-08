@@ -79,7 +79,7 @@ org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin
                org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testStringLiteralInvalidName        <!-- OAK-3265, JCR-3913 -->
                org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral                     <!-- OAK-3265, JCR-3913 -->
                org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265, JCR-3913 -->
-               org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreRemovesMixin                     <!-- OAK-4680 -->
+               org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreRemovesMixin                     <!-- JCR-4680 -->
               </value>
             </property>
           </systemProperties>
