@@ -22,6 +22,7 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -407,7 +408,13 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         for (PropertyState prop: state.getProperties()) {
             Name propName = prop.getName();
             if (!propNames.contains(propName)) {
-                int opv = state.getDefinition(prop).getOnParentVersion();
+                int opv;
+                try {
+                    opv = state.getDefinition(prop).getOnParentVersion();
+                } catch (ConstraintViolationException ignore) {
+                    // N/P definition no longer exists (like from a mixin on N but not on F, already removed above)
+                    opv = OnParentVersionAction.ABORT;
+                }
                 if (opv == OnParentVersionAction.COPY
                         || opv == OnParentVersionAction.VERSION
                         || opv == OnParentVersionAction.ABORT) {
