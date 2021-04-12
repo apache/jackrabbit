@@ -125,6 +125,7 @@
                      org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265, JCR-3913 -->
                      <!-- JCR-3995 -->
                      org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.acl.AccessControlManagerImplTest#testAddingFourAccessControlEntries
+                     org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreRemovesMixin                     <!-- JCR-4680 -->
                   </value>
                 </property>
                 <property>

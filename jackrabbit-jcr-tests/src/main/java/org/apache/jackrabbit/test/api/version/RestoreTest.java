@@ -26,6 +26,7 @@ import javax.jcr.version.VersionIterator;
 import javax.jcr.version.VersionManager;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemExistsException;
@@ -1458,5 +1459,32 @@ public class RestoreTest extends AbstractVersionTest {
         String orderOk = nodeName1 + ", " + nodeName2;
         String order = n1.getName() + ", " + n2.getName();
         assertEquals("Invalid child node ordering", orderOk, order);
+    }
+
+    /**
+     * Test that after restore(), a subsequently added mixin type is removed
+     */
+    public void testRestoreRemovesMixin() throws RepositoryException, NotExecutableException {
+        Session s = testRootNode.getSession();
+        ensureKnowsNodeType(s, ntQuery);
+        ensureKnowsNodeType(s, mixTitle);
+
+        Node testRoot = createVersionableNode(testRootNode, nodeName4, s.getWorkspace().getNodeTypeManager().getNodeType(ntQuery));
+        ensureMixinType(testRoot, mixVersionable);
+        versionableNode.getSession().save();
+
+        Version v10 = versionManager.checkin(testRoot.getPath());
+        versionManager.checkout(testRoot.getPath());
+        // use mix:title to allow adding property jcr:title
+        testRoot.addMixin(mixTitle);
+        // add jcr:title property which is *not* allowed by the frozen node its
+        // type alone (nt:query)
+        testRoot.setProperty("jcr:title", "title");
+        versionableNode.getSession().save();
+        // restore base version without mix:title mixin, removing jcr:title
+        // property
+        versionManager.restore(v10, true);
+        assertFalse(testRoot.isNodeType(mixTitle));
+        assertFalse(testRoot.hasProperty("jcr:title"));
     }
 }
