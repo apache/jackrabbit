@@ -35,7 +35,7 @@
   <description>Web application that hosts and serves a Jackrabbit content repository</description>
 
   <properties>
-    <tomcat.version>8.5.64</tomcat.version>
+    <tomcat.version>8.5.65</tomcat.version>
   </properties>
 
   <dependencies>
