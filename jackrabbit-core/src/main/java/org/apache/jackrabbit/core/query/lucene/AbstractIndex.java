@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
@@ -43,7 +44,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Version;
-import org.apache.tika.io.IOExceptionWithCause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,7 +218,7 @@ abstract class AbstractIndex {
         invalidateSharedReader();
 
         if (!exceptions.isEmpty()) {
-            throw new IOExceptionWithCause(
+            throw new IOException(
                     exceptions.size() + " of " + docs.length
                     + " background indexer tasks failed", exceptions.get(0));
         }
