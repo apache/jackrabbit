@@ -625,6 +625,11 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     protected void doPut(WebdavRequest request, WebdavResponse response,
                          DavResource resource) throws IOException, DavException {
 
+        if (request.getHeader("Content-Range") != null) {
+            response.sendError(DavServletResponse.SC_BAD_REQUEST, "Content-Range in PUT request not supported");
+            return;
+        }
+
         DavResource parentResource = resource.getCollection();
         if (parentResource == null || !parentResource.exists()) {
             // parent does not exist
