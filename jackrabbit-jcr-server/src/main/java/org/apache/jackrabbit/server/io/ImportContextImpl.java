@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.io;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,7 @@ public class ImportContextImpl implements ImportContext {
             metadata.set(Metadata.CONTENT_TYPE, inputCtx.getContentType());
         }
         if (systemId != null) {
-            metadata.set(Metadata.RESOURCE_NAME_KEY, systemId);
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, systemId);
         }
         if (stream != null && !stream.markSupported()) {
             stream = new BufferedInputStream(stream);

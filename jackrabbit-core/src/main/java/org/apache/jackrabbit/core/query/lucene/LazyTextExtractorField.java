@@ -27,6 +27,7 @@ import org.apache.lucene.document.AbstractField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.Field.TermVector;
+import org.apache.tika.exception.WriteLimitReachedException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
@@ -187,7 +188,7 @@ public class LazyTextExtractorField extends AbstractField {
                 // not being present. This is equivalent to disabling
                 // selected media types in configuration, so we can simply
                 // ignore these errors.
-                if (!writeOutContentHandler.isWriteLimitReached(e)) {
+                if (!WriteLimitReachedException.isWriteLimitReached(e)) {
                     log.debug("Failed to extract text from a binary property."
                             + " This is a fairly common case, and nothing to"
                             + " worry about. The stack trace is included to"
@@ -198,7 +199,7 @@ public class LazyTextExtractorField extends AbstractField {
             } catch (Throwable t) {
                 // Capture and report any other full text extraction problems.
                 // The special STOP exception is used for normal termination.
-                if (!writeOutContentHandler.isWriteLimitReached(t)) {
+                if (!WriteLimitReachedException.isWriteLimitReached(t)) {
                     log.debug("Failed to extract text from a binary property."
                             + " This is a fairly common case, and nothing to"
                             + " worry about. The stack trace is included to"

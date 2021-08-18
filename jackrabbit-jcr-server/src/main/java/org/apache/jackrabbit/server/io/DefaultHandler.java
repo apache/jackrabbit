@@ -29,6 +29,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -642,7 +643,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
     protected String detect(String name) {
         try {
             Metadata metadata = new Metadata();
-            metadata.set(Metadata.RESOURCE_NAME_KEY, name);
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, name);
             if (ioManager != null && ioManager.getDetector() != null) {
                 return ioManager.getDetector().detect(null, metadata).toString();
             } else {
