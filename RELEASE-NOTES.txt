@@ -1,95 +1,42 @@
-Release Notes -- Apache Jackrabbit -- Version 2.14.9
+Release Notes -- Apache Jackrabbit -- Version 2.14.10
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.14.9, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.14.10, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.14.9 is a patch release that contains fixes and
+Apache Jackrabbit 2.14.10 is a patch release that contains fixes and
 improvements over Jackrabbit 2.14. Jackrabbit 2.14.x releases are
 considered stable and targeted for production use.
   
-Changes in Jackrabbit 2.14.9
-----------------------------
+Note that an "end of life" date has already been planned for this branch. See
+<https://jackrabbit.apache.org/jcr/jackrabbit-roadmap.html> for details.
+
+Changes in Jackrabbit 2.14.10
+-----------------------------
 
 Bug
 
-    [JCR-3942] - Content-Length header field may be set twice
-    [JCR-4408] - jackrabbit-webapp: test dependency for httpcore breaks war file
-    [JCR-4482] - jcr2spi: WorkspaceContentHandler leaks temp files
-    [JCR-4483] - jcr2spi: potential NPE in ImportHandler.endDocument
-    [JCR-4484] - jcr-tests: SerializationTest needs to cleanup after parse failures in import tests
-    [JCR-4485] - InternalValueFactory.create(File) does not close input stream
-    [JCR-4537] - MalformedURLException: Nested JAR URLs are not supported
-    [JCR-4549] - backup with RepositoryCopier.copy() fails on second method call
-    [JCR-4551] - Use the normalized MediaType to check if the given MediaType should be indexed
-    [JCR-4579] - jackrabbit-data: allow to disable statement pooling through system property
-    [JCR-4603] - spi-commons: Iterators - incorrect method signature
-    [JCR-4626] - CI build fail because org.glassfish:javax.el:jar:3.0.1-b06-SNAPSHOT can't be retrieved
+    [JCR-4663] - webdav: check Content-Range on PUT
 
 Improvement
 
-    [JCR-4470] - update javadoc-plugin dependency to 3.1.1
-    [JCR-4475] - Improve o.a.j.jcr2dav.RepositoryStubImpl to test with custom servlet path mapping
-    [JCR-4497] - pass computed args to surefire/failsafe invocations
-    [JCR-4499] - Update jacoco dependency to 0.8.5 and align config with Oak
-    [JCR-4500] - jcr-commons: enable coverage checks
-    [JCR-4501] - jcr-commons: add test coverage for ISO8601 util
-    [JCR-4541] - reduce classpath lookups for SaxParserFactory
-    [JCR-4609] - Improve logging in case of exception in JcrUtils.getRepository()
-    [JCR-4617] - Emit apache-rat-plugin errors on console
-    [JCR-4618] - Relax PredefinedNodeTypeTest to not require nt:frozenNode to be referenceable
+    [JCR-4683] - add test coverage for restore that removes a mixin
 
 Task
 
-    [JCR-4476] - Update httpcore dependency to 4.4.12
-    [JCR-4478] - Update httpclient/mime dependencies to 4.5.10
-    [JCR-4489] - Update jacoco dependency to 0.8.4
-    [JCR-4496] - align ISO8601 class in tests with jcr-commons version
-    [JCR-4505] - Update maven-assembly-plugin to 3.2.0
-    [JCR-4506] - Update maven-jar-plugin to 3.2.0
-    [JCR-4507] - Update spotbugs-maven-plugin to 3.1.12.2
-    [JCR-4508] - Upgrade maven-scr-plugin to 1.26.2
-    [JCR-4511] - Update slf4j dependency to 1.7.29
-    [JCR-4512] - Update maven-scr-plugin to 1.26.4
-    [JCR-4519] - Update httpcore dependency to 4.4.13
-    [JCR-4522] - Update httpclient/mime dependencies to 4.5.11
-    [JCR-4529] - Update tomcat dependency to 8.5.50
-    [JCR-4530] - jackrabbit-core: avoid use of deprecated commons-collections Buffers
-    [JCR-4531] - Update tomcat dependency to 8.5.51/7.0.100
-    [JCR-4544] - Update slf4j dependency to 1.7.30
-    [JCR-4545] - Update httpclient/mime dependencies to 4.5.12
-    [JCR-4546] - Update aws java sdk version to 1.11.700 (consistent with Oak)
-    [JCR-4547] - Update tomcat dependency to 8.5.53/7.0.103
-    [JCR-4548] - update javadoc-plugin dependency to 3.2.0
-    [JCR-4556] - Update tomcat dependency to 8.5.54
-    [JCR-4557] - update junit dependency to 4.13
-    [JCR-4558] - update Apache parent pom to version 23
-    [JCR-4559] - Update commons file-upload dependency to 1.4
-    [JCR-4560] - Update h2db dependency to 1.4.200
-    [JCR-4562] - Remove workaround for FELIX-2492
-    [JCR-4568] - Update to jacoco version 0.8.6 (compatible with Java 15)
-    [JCR-4573] - Update Jetty dependency to 9.2.30.v20200428
-    [JCR-4575] - Update tomcat dependency to 8.5.55/7.0.104
-    [JCR-4592] - Update maven-assembly-plugin to 3.3.0
-    [JCR-4593] - update war-plugin dependency to 3.3.0
-    [JCR-4594] - update pmd-plugin dependency to 3.13.0
-    [JCR-4595] - update checkstyle-plugin dependency to 3.1.1
-    [JCR-4596] - update build-helper-maven-plugin to version 3.2.0
-    [JCR-4600] - Update tomcat dependency to 8.5.56
-    [JCR-4605] - standalone: fix deprecation warning wrt GnuParser
-    [JCR-4612] - Update tomcat dependency to 8.5.57/7.0.105
-    [JCR-4616] - parent: remove PMC information from POM
-    [JCR-4621] - add 'javadoc' profile for Jenkins matrix builds
-    [JCR-4622] - add 'rat' profile for Jenkins matrix builds
-    [JCR-4629] - Update spotbugs-maven-plugin to 4.0.4
-    [JCR-4631] - update war-plugin dependency to 3.3.1
-    [JCR-4642] - update geronimo-j2ee-connector_1.5_spec dependency to 2.0.0
-    [JCR-4644] - Update tomcat dependency to 8.5.58/7.0.106
-    [JCR-4646] - Update tomcat dependency to 8.5.59
-    [JCR-4647] - update junit dependency to 4.13.1
+    [JCR-4652] - Update tomcat dependency to 8.5.60
+    [JCR-4653] - Update httpclient/mime dependencies to 4.5.13
+    [JCR-4658] - Update httpcore dependency to 4.4.14
+    [JCR-4659] - Update tomcat dependency to 8.5.61
+    [JCR-4660] - update pmd-plugin dependency to 3.14.0
+    [JCR-4668] - Update tomcat dependency to 8.5.63
+    [JCR-4669] - update checkstyle-plugin dependency to 3.1.2
+    [JCR-4672] - update junit dependency to 4.13.2
+    [JCR-4678] - Update tomcat dependency to 8.5.64
+    [JCR-4687] - Update tomcat dependency to 8.5.65
 
 
 For more detailed information about all the changes in this and other
