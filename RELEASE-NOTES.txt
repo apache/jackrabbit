@@ -1,40 +1,39 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.7
+Release Notes -- Apache Jackrabbit -- Version 2.21.8
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.7, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.8, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.7 is an unstable release cut directly from
+Apache Jackrabbit 2.21.8 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.7
+Changes in Jackrabbit 2.21.8
 ----------------------------
-
-Bug
-
-    [JCR-4671] - Derby is missing from the JCA artifact
-
-Improvement
-
-    [JCR-3928] - Enable pathStyleAccess in AWS Client
 
 Task
 
-    [JCR-4690] - Update mockito dependency to 3.9.0
-    [JCR-4691] - Update easymock dependency to 4.3
-    [JCR-4692] - Update to jacoco version 0.8.7
-    [JCR-4693] - Update Jackrabbit trunk to Oak 1.40.0
-    [JCR-4695] - set baseline comparisonVersion to latest stable (2.20.3)
-    [JCR-4697] - Update commons-io dependency to 2.10.0
-    [JCR-4699] - Update mockito dependency to 3.11.1
-    [JCR-4700] - Update tomcat dependency to 8.5.68
-    [JCR-4701] - Update mockito dependency to 3.11.2
-    [JCR-4702] - webapp: update htmlunit dependency to 2.51.0
+    [JCR-4704] - Update Tika dependency to 1.27
+    [JCR-4712] - Update Tika dependency to 2.0.0
+    [JCR-4713] - avoid use of deprecated tika IOExceptionWithCause
+    [JCR-4714] - TomcatIT uses Guava Files.readLines inherited from tika-parsers 1.x
+    [JCR-4715] - Update slf4j dependency to 1.7.32
+    [JCR-4716] - Update tomcat dependency to 8.5.70
+    [JCR-4717] - Update commons-io dependency to 2.11.0
+    [JCR-4718] - Upgrade Commons VFS to 2.9.0
+    [JCR-4719] - it-osgi: update felix.framework to 7.0.1
+    [JCR-4720] - webapp: update htmlunit dependency to 2.52.0
+    [JCR-4721] - Update Logback version to 1.2.5
+    [JCR-4722] - Update Tika dependency to 2.1.0
+    [JCR-4723] - Update aws java sdk version to 1.12.55
+    [JCR-4724] - Update commons-digester to version 2.1
+    [JCR-4728] - Update tomcat dependency to 8.5.71
+    [JCR-4729] - Update mockito dependency to 3.12.4
+    [JCR-4730] - webapp: update htmlunit dependency to 2.53.0
 
 
 For more detailed information about all the changes in this and other
