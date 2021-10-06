@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.UserTransactionImpl;
 
 import javax.jcr.Node;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionManager;
 
 /**
  * Test case for JCR-1476.
@@ -38,5 +39,23 @@ public class RestoreTest extends AbstractJCRTest {
         n.restore(v10, true);
         assertEquals("Wrong version restored", versionName, n.getBaseVersion().getName());
         tx.commit();
+    }
+
+    public void testRestoreToNodeWithAnUnknownPropertyType() throws Exception {
+        // create n from a type without jcr:title and no matching residual properties, unlike default nt:unstructured
+        Node n = testRootNode.addNode(nodeName1, "nt:query");
+        n.addMixin(mixVersionable);
+        superuser.save();
+        VersionManager versionManager = superuser.getWorkspace().getVersionManager();
+        Version v10 = versionManager.checkin(n.getPath());
+        versionManager.checkout(n.getPath());
+        // use mix:title to allow adding property jcr:title
+        n.addMixin("mix:title");
+        // add jcr:title property which is *not* allowed by the frozen node its type alone (nt:query)
+        n.setProperty("jcr:title", "title");
+        superuser.save();
+        // restore base version without mix:title mixin, removing jcr:title property
+        versionManager.restore(v10, true);
+        assertFalse(n.hasProperty("jcr:title"));
     }
 }
