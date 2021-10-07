@@ -288,6 +288,7 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>

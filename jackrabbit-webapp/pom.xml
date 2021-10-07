@@ -143,6 +143,10 @@
       <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
