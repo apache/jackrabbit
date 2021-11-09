@@ -489,7 +489,6 @@ org.apache.jackrabbit.test.api.security.AccessControlListTest#testExtendPrivileg
 org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testSetPolicy
 <!-- JCR-3206 -->
 org.apache.jackrabbit.test.api.observation.EventJournalTest
-org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreRemovesMixin                     <!-- JCR-4680 -->
                   </value>
                 </property>
                 <property>
