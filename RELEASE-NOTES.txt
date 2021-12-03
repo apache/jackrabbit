@@ -1,39 +1,33 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.8
+Release Notes -- Apache Jackrabbit -- Version 2.21.9
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.8, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.9, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.8 is an unstable release cut directly from
+Apache Jackrabbit 2.21.9 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.8
+Changes in Jackrabbit 2.21.9
 ----------------------------
 
 Task
 
-    [JCR-4704] - Update Tika dependency to 1.27
-    [JCR-4712] - Update Tika dependency to 2.0.0
-    [JCR-4713] - avoid use of deprecated tika IOExceptionWithCause
-    [JCR-4714] - TomcatIT uses Guava Files.readLines inherited from tika-parsers 1.x
-    [JCR-4715] - Update slf4j dependency to 1.7.32
-    [JCR-4716] - Update tomcat dependency to 8.5.70
-    [JCR-4717] - Update commons-io dependency to 2.11.0
-    [JCR-4718] - Upgrade Commons VFS to 2.9.0
-    [JCR-4719] - it-osgi: update felix.framework to 7.0.1
-    [JCR-4720] - webapp: update htmlunit dependency to 2.52.0
-    [JCR-4721] - Update Logback version to 1.2.5
-    [JCR-4722] - Update Tika dependency to 2.1.0
-    [JCR-4723] - Update aws java sdk version to 1.12.55
-    [JCR-4724] - Update commons-digester to version 2.1
-    [JCR-4728] - Update tomcat dependency to 8.5.71
-    [JCR-4729] - Update mockito dependency to 3.12.4
-    [JCR-4730] - webapp: update htmlunit dependency to 2.53.0
+    [JCR-4734] - Update tomcat dependency to 8.5.72
+    [JCR-4735] - webapp: update htmlunit dependency to 2.54.0
+    [JCR-4736] - Update commons-cli dependency to 1.5
+    [JCR-4737] - set baseline comparisonVersion to latest stable (2.20.4)
+    [JCR-4738] - add tests for setPrimaryType() with expanded name
+    [JCR-4739] - avoid use of deprecated API in NodeTypeTest
+    [JCR-4740] - add test coverage for mandatory residual child nodes
+    [JCR-4744] - Update Logback version to 1.2.7
+    [JCR-4745] - Update tomcat dependency to 8.5.73
+    [JCR-4746] - Update mockito dependency to 4.1.0
+    [JCR-4747] - webapp: update htmlunit dependency to 2.55.0
 
 
 For more detailed information about all the changes in this and other
