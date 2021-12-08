@@ -39,18 +39,8 @@ class IdURICache {
 
     IdURICache(String workspaceUri) {
         this.workspaceUri = workspaceUri;
-        idToUriCache = new LinkedHashMap<ItemId, String>(CACHESIZE, 1) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<ItemId, String> eldest) {
-                return this.size() > CACHESIZE;
-            }
-        };
-        uriToIdCache = new LinkedHashMap<String, ItemId>(CACHESIZE, 1) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, ItemId> eldest) {
-                return this.size() > CACHESIZE;
-            }
-        };
+        idToUriCache = new LRULinkedHashMap<>(CACHESIZE, 1);
+        uriToIdCache = new LRULinkedHashMap<>(CACHESIZE, 1);
     }
 
     public ItemId getItemId(String uri) {
@@ -106,6 +96,23 @@ class IdURICache {
             return uri.substring(0, uri.length() - 1);
         } else {
             return uri;
+        }
+    }
+
+    private class LRULinkedHashMap<K, V> extends LinkedHashMap<K, V> {
+
+        private static final long serialVersionUID = 4463208266433931306L;
+
+        private int capacity;
+
+        LRULinkedHashMap(int capacity, float loadFactor) {
+            super(capacity, loadFactor);
+            this.capacity = capacity;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+            return this.size() > this.capacity;
         }
     }
 }
