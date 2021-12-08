@@ -60,10 +60,7 @@ class IdURICache {
     }
 
     public void add(String uri, ItemId itemId) {
-        if (!uri.startsWith(workspaceUri)) {
-            throw new IllegalArgumentException("Workspace mismatch: '" + uri + "' not under '" + workspaceUri + "'");
-        }
-        String cleanUri = getCleanUri(uri);
+        String cleanUri = checkedIsUnderWorkspace(getCleanUri(uri));
         uriToIdCache.put(cleanUri, itemId);
         idToUriCache.put(itemId, cleanUri);
         log.debug("Added: ItemId = " + itemId + " URI = " + cleanUri);
@@ -89,6 +86,27 @@ class IdURICache {
     public void clear() {
         idToUriCache.clear();
         uriToIdCache.clear();
+    }
+
+    private String checkedIsUnderWorkspace(String uri) {
+        if (uri.startsWith(workspaceUri)) {
+            return uri;
+        } else {
+            int ml = Math.max(uri.length(), workspaceUri.length());
+            int match = 0;
+            for (int i = 0; i < ml; i++) {
+                if (uri.charAt(i) != workspaceUri.charAt(i)) {
+                    break;
+                }
+                match = i;
+            }
+            String diags = "";
+            if (uri.length() > match) {
+                String expected = (workspaceUri.length() > match) ? String.format(", expected: '%s'", workspaceUri.substring(match + 1)): ""; 
+                diags = String.format(" (position %d: '{%s}%s'%s)", match, uri.substring(0, match + 1), uri.substring(match + 1), expected);
+            }
+            throw new IllegalArgumentException("Workspace mismatch: '" + uri + "' not under workspace '" + workspaceUri + "'" + diags);
+        }
     }
 
     private static String getCleanUri(String uri) {
