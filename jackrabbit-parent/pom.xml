@@ -48,7 +48,7 @@
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <oak.version>1.40.0</oak.version>
     <jetty.version>9.2.30.v20200428</jetty.version>
-    <tika.version>1.27</tika.version>
+    <tika.version>2.0.0</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.32</slf4j.api.version>
     <slf4j.version>1.7.32</slf4j.version> <!-- sync with logback version -->
@@ -506,7 +506,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.tika</groupId>
-        <artifactId>tika-parsers</artifactId>
+        <artifactId>tika-parsers-standard-package</artifactId>
         <version>${tika.version}</version>
         <exclusions>
           <!-- Exclude the NetCDF and the related commons-httpclient -->
