@@ -91,7 +91,7 @@ public class NameTest extends AbstractJCRTest {
 
     /**
      * Test if creating a node with an expanded node type name returns the proper
-     * standard JCR node type name.
+     * standard JCR node type name, and that it works for {@link Node#setPrimaryType(String)}.
      * 
      * @throws RepositoryException
      */
@@ -101,6 +101,9 @@ public class NameTest extends AbstractJCRTest {
         Node n = testRootNode.addNode(nodeName, ntName);
 
         assertEquals(nodeName1, n.getName());
+        assertEquals(testNodeType, n.getPrimaryNodeType().getName());
+
+        n.setPrimaryType(ntName);
         assertEquals(testNodeType, n.getPrimaryNodeType().getName());
     }
 }
