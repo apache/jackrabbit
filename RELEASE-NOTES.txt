@@ -55,7 +55,7 @@ Task
     [JCR-4730] - webapp: update htmlunit dependency to 2.53.0
     [JCR-4744] - Update Logback version to 1.2.7
     [JCR-4750] - Update Logback version to 1.2.8
-
+    [JCR-4754] - Update Logback version to 1.2.10
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
