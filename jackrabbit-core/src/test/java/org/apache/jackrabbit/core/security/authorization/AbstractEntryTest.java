@@ -24,15 +24,19 @@ import java.util.List;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeCollection;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * <code>AbstractEntryTest</code>...
@@ -125,6 +129,22 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         assertEquals(privMgr.getBits(privs), privMgr.getBits(entry.getPrivileges()));
     }
 
+    public void testGetPrivilegeCollection() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlEntry entry = createEntry(new String[] {Privilege.JCR_READ, Privilege.JCR_WRITE}, true);
+
+        PrivilegeCollection pc = entry.getPrivilegeCollection();
+        assertArrayEquals(entry.getPrivileges(), pc.getPrivileges());
+        
+        assertTrue(pc.includes(Privilege.JCR_READ));
+        assertTrue(pc.includes(Privilege.JCR_WRITE));
+        assertTrue(pc.includes(Privilege.JCR_READ, Privilege.JCR_WRITE));
+        assertTrue(pc.includes(Privilege.JCR_READ, Privilege.JCR_MODIFY_PROPERTIES, Privilege.JCR_REMOVE_CHILD_NODES));
+        
+        assertFalse(pc.includes(Privilege.JCR_READ, Privilege.JCR_LIFECYCLE_MANAGEMENT));
+        assertFalse(pc.includes(Privilege.JCR_VERSION_MANAGEMENT));
+        assertFalse(pc.includes(Privilege.JCR_ALL));
+    }
+
     public void testEquals() throws RepositoryException, NotExecutableException  {
 
         Map<AccessControlEntry, AccessControlEntry> equalAces = new HashMap<AccessControlEntry, AccessControlEntry>();
@@ -208,6 +228,11 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
 
             public Value[] getRestrictions(String restrictionName) throws RepositoryException {
                 return null;
+            }
+
+            @Override
+            public PrivilegeCollection getPrivilegeCollection() throws RepositoryException {
+                throw new UnsupportedRepositoryOperationException();
             }
 
             public Principal getPrincipal() {
@@ -296,6 +321,11 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
 
             public Value[] getRestrictions(String restrictionName) throws RepositoryException {
                 return null;
+            }
+
+            @Override
+            public PrivilegeCollection getPrivilegeCollection() throws RepositoryException {
+                throw new UnsupportedRepositoryOperationException();
             }
 
             public Principal getPrincipal() {

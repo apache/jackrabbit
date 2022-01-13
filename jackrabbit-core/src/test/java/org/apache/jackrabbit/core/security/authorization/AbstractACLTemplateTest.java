@@ -20,6 +20,7 @@ import java.security.Principal;
 import java.util.Collections;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
@@ -29,6 +30,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeCollection;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.security.TestPrincipal;
@@ -130,6 +132,11 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
                     return null;
                 }
 
+                @Override
+                public PrivilegeCollection getPrivilegeCollection() throws RepositoryException {
+                    throw new UnsupportedRepositoryOperationException();
+                }
+
                 public Principal getPrincipal() {
                     return testPrincipal;
                 }
@@ -167,6 +174,11 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
 
                 public Value[] getRestrictions(String restrictionName) throws RepositoryException {
                     return null;
+                }
+
+                @Override
+                public PrivilegeCollection getPrivilegeCollection() throws RepositoryException {
+                    throw new UnsupportedRepositoryOperationException();
                 }
 
                 public Principal getPrincipal() {

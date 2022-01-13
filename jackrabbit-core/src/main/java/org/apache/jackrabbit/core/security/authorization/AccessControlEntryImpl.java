@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeCollection;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlException;
@@ -31,6 +31,7 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -305,6 +306,34 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      */
     public Value[] getRestrictions(String restrictionName) throws RepositoryException {
         return new Value[] {getRestriction(restrictionName)};
+    }
+
+    @Override
+    public PrivilegeCollection getPrivilegeCollection() {
+        return new PrivilegeCollection() {
+            @Override
+            public Privilege[] getPrivileges() {
+                return AccessControlEntryImpl.this.getPrivileges();
+            }
+
+            @Override
+            public boolean includes(String... privilegeNames) throws RepositoryException {
+                if (privilegeNames.length == 0) {
+                    return true;
+                }
+                PrivilegeBits pb = AccessControlEntryImpl.this.getPrivilegeBits();
+                if (pb.isEmpty()) {
+                    return false;
+                }
+                Set<Privilege> privileges = new HashSet<>(privilegeNames.length);
+                PrivilegeManagerImpl privilegeMgr = getPrivilegeManager();
+                for (String pName : privilegeNames) {
+                    privileges.add(privilegeMgr.getPrivilege(pName));
+                }
+                PrivilegeBits toTest = privilegeMgr.getBits(privileges.toArray(new Privilege[0]));
+                return pb.includes(toTest);
+            }
+        };
     }
 
     //-------------------------------------------------------------< Object >---

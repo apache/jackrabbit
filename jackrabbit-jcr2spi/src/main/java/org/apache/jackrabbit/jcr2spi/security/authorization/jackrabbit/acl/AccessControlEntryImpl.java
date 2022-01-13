@@ -25,12 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeCollection;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
@@ -150,6 +152,11 @@ class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
     public Value[] getRestrictions(String restrictionName)
             throws RepositoryException {
         return new Value[] {getRestriction(restrictionName)};
+    }
+
+    @Override
+    public PrivilegeCollection getPrivilegeCollection() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
     }
 
     //-------------------------------------------------------------< Object >---
