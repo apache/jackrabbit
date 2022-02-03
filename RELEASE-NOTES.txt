@@ -1,33 +1,36 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.9
+Release Notes -- Apache Jackrabbit -- Version 2.21.10
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.9, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.10, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.9 is an unstable release cut directly from
+Apache Jackrabbit 2.21.10 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.9
-----------------------------
+Changes in Jackrabbit 2.21.10
+-----------------------------
+
+Improvement
+
+    [JCR-4758] - Implement JackrabbitAccessControlEntry.getPrivilegeCollection in jackrabbit
 
 Task
 
-    [JCR-4734] - Update tomcat dependency to 8.5.72
-    [JCR-4735] - webapp: update htmlunit dependency to 2.54.0
-    [JCR-4736] - Update commons-cli dependency to 1.5
-    [JCR-4737] - set baseline comparisonVersion to latest stable (2.20.4)
-    [JCR-4738] - add tests for setPrimaryType() with expanded name
-    [JCR-4739] - avoid use of deprecated API in NodeTypeTest
-    [JCR-4740] - add test coverage for mandatory residual child nodes
-    [JCR-4744] - Update Logback version to 1.2.7
-    [JCR-4745] - Update tomcat dependency to 8.5.73
-    [JCR-4746] - Update mockito dependency to 4.1.0
-    [JCR-4747] - webapp: update htmlunit dependency to 2.55.0
+    [JCR-4749] - IdURICache: improve diagnostics when workspaceUri does not match
+    [JCR-4750] - Update Logback version to 1.2.8
+    [JCR-4751] - Update httpcore dependency to 4.4.15
+    [JCR-4752] - Update h2db dependency to 2.0.202
+    [JCR-4754] - Update Logback version to 1.2.10
+    [JCR-4755] - Update Tika dependency to 2.2.1
+    [JCR-4756] - Update h2db dependency to 2.0.206
+    [JCR-4757] - Update Jackrabbit trunk to Oak 1.42.0
+    [JCR-4761] - Update mockito dependency to 4.3.1
+    [JCR-4762] - Update slf4j dependency to 1.7.35
 
 
 For more detailed information about all the changes in this and other
