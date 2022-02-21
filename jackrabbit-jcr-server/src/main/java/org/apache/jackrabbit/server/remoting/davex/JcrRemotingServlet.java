@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.remoting.davex;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -246,6 +247,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     private static final String PARAM_CLONE = ":clone";
     private static final String PARAM_INCLUDE = ":include";
 
+    private static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
+
     private BatchReadConfig brConfig;
     private ProtectedRemoveManager protectedRemoveManager;
 
@@ -352,7 +355,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 Node node = session.getNode(path);
                 int depth = ((WrappingLocator) locator).getDepth();
 
-                webdavResponse.setContentType("text/plain;charset=utf-8");
+                webdavResponse.setContentType(CONTENT_TYPE_APPLICATION_JSON);
+                webdavResponse.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 webdavResponse.setStatus(DavServletResponse.SC_OK);
                 JsonWriter writer = new JsonWriter(webdavResponse.getWriter());
 
@@ -437,7 +441,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 if (loc == null) {
                     webdavResponse.setStatus(HttpServletResponse.SC_OK);
                     if (includes != null) {
-                        webdavResponse.setContentType("text/plain;charset=utf-8");
+                        webdavResponse.setContentType(CONTENT_TYPE_APPLICATION_JSON);
+                        webdavResponse.setCharacterEncoding(StandardCharsets.UTF_8.name());
                         JsonWriter writer = new JsonWriter(webdavResponse.getWriter());
 
                         DavResourceLocator locator = davResource.getLocator();
