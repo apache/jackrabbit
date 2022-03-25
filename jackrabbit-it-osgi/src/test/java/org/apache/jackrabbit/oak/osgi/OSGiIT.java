@@ -22,6 +22,7 @@ import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemProperties;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.vmOption;
 
 import java.io.File;
@@ -42,6 +43,7 @@ import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.ops4j.pax.exam.options.SystemPropertyOption;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.ops4j.pax.exam.util.PathUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -56,14 +58,21 @@ public class OSGiIT {
     public Option[] configuration() throws IOException, URISyntaxException {
         return CoreOptions.options(
                 junitBundles(),
+                mavenBundle("org.osgi", "org.osgi.service.log", "1.3.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.12"),
                 mavenBundle("org.apache.felix", "org.apache.felix.jaas", "1.0.2"),
                 mavenBundle("org.osgi", "org.osgi.dto", "1.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.16"),
                 mavenBundle("org.apache.felix", "org.apache.felix.fileinstall", "3.2.6"),
-                mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.7.2"),
+                mavenBundle("org.slf4j", "slf4j-api", "1.7.35"),
+                mavenBundle("commons-logging", "commons-logging", "1.2"),
+                mavenBundle("ch.qos.logback", "logback-core", "1.2.10"),
+                mavenBundle("ch.qos.logback", "logback-classic", "1.2.10"),
                 frameworkProperty("repository.home").value("target"),
-                systemProperties(new SystemPropertyOption("felix.fileinstall.dir").value(getConfigDir())),
+                systemProperties(
+                        systemProperty("logback.configurationFile")
+                                .value("file:" + PathUtils.getBaseDir() + "/src/test/resources/logback-test.xml"),
+                        new SystemPropertyOption("felix.fileinstall.dir").value(getConfigDir())),
                 jarBundles(),
                 jpmsOptions());
     }
