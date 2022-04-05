@@ -47,7 +47,7 @@
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <oak.version>1.42.0</oak.version>
-    <jetty.version>9.2.30.v20200428</jetty.version>
+    <jetty.version>9.4.41.v20210516</jetty.version>
     <tika.version>2.3.0</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.35</slf4j.api.version>
