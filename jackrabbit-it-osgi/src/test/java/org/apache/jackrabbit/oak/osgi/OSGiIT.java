@@ -66,8 +66,8 @@ public class OSGiIT {
                 mavenBundle("org.apache.felix", "org.apache.felix.fileinstall", "3.2.6"),
                 mavenBundle("org.slf4j", "slf4j-api", "1.7.35"),
                 mavenBundle("commons-logging", "commons-logging", "1.2"),
-                mavenBundle("ch.qos.logback", "logback-core", "1.2.10"),
-                mavenBundle("ch.qos.logback", "logback-classic", "1.2.10"),
+                mavenBundle("ch.qos.logback", "logback-core", "1.2.11"),
+                mavenBundle("ch.qos.logback", "logback-classic", "1.2.11"),
                 frameworkProperty("repository.home").value("target"),
                 systemProperties(
                         systemProperty("logback.configurationFile")
