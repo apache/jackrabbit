@@ -1,36 +1,50 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.10
+Release Notes -- Apache Jackrabbit -- Version 2.21.11
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.10, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.11, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.10 is an unstable release cut directly from
+Apache Jackrabbit 2.21.11 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.10
+Changes in Jackrabbit 2.21.11
 -----------------------------
+
+Bug
+
+    [JCR-4766] - JcrRemotingServlet should use 'application/json' media type for JSON response
 
 Improvement
 
-    [JCR-4758] - Implement JackrabbitAccessControlEntry.getPrivilegeCollection in jackrabbit
+    [JCR-4784] - add lucene analyzers dependency to standalone project
 
 Task
 
-    [JCR-4749] - IdURICache: improve diagnostics when workspaceUri does not match
-    [JCR-4750] - Update Logback version to 1.2.8
-    [JCR-4751] - Update httpcore dependency to 4.4.15
-    [JCR-4752] - Update h2db dependency to 2.0.202
-    [JCR-4754] - Update Logback version to 1.2.10
-    [JCR-4755] - Update Tika dependency to 2.2.1
-    [JCR-4756] - Update h2db dependency to 2.0.206
-    [JCR-4757] - Update Jackrabbit trunk to Oak 1.42.0
-    [JCR-4761] - Update mockito dependency to 4.3.1
-    [JCR-4762] - Update slf4j dependency to 1.7.35
+    [JCR-4764] - Update Tika dependency to 2.3.0
+    [JCR-4765] - Update h2db dependency to 2.1.210
+    [JCR-4771] - set baseline comparisonVersion to latest stable (2.20.5)
+    [JCR-4774] - fix jackrabbit-it-osgi logging config
+    [JCR-4775] - fix dangling javadoc links for Apache HTTP libs
+    [JCR-4776] - use slf4j-reload4j instead of slf4-log4j12
+    [JCR-4777] - Update Logback version to 1.2.11
+    [JCR-4778] - Update slf4j dependency to 1.7.36
+    [JCR-4779] - Update mockito dependency to 4.4.0
+    [JCR-4780] - webapp: update htmlunit dependency to 2.60.0
+    [JCR-4781] - Update tomcat dependency to 8.5.78
+    [JCR-4782] - Update h2db dependency to 2.1.212
+    [JCR-4783] - it-osgi: update felix.framework to 7.0.3
+    [JCR-4787] - Update Tika dependency to 2.4.0
+    [JCR-4789] - webapp: update htmlunit dependency to 2.61.0
+    [JCR-4790] - Update mockito dependency to 4.5.1
+    [JCR-4791] - Update aws java sdk version to 1.12.223
+    [JCR-4792] - Update tomcat dependency to 8.5.79
+    [JCR-4793] - Update mockito dependency to 4.6.0
+    [JCR-4794] - it-osgi: update felix.framework to 7.0.4
 
 
 For more detailed information about all the changes in this and other
