@@ -49,6 +49,7 @@
     <oak.version>1.42.0</oak.version>
     <jetty.version>9.2.30.v20200428</jetty.version>
     <tika.version>2.4.0</tika.version>
+    <lucene.version>3.6.0</lucene.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.36</slf4j.api.version>
     <slf4j.version>1.7.36</slf4j.version> <!-- sync with logback version -->
@@ -497,7 +498,12 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
-        <version>3.6.0</version>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-analyzers</artifactId>
+        <version>${lucene.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tika</groupId>
