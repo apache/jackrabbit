@@ -19,10 +19,6 @@ Bug
 
     [JCR-4766] - JcrRemotingServlet should use 'application/json' media type for JSON response
 
-Improvement
-
-    [JCR-4784] - add lucene analyzers dependency to standalone project
-
 Task
 
     [JCR-4764] - Update Tika dependency to 2.3.0
