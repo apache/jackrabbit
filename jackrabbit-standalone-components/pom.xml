@@ -89,14 +89,6 @@
       <artifactId>tika-parsers-standard-package</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-analyzers</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
       <version>${project.version}</version>
