@@ -211,9 +211,9 @@
           <links>
             <link>https://docs.adobe.com/docs/en/spec/javax.jcr/javadocs/jcr-2.0/</link>
             <link>https://jackrabbit.apache.org/oak/docs/apidocs</link>
-            <link>https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
-            <link>https://hc.apache.org/httpcomponents-client-ga/httpmime/apidocs/</link>
-            <link>https://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs</link>
+            <link>https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/</link>
+            <link>https://hc.apache.org/httpcomponents-client-4.5.x/current/httpmime/apidocs/</link>
+            <link>https://hc.apache.org/httpcomponents-core-4.4.x/current/httpcore/apidocs/</link>
           </links>
         </configuration>
       </plugin>
