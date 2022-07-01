@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.20.5
+Release Notes -- Apache Jackrabbit -- Version 2.20.6
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.20.5, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.20.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.20.5 is an incremental feature release based on
+Apache Jackrabbit 2.20.6 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.20.x releases are considered stable and targeted for production use.
 
@@ -18,37 +18,34 @@ The minimum Java version for this release is Java 8. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.20.5
+Changes in Jackrabbit 2.20.6
 ----------------------------
 
-Improvement
+Bug
 
-    [JCR-4758] - Implement JackrabbitAccessControlEntry.getPrivilegeCollection in jackrabbit
+    [JCR-4766] - JcrRemotingServlet should use 'application/json' media type for JSON response
 
 Task
 
-    [JCR-4712] - Update Tika dependency to 2.0.0
-    [JCR-4722] - Update Tika dependency to 2.1.0
-    [JCR-4734] - Update tomcat dependency to 8.5.72
-    [JCR-4735] - webapp: update htmlunit dependency to 2.54.0
-    [JCR-4736] - Update commons-cli dependency to 1.5
-    [JCR-4738] - add tests for setPrimaryType() with expanded name
-    [JCR-4739] - avoid use of deprecated API in NodeTypeTest
-    [JCR-4740] - add test coverage for mandatory residual child nodes
-    [JCR-4744] - Update Logback version to 1.2.7
-    [JCR-4745] - Update tomcat dependency to 8.5.73
-    [JCR-4746] - Update mockito dependency to 4.1.0
-    [JCR-4747] - webapp: update htmlunit dependency to 2.55.0
-    [JCR-4749] - IdURICache: improve diagnostics when workspaceUri does not match
-    [JCR-4750] - Update Logback version to 1.2.8
-    [JCR-4751] - Update httpcore dependency to 4.4.15
-    [JCR-4752] - Update h2db dependency to 2.0.202
-    [JCR-4754] - Update Logback version to 1.2.10
-    [JCR-4755] - Update Tika dependency to 2.2.1
-    [JCR-4756] - Update h2db dependency to 2.0.206
-    [JCR-4757] - Update Jackrabbit trunk to Oak 1.42.0
-    [JCR-4761] - Update mockito dependency to 4.3.1
-    [JCR-4762] - Update slf4j dependency to 1.7.35
+    [JCR-4764] - Update Tika dependency to 2.3.0
+    [JCR-4765] - Update h2db dependency to 2.1.210
+    [JCR-4774] - fix jackrabbit-it-osgi logging config
+    [JCR-4775] - fix dangling javadoc links for Apache HTTP libs
+    [JCR-4776] - use slf4j-reload4j instead of slf4-log4j12
+    [JCR-4777] - Update Logback version to 1.2.11
+    [JCR-4778] - Update slf4j dependency to 1.7.36
+    [JCR-4779] - Update mockito dependency to 4.4.0
+    [JCR-4780] - webapp: update htmlunit dependency to 2.60.0
+    [JCR-4781] - Update tomcat dependency to 8.5.78
+    [JCR-4782] - Update h2db dependency to 2.1.212
+    [JCR-4783] - it-osgi: update felix.framework to 7.0.3
+    [JCR-4787] - Update Tika dependency to 2.4.0
+    [JCR-4789] - webapp: update htmlunit dependency to 2.61.0
+    [JCR-4790] - Update mockito dependency to 4.5.1
+    [JCR-4791] - Update aws java sdk version to 1.12.223
+    [JCR-4792] - Update tomcat dependency to 8.5.79
+    [JCR-4793] - Update mockito dependency to 4.6.0
+    [JCR-4794] - it-osgi: update felix.framework to 7.0.4
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
