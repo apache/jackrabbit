@@ -47,7 +47,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>1.6.2</version> <!-- overridden by downstream projects -->
+      <version>2.1.0</version> <!-- overridden by downstream projects -->
       <scope>provided</scope>
     </dependency>
     <dependency>
