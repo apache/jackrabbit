@@ -39,18 +39,8 @@ class IdURICache {
 
     IdURICache(String workspaceUri) {
         this.workspaceUri = workspaceUri;
-        idToUriCache = new LinkedHashMap<ItemId, String>(CACHESIZE, 1) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<ItemId, String> eldest) {
-                return this.size() > CACHESIZE;
-            }
-        };
-        uriToIdCache = new LinkedHashMap<String, ItemId>(CACHESIZE, 1) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, ItemId> eldest) {
-                return this.size() > CACHESIZE;
-            }
-        };
+        idToUriCache = new LRULinkedHashMap<>(CACHESIZE, 1);
+        uriToIdCache = new LRULinkedHashMap<>(CACHESIZE, 1);
     }
 
     public ItemId getItemId(String uri) {
@@ -70,10 +60,7 @@ class IdURICache {
     }
 
     public void add(String uri, ItemId itemId) {
-        if (!uri.startsWith(workspaceUri)) {
-            throw new IllegalArgumentException("Workspace mismatch: '" + uri + "' not under '" + workspaceUri + "'");
-        }
-        String cleanUri = getCleanUri(uri);
+        String cleanUri = checkedIsUnderWorkspace(getCleanUri(uri));
         uriToIdCache.put(cleanUri, itemId);
         idToUriCache.put(itemId, cleanUri);
         log.debug("Added: ItemId = " + itemId + " URI = " + cleanUri);
@@ -101,11 +88,49 @@ class IdURICache {
         uriToIdCache.clear();
     }
 
+    private String checkedIsUnderWorkspace(String uri) {
+        if (uri.startsWith(workspaceUri)) {
+            return uri;
+        } else {
+            int ml = Math.max(uri.length(), workspaceUri.length());
+            int match = 0;
+            for (int i = 0; i < ml; i++) {
+                if (uri.charAt(i) != workspaceUri.charAt(i)) {
+                    break;
+                }
+                match = i;
+            }
+            String diags = "";
+            if (uri.length() > match) {
+                String expected = (workspaceUri.length() > match) ? String.format(", expected: '%s'", workspaceUri.substring(match + 1)): ""; 
+                diags = String.format(" (position %d: '{%s}%s'%s)", match, uri.substring(0, match + 1), uri.substring(match + 1), expected);
+            }
+            throw new IllegalArgumentException("Workspace mismatch: '" + uri + "' not under workspace '" + workspaceUri + "'" + diags);
+        }
+    }
+
     private static String getCleanUri(String uri) {
         if (uri.endsWith("/")) {
             return uri.substring(0, uri.length() - 1);
         } else {
             return uri;
+        }
+    }
+
+    private class LRULinkedHashMap<K, V> extends LinkedHashMap<K, V> {
+
+        private static final long serialVersionUID = 4463208266433931306L;
+
+        private int capacity;
+
+        LRULinkedHashMap(int capacity, float loadFactor) {
+            super(capacity, loadFactor);
+            this.capacity = capacity;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+            return this.size() > this.capacity;
         }
     }
 }
