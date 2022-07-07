@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
@@ -74,4 +75,27 @@ public class NodeTypeTest extends AbstractJCRTest {
         assertEquals(def, value.getString());
     }
 
+    public void testMandatoryResidualChildNode() throws RepositoryException, ParseException, IOException {
+        Node root = superuser.getRootNode();
+
+        String cnd = "<'test'='http://www.apache.org/jackrabbit/test'>\n" +
+                "[test:MyType] > nt:unstructured\n" +
+                " + * (nt:folder) mandatory";
+
+        CndImporter.registerNodeTypes(new StringReader(cnd), superuser);
+
+        // add with missing mandatory residual child node
+        Node n = root.addNode("test", "test:MyType");
+        superuser.save();
+        // must not fail as residual mandatory child names are not enforced according to https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.7.2.4%20Mandatory
+
+        // add mandatory residual child node
+        Node mandatoryChildNode = n.addNode("child", "nt:folder");
+        superuser.save();
+        assertTrue("Mandatory child node not detected as such", mandatoryChildNode.getDefinition().isMandatory());
+
+        // remove mandatory residual child node
+        mandatoryChildNode.remove();
+        superuser.save();
+    }
 }
