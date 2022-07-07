@@ -25,8 +25,8 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.nodetype.NodeTypeManager;
 
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -61,8 +61,7 @@ public class NodeTypeTest extends AbstractJCRTest {
         String cnd =
             "<test='http://www.apache.org/jackrabbit/test'>\n"
             + "[" + type + "]\n - value(binary) = '" + def + "' m a";
-        JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
-            superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeManager manager = superuser.getWorkspace().getNodeTypeManager();
         if (!manager.hasNodeType(type)) {
             Reader cndReader = new InputStreamReader(new ByteArrayInputStream(cnd.getBytes("UTF-8")));
             CndImporter.registerNodeTypes(cndReader, superuser);
