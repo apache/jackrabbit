@@ -46,7 +46,7 @@
     <test.opts.memory>-Xmx256m</test.opts.memory>
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
-    <oak.version>1.42.0</oak.version>
+    <oak.version>1.44.0</oak.version>
     <jetty.version>9.2.30.v20200428</jetty.version>
     <tika.version>2.4.1</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
