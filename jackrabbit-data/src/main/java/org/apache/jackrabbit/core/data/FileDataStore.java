@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -58,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * up to billions of distinct records.
  * <p>
  * This implementation relies on the underlying file system to support
- * atomic O(1) move operations with {@link File#renameTo(File)}.
+ * atomic O(1) move operations with {@link Files#move()}.
  */
 public class FileDataStore extends AbstractDataStore
         implements MultiDataStoreAware {
@@ -196,15 +198,9 @@ public class FileDataStore extends AbstractDataStore
                 if (!file.exists()) {
                     File parent = file.getParentFile();
                     parent.mkdirs();
-                    if (temporary.renameTo(file)) {
-                        // no longer need to delete the temporary file
-                        temporary = null;
-                    } else {
-                        throw new IOException(
-                                "Can not rename " + temporary.getAbsolutePath()
-                                + " to " + file.getAbsolutePath()
-                                + " (media read only?)");
-                    }
+                    Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                    // no longer need to delete the temporary file
+                    temporary = null;
                 } else {
                     long now = System.currentTimeMillis();
                     if (getLastModified(file) < now + ACCESS_TIME_RESOLUTION) {
