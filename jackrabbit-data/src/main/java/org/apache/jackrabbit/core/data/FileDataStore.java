@@ -23,7 +23,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
@@ -60,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * up to billions of distinct records.
  * <p>
  * This implementation relies on the underlying file system to support
- * atomic O(1) move operations with {@link Files#move()}.
+ * atomic O(1) move operations with {@link Files#move(Path, Path, CopyOption...)}.
  */
 public class FileDataStore extends AbstractDataStore
         implements MultiDataStoreAware {
