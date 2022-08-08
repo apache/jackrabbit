@@ -18,6 +18,7 @@ Changes in Jackrabbit 2.21.12
 Bug
 
     [JCR-4799] - jackrabbit.client.useSystemProperties undone by SSL config: client certificates no longer work
+    [JCR-4808] - 'pedantic' profile should run integration tests
     [JCR-4814] - FileDataStore: File.renameTo sometimes fails to move temporary file to data record location
 
 Task
