@@ -358,8 +358,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         }
 
-        
         HttpClientBuilder hcb = HttpClients.custom();
+
+        final SSLConnectionSocketFactory sslSocketFactory;
 
         // request config
         RequestConfig requestConfig = RequestConfig.custom().
@@ -369,37 +370,49 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         hcb.setDefaultRequestConfig(requestConfig);
         if (Boolean.getBoolean("jackrabbit.client.useSystemProperties") || connectionOptions.isUseSystemPropertes()) {
             log.debug("Using system properties for establishing connection!");
+
+            if (connectionOptions.isAllowSelfSignedCertificates()) {
+                throw new RepositoryException(ConnectionOptions.PARAM_ALLOW_SELF_SIGNED_CERTIFICATES
+                        + " is not allowed when system properties (jackrabbit.client.useSystemProperties) have been specified.");
+            }
+            if (connectionOptions.isDisableHostnameVerification()) {
+                throw new RepositoryException(ConnectionOptions.PARAM_DISABLE_HOSTNAME_VERIFICATION
+                        + " is not allowed when system properties (jackrabbit.client.useSystemProperties) have been specified.");
+            }
+
             // support Java system proxy? (JCR-3211)
             hcb.useSystemProperties();
-        }
-        
-        // TLS settings (via connection manager)
-        final SSLContext sslContext;
-        try {
-            if (connectionOptions.isAllowSelfSignedCertificates()) {
-                log.warn("Nonsecure TLS setting: Accepting self-signed certificates!");
-                    sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-                    hcb.setSSLContext(sslContext);
-            } else {
-                sslContext = SSLContextBuilder.create().build();
-            }
-        } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
-            throw new RepositoryException(e);
-        }
-        final SSLConnectionSocketFactory sslSocketFactory;
-        if (connectionOptions.isDisableHostnameVerification()) {
-            log.warn("Nonsecure TLS setting: Host name verification of TLS certificates disabled!");
-            // we can optionally disable hostname verification.
-            sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+
+            sslSocketFactory = SSLConnectionSocketFactory.getSystemSocketFactory();
         } else {
-            sslSocketFactory = new SSLConnectionSocketFactory(sslContext);
+            // TLS settings (via connection manager)
+            final SSLContext sslContext;
+            try {
+                if (connectionOptions.isAllowSelfSignedCertificates()) {
+                    log.warn("Nonsecure TLS setting: Accepting self-signed certificates!");
+                        sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
+                        hcb.setSSLContext(sslContext);
+                } else {
+                    sslContext = SSLContextBuilder.create().build();
+                }
+            } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+                throw new RepositoryException(e);
+            }
+
+            if (connectionOptions.isDisableHostnameVerification()) {
+                log.warn("Nonsecure TLS setting: Host name verification of TLS certificates disabled!");
+                // we can optionally disable hostname verification.
+                sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+            } else {
+                sslSocketFactory = new SSLConnectionSocketFactory(sslContext);
+            }
         }
-        
+
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
             .register("http", PlainConnectionSocketFactory.getSocketFactory())
             .register("https", sslSocketFactory)
             .build();
-        
+
         PoolingHttpClientConnectionManager cmgr = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
         int maxConnections = connectionOptions.getMaxConnections();
         if (maxConnections > 0) {
