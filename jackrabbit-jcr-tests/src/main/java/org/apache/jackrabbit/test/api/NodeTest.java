@@ -499,6 +499,34 @@ public class NodeTest extends AbstractJCRTest {
     }
 
     /**
+     * Creates a node without its mandatory child node using {@link
+     * Node#addNode(String, String)} and then saves.
+     * <p>
+     * This should throw a {@link ConstraintViolationException}.
+     * <p>
+     * Prerequisites: <ul>
+     * <li><code>javax.jcr.tck.NodeTest.testAddNodeLackingMandatoryChildNode.nodetype2</code>
+     * a node type that has a mandatory child node</li>
+     * </ul>
+     */
+    public void testAddNodeLackingMandatoryChildNode() throws RepositoryException {
+
+        // get default workspace test root node using superuser session
+        Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
+
+        // create the node without the mandatory child node definition
+        defaultRootNode.addNode(nodeName2, getProperty("nodetype2"));
+
+        try {
+            // save changes
+            superuser.save();
+            fail("Adding a node without its mandatory child node should throw a ConstraintViolationException");
+        } catch (ConstraintViolationException e) {
+            // ok, works as expected
+        }
+    }
+
+    /**
      * Creates a node with a mandatory child node using {@link
      * Node#addNode(String, String)}, saves on parent node then tries to delete
      * the mandatory child node.
