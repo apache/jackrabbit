@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api.version;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.jcr.Node;
@@ -457,6 +458,28 @@ public class VersionLabelTest extends AbstractVersionTest {
         }
 
         assertTrue("VersionHistory.getVersionLabels(Version)  must return all labels, that have been added for this version.", testLabels.isEmpty());
+    }
+
+    /**
+     * Test VersionHistory.removeVersion(String) should remove all associated labels
+     * with removal of version
+     *
+     * @throws RepositoryException
+     * @see VersionHistory#removeVersion(String)
+     */
+    public void testVersionLabelsAfterRemovingVersion() throws RepositoryException {
+        versionableNode.checkout();
+        Version v = versionableNode.checkin();
+        vHistory.addVersionLabel(v.getName(), versionLabel2, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
+        versionableNode.checkout();
+
+        //removing version version
+        vHistory.removeVersion(version.getName());
+
+        List<String> list=Arrays.asList(vHistory.getVersionLabels());
+        assertFalse("VersionHistory.hasVersionLabel(versionLabel) must return false if version corresponding to label has been removed ", vHistory.hasVersionLabel(versionLabel));
+        assertFalse("VersionHistory.getVersionLabels() should not return the labels whose version is removed", list.contains(versionLabel));
     }
 
     /**
