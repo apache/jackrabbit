@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.spi.commons.iterator;
 
 /**
- * Type safe counter part of {@link org.apache.commons.collections.Transformer}.
+ * Type safe counter part of {@code org.apache.commons.collections.Transformer}.
  *
  * @param <A>  argument type to transform from
  * @param <R>  result type to transform to
@@ -31,5 +31,4 @@ public interface Transformer<A, R> {
      * @return a transformed object
      */
     public R transform(A argument);
-
 }
