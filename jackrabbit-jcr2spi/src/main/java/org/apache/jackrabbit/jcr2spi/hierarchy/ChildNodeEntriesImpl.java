@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.list.AbstractLinkedList;
+import org.apache.commons.collections4.list.AbstractLinkedList;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.Name;
@@ -475,15 +475,37 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     //-------------------------------------------------< AbstractLinkedList >---
+
     /**
      * An implementation of a linked list which provides access to the internal
      * LinkNode which links the entries of the list.
      */
     private final class LinkedEntries extends AbstractLinkedList {
 
+        Node<?> header;
+        transient int modCount;
+
         LinkedEntries() {
             super();
             init();
+        }
+
+        @Override
+        protected void addNode(Node nodeToInsert, Node insertBeforeNode) {
+            super.addNode(nodeToInsert, insertBeforeNode);
+            modCount++;
+        }
+
+        @Override
+        protected void removeNode(Node node) {
+            super.removeNode(node);
+            modCount++;
+        }
+
+        @Override
+        protected void removeAllNodes() {
+            super.removeAllNodes();
+            modCount++;
         }
 
         /**
@@ -574,7 +596,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         void reorderNode(LinkedEntries.LinkNode insert, LinkedEntries.LinkNode before) {
             removeNode(insert);
             if (before == null) {
-                addNode(insert, header);
+                addNode(insert, getHeader());
             } else {
                 addNode(insert, before);
             }
@@ -599,7 +621,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          */
         @Override
         protected Node createHeaderNode() {
-            return new LinkedEntries.LinkNode();
+            header = new LinkedEntries.LinkNode();
+            return header;
         }
 
         /**
@@ -686,7 +709,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         //----------------------------------------------------------------------
         private class LinkNodeIterator implements Iterator<LinkedEntries.LinkNode> {
 
-            private LinkedEntries.LinkNode next = ((LinkedEntries.LinkNode) header).getNextLinkNode();
+            private LinkedEntries.LinkNode next = getHeader().getNextLinkNode();
             private final int expectedModCount = modCount;
 
             public boolean hasNext() {
@@ -704,6 +727,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 return n;
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException("remove");
             }
@@ -719,6 +743,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
 
     //--------------------------------------------------------------------------
+
     /**
      * Mapping of Name to LinkNode OR List of LinkNode(s) in case of SNSiblings.
      */
