@@ -29,7 +29,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
@@ -111,7 +112,7 @@ public class TransientRepository extends AbstractRepository
      * is opened.
      */
     private final Map<Session, Session> sessions =
-        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+        new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK);
 
     /**
      * The static repository descriptors. The default {@link RepositoryImpl}

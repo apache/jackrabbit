@@ -50,7 +50,8 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 import javax.security.auth.Subject;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.management.RepositoryManager;
@@ -210,7 +211,7 @@ public class RepositoryImpl extends AbstractRepository
      * active sessions (weak references)
      */
     private final Map<Session, Session> activeSessions =
-            new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+            new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK);
 
     // flag indicating if repository has been shut down
     private boolean disposed;

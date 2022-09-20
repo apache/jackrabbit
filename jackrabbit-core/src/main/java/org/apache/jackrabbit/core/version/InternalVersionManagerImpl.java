@@ -29,7 +29,8 @@ import javax.jcr.Session;
 import javax.jcr.version.ActivityViolationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
@@ -127,7 +128,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      */
     @SuppressWarnings("unchecked")
     private final Map<ItemId, InternalVersionItem> versionItems =
-            new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+            new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.WEAK);
 
     /**
      * Creates a new internal version manager

@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import java.util.Map;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.version.VersionItemStateManager;

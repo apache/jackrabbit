@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +103,7 @@ public class ItemStateReferenceCache implements ItemStateCache {
             // are generally recommended over weak references for caching
             // purposes, it seems that using weak references is safer here.
             segments[i] =
-                new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+                new ReferenceMap(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.WEAK);
         }
     }
 

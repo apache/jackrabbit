@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import org.apache.commons.collections.map.LRUMap;
 
 import java.security.Principal;
 import java.util.Properties;
+
+import org.apache.commons.collections4.map.LRUMap;
 
 /**
  * A base class of a principal provider implementing common tasks and a

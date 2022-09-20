@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

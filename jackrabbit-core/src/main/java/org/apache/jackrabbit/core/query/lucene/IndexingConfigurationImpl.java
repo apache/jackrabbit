@@ -29,7 +29,7 @@ import java.util.Properties;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.id.PropertyId;

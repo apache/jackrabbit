@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.cluster.PrivilegeEventChannel;
 import org.apache.jackrabbit.core.cluster.PrivilegeEventListener;
 import org.apache.jackrabbit.spi.PrivilegeDefinition;
@@ -133,7 +134,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     private final Map<PrivilegeBits, Set<Name>> bitsToNames = new HashMap<PrivilegeBits, Set<Name>>();
 
     @SuppressWarnings("unchecked")    
-    private final Map<Listener, Listener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    private final Map<Listener, Listener> listeners = Collections.synchronizedMap(new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK));
 
     private final NamespaceRegistry namespaceRegistry;
     private final CustomPrivilegeStore customPrivilegesStore;

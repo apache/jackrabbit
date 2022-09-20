@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import org.apache.commons.collections.map.LinkedMap;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Collections;
+
+import org.apache.commons.collections4.map.LinkedMap;
 
 /**
  * <code>EmptyLinkedMap</code> implements an empty unmodifiable {@link LinkedMap}.
@@ -108,7 +109,7 @@ public class EmptyLinkedMap extends LinkedMap {
      *
      * @return {@link #INSTANCE}.
      */
-    public Object clone() {
+    public LinkedMap clone() {
         return INSTANCE;
     }
 

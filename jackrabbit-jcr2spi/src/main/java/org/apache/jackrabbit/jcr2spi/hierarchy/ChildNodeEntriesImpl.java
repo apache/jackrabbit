@@ -670,7 +670,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 }
                 // if the nodeEntry has been g-collected in the mean time
                 // create a new NodeEntry in order to avoid returning null.
-                if (ne == null && this != header) {
+                if (ne == null && this != getHeader()) {
                     ne = factory.createNodeEntry(parent, qName, null);
                     super.setValue(new SoftReference<NodeEntry>(ne));
                 }

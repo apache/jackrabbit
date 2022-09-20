@@ -26,7 +26,8 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -75,7 +76,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Mapping of item ids to <code>LRUEntry</code> in the path map
      */
-    private final ReferenceMap idCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
+    private final ReferenceMap idCache = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.HARD);
 
     /**
      * Cache monitor object

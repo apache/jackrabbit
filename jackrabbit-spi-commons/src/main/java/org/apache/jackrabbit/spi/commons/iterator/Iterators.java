@@ -161,13 +161,7 @@ public final class Iterators {
      * @return
      */
     public static <S, R> Iterator<R> transformIterator(Iterator<S> iterator, final Transformer<S, R> transformer) {
-
-        org.apache.commons.collections4.Transformer<S, R> tf = new org.apache.commons.collections4.Transformer<S, R>() {
-            public R transform(S input) {
-                return transformer.transform(input);
-            }
-        };
-        return new TransformIterator<S, R>(iterator, tf);
+        return new TransformIterator<>(iterator, transformer::transform);
     }
 
     /**

@@ -37,7 +37,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;

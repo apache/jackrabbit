@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import java.util.List;
 
-import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.jackrabbit.core.cache.ConcurrentCache;
 import org.apache.jackrabbit.core.id.ItemId;

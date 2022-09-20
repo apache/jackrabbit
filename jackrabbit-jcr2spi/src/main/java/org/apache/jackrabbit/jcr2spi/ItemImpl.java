@@ -35,7 +35,8 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
@@ -71,7 +72,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     @SuppressWarnings("unchecked")
     protected final Map<ItemLifeCycleListener, ItemLifeCycleListener> listeners =
-        Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+        Collections.synchronizedMap(new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK));
 
     public ItemImpl(SessionImpl session, ItemState state,
                     ItemLifeCycleListener[] listeners) {

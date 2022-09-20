@@ -218,8 +218,8 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
       <artifactId>concurrent</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -271,6 +271,11 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
       <artifactId>jackrabbit-spi</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

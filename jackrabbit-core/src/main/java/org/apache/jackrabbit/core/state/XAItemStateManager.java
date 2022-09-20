@@ -24,8 +24,8 @@ import java.util.Map;
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.iterators.FilterIterator;
+import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.iterators.FilterIterator;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -445,7 +445,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         return new Iterable<PropertyState>() {
             @SuppressWarnings("unchecked")
             public Iterator<PropertyState> iterator() {
-                return (Iterator<PropertyState>) new FilterIterator(
+                return (Iterator<PropertyState>) new FilterIterator<>(
                         itemStates.iterator(), new Predicate() {
                     public boolean evaluate(Object object) {
                         ItemState state = (ItemState) object;

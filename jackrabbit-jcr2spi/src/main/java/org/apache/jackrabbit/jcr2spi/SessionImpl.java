@@ -50,7 +50,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
@@ -123,7 +124,7 @@ public class SessionImpl extends AbstractSession
      * Listeners (weak references)
      */
     @SuppressWarnings("unchecked")
-    private final Map<SessionListener, SessionListener> listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    private final Map<SessionListener, SessionListener> listeners = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK);
 
     private final Repository repository;
     private final RepositoryConfig config;

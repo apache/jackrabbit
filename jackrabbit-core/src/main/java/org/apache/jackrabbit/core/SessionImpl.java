@@ -61,8 +61,9 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -198,7 +199,7 @@ public class SessionImpl extends AbstractSession
      */
     @SuppressWarnings("unchecked")
     protected final Map<SessionListener, SessionListener> listeners =
-        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+        new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK);
 
     /**
      * Principal Manager

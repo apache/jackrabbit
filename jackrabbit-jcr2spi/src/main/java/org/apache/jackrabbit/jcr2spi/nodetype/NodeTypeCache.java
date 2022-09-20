@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -64,7 +65,7 @@ public class NodeTypeCache {
             caches = CACHES_PER_SERVICE.get(service);
             if (caches == null) {
                 // use soft references for the node type caches
-                caches = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+                caches = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.SOFT);
                 CACHES_PER_SERVICE.put(service, caches);
             }
         }

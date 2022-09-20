@@ -26,7 +26,7 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
@@ -175,7 +175,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
                     removedStates.iterator(),
                     modifiedStates.iterator()
             };
-            IteratorChain chain = new IteratorChain(its);
+            IteratorChain chain = new IteratorChain<>(its);
             if (!throwOnStale) {
                 chain.addIterator(staleStates.iterator());
             }

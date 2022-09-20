@@ -32,7 +32,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -1304,7 +1304,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * with this NodeEntry
      */
     private Iterator<HierarchyEntry> getAllChildEntries(boolean includeAttic) {
-        IteratorChain chain = new IteratorChain();
+        IteratorChain chain = new IteratorChain<>();
         // attic
         if (includeAttic) {
             Collection<PropertyEntry> attic = propertiesInAttic.values();

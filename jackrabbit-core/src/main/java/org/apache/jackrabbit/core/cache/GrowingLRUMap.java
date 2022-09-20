@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.cache;
 
-import org.apache.commons.collections.map.LRUMap;
+
+import org.apache.commons.collections4.map.LRUMap;
 
 /**
  * <code>GrowingLRUMap</code> extends the LRUMap such that it can grow from

@@ -30,7 +30,8 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -123,7 +124,7 @@ public class ItemManager implements ItemStateListener {
         this.rootNodeDef = sessionContext.getNodeTypeManager().getRootNodeDefinition();
 
         // setup item cache with weak references to items
-        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        itemCache = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.WEAK);
 
         // setup shareable nodes cache
         shareableNodesCache = new ShareableNodesCache();
@@ -1195,7 +1196,7 @@ public class ItemManager implements ItemStateListener {
          * Create a new instance of this class.
          */
         public ShareableNodesCache() {
-            cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
+            cache = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.HARD);
         }
 
         /**
@@ -1255,7 +1256,7 @@ public class ItemManager implements ItemStateListener {
             NodeId id = data.getNodeState().getNodeId();
             ReferenceMap map = (ReferenceMap) cache.get(id);
             if (map == null) {
-                map = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+                map = new ReferenceMap(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.WEAK);
                 cache.put(id, map);
             }
             Object old = map.put(data.getPrimaryParentId(), data);

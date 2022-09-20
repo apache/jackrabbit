@@ -41,7 +41,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
@@ -122,7 +123,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      */
     @SuppressWarnings("unchecked")
     private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners =
-            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+            Collections.synchronizedMap(new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.WEAK, AbstractReferenceMap.ReferenceStrength.WEAK));
 
     /**
      * Node type event channel.

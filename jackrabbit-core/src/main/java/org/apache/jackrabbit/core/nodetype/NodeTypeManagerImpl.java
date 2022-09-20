@@ -41,7 +41,8 @@ import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.nodetype.NodeTypeIterator;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
@@ -112,9 +113,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
 
         // setup caches with soft references to node type
         // & item definition instances
-        ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-        pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-        ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        ntCache = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, ReferenceMap.ReferenceStrength.SOFT);
+        pdCache = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.SOFT);
+        ndCache = new ReferenceMap<>(AbstractReferenceMap.ReferenceStrength.HARD, AbstractReferenceMap.ReferenceStrength.SOFT);
 
         NodeTypeRegistry registry = context.getNodeTypeRegistry();
 
