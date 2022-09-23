@@ -61,8 +61,9 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -196,9 +197,8 @@ public class SessionImpl extends AbstractSession
     /**
      * Listeners (weak references)
      */
-    @SuppressWarnings("unchecked")
     protected final Map<SessionListener, SessionListener> listeners =
-        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+        new ReferenceMap<>(ReferenceStrength.WEAK, ReferenceStrength.WEAK);
 
     /**
      * Principal Manager
@@ -956,6 +956,7 @@ public class SessionImpl extends AbstractSession
     /**
      * Utility method that removes all registered event listeners.
      */
+    @SuppressWarnings("unchecked")
     private void removeRegisteredEventListeners() {
         try {
             ObservationManager manager = getWorkspace().getObservationManager();

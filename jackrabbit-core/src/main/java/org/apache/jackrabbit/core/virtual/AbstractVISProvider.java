@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -69,12 +70,11 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * the cache node states. key=ItemId, value=ItemState
      */
-    @SuppressWarnings("unchecked")
     private final Map<NodeId, NodeState> nodes =
         // Using soft references instead of weak ones seems to have
         // some unexpected performance consequences, so for now it's
         // better to stick with weak references.
-        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.WEAK);
 
     /**
      * Listeners (weak references)

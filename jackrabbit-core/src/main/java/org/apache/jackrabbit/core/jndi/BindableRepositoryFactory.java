@@ -25,7 +25,7 @@ import javax.naming.Name;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
 
 /**
  * <code>BindableRepositoryFactory</code> is an object factory that when given
@@ -38,7 +38,7 @@ public class BindableRepositoryFactory implements ObjectFactory {
      * cache using <code>java.naming.Reference</code> objects as keys and
      * storing soft references to <code>BindableRepository</code> instances
      */
-    private static final Map cache = new ReferenceMap();
+    private static final Map<Object, Object> cache = new ReferenceMap<>();
 
     /**
      * {@inheritDoc}

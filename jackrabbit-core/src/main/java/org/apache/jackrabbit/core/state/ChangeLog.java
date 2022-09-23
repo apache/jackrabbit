@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import java.util.Map;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.version.VersionItemStateManager;
@@ -32,26 +32,22 @@ public class ChangeLog {
     /**
      * Added states
      */
-    @SuppressWarnings("unchecked")
-    private final Map<ItemId, ItemState> addedStates = (Map<ItemId, ItemState>) new LinkedMap();
+    private final Map<ItemId, ItemState> addedStates = new LinkedMap<>();
 
     /**
      * Modified states
      */
-    @SuppressWarnings("unchecked")
-    private final Map<ItemId, ItemState> modifiedStates = (Map<ItemId, ItemState>) new LinkedMap();
+    private final Map<ItemId, ItemState> modifiedStates = new LinkedMap<>();
 
     /**
      * Deleted states
      */
-    @SuppressWarnings("unchecked")
-    private final Map<ItemId, ItemState> deletedStates = (Map<ItemId, ItemState>) new LinkedMap();
+    private final Map<ItemId, ItemState> deletedStates = new LinkedMap<>();
 
     /**
      * Modified references
      */
-    @SuppressWarnings("unchecked")
-    private final Map<NodeId, NodeReferences> modifiedRefs = (Map<NodeId, NodeReferences>) new LinkedMap();
+    private final Map<NodeId, NodeReferences> modifiedRefs = new LinkedMap<>();
 
     private long updateSize;
 

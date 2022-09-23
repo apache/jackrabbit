@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
@@ -75,7 +75,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
 
         repPolicyName = systemSession.getJCRName(N_POLICY);
 
-        cache = new LRUMap(1000);
+        cache = new LRUMap<>(1000);
 
         ObservationManager observationMgr = systemSession.getWorkspace().getObservationManager();
         /*

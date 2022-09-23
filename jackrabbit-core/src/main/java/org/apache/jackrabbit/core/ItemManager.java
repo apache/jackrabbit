@@ -30,7 +30,8 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -114,7 +115,6 @@ public class ItemManager implements ItemStateListener {
      *
      * @param sessionContext component context of the associated session
      */
-    @SuppressWarnings("unchecked")
     protected ItemManager(SessionContext sessionContext) {
         this.sism = sessionContext.getItemStateManager();
         this.hierMgr = sessionContext.getHierarchyManager();
@@ -123,7 +123,7 @@ public class ItemManager implements ItemStateListener {
         this.rootNodeDef = sessionContext.getNodeTypeManager().getRootNodeDefinition();
 
         // setup item cache with weak references to items
-        itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        itemCache = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.WEAK);
 
         // setup shareable nodes cache
         shareableNodesCache = new ShareableNodesCache();
@@ -1189,13 +1189,13 @@ public class ItemManager implements ItemStateListener {
          * This cache is based on a reference map, that maps an item id to a map,
          * which again maps a (hard-ref) parent id to a (weak-ref) shareable node.
          */
-        private final ReferenceMap cache;
+        private final ReferenceMap<NodeId, ReferenceMap<NodeId, AbstractNodeData>> cache;
 
         /**
          * Create a new instance of this class.
          */
         public ShareableNodesCache() {
-            cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
+            cache = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.HARD);
         }
 
         /**
@@ -1214,7 +1214,7 @@ public class ItemManager implements ItemStateListener {
          * @return node or <code>null</code>
          */
         public AbstractNodeData retrieveFirst(NodeId id) {
-            ReferenceMap map = (ReferenceMap) cache.get(id);
+            ReferenceMap<NodeId, AbstractNodeData> map = cache.get(id);
             if (map != null) {
                 Iterator<AbstractNodeData> iter = map.values().iterator();
                 try {
@@ -1239,9 +1239,9 @@ public class ItemManager implements ItemStateListener {
          * @return node or <code>null</code>
          */
         public AbstractNodeData retrieve(NodeId id, NodeId parentId) {
-            ReferenceMap map = (ReferenceMap) cache.get(id);
+            ReferenceMap<NodeId, AbstractNodeData> map = cache.get(id);
             if (map != null) {
-                return (AbstractNodeData) map.get(parentId);
+                return map.get(parentId);
             }
             return null;
         }
@@ -1253,9 +1253,9 @@ public class ItemManager implements ItemStateListener {
          */
         public void cache(AbstractNodeData data) {
             NodeId id = data.getNodeState().getNodeId();
-            ReferenceMap map = (ReferenceMap) cache.get(id);
+            ReferenceMap<NodeId, AbstractNodeData> map = cache.get(id);
             if (map == null) {
-                map = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+                map = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.WEAK);
                 cache.put(id, map);
             }
             Object old = map.put(data.getPrimaryParentId(), data);
@@ -1270,7 +1270,7 @@ public class ItemManager implements ItemStateListener {
          * @param data data to evict
          */
         public void evict(AbstractNodeData data) {
-            ReferenceMap map = (ReferenceMap) cache.get(data.getId());
+            ReferenceMap<NodeId, AbstractNodeData> map = cache.get(data.getId());
             if (map != null) {
                 map.remove(data.getPrimaryParentId());
             }

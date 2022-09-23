@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.version;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -55,7 +56,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * Map of returned items. this is kept for invalidating
      */
-    private ReferenceMap items = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    private ReferenceMap<ItemId, ItemState> items = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.WEAK);
 
     /**
      * Creates a new version manager
@@ -118,7 +119,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
      */
     public synchronized ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
-        ItemState item = (ItemState) items.get(id);
+        ItemState item = items.get(id);
         if (item == null) {
             item = stateMgr.getItemState(id);
             items.put(id, item);

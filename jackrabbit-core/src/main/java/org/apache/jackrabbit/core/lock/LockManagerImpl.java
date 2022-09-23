@@ -37,7 +37,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -1118,9 +1118,8 @@ public class LockManagerImpl
      * add and remove operations on nodes with the same UUID into a move
      * operation.
      */
-    @SuppressWarnings("unchecked")
-	private Iterator<HierarchyEvent> consolidateEvents(EventIterator events) {
-        LinkedMap eventMap = new LinkedMap();
+    private Iterator<HierarchyEvent> consolidateEvents(EventIterator events) {
+        LinkedMap<NodeId, HierarchyEvent> eventMap = new LinkedMap<>();
 
         while (events.hasNext()) {
             EventImpl event = (EventImpl) events.nextEvent();
@@ -1138,7 +1137,7 @@ public class LockManagerImpl
                 continue;
             }
 
-            HierarchyEvent heExisting = (HierarchyEvent) eventMap.get(he.id);
+            HierarchyEvent heExisting = eventMap.get(he.id);
             if (heExisting != null) {
                 heExisting.merge(he);
             } else {

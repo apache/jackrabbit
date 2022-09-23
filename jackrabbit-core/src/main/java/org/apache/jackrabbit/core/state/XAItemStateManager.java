@@ -24,8 +24,8 @@ import java.util.Map;
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.iterators.FilterIterator;
+import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.iterators.FilterIterator;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -60,7 +60,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * manager is in one of the {@link #prepare}, {@link #commit}, {@link
      * #rollback} methods.
      */
-    private final Map commitLogs = Collections.synchronizedMap(new IdentityHashMap());
+    private final Map<Thread, ChangeLog> commitLogs = Collections.synchronizedMap(new IdentityHashMap<>());
 
     /**
      * Current instance-local change log.
@@ -213,7 +213,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * change log was found.
      */
     public ChangeLog getChangeLog() {
-        ChangeLog changeLog = (ChangeLog) commitLogs.get(Thread.currentThread());
+        ChangeLog changeLog = commitLogs.get(Thread.currentThread());
         if (changeLog == null) {
             changeLog = txLog;
         }
@@ -443,12 +443,11 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     private Iterable<PropertyState> filterReferenceProperties(
             final Iterable<ItemState> itemStates) {
         return new Iterable<PropertyState>() {
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             public Iterator<PropertyState> iterator() {
                 return (Iterator<PropertyState>) new FilterIterator(
-                        itemStates.iterator(), new Predicate() {
-                    public boolean evaluate(Object object) {
-                        ItemState state = (ItemState) object;
+                        itemStates.iterator(), new Predicate<ItemState>() {
+                    public boolean evaluate(ItemState state) {
                         if (!state.isNode()) {
                             PropertyState prop = (PropertyState) state;
                             return prop.getType() == PropertyType.REFERENCE;
