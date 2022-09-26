@@ -28,7 +28,7 @@ import java.io.Serializable;
  * The String representation of a {@link Name} object must be in the format
  * "<code>{namespaceURI}localPart</code>" (called the "expanded form" in the
  * <a href=
- * "https://developer.adobe.com/experience-manager/reference-materials/spec/jcr/2.0/3_Repository_Model.html#3.2.5.1%20Expanded%20Form">Section
+ * "https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.5.1%20Expanded%20Form">Section
  * 3.2.5.1 of the JCR 2.0 specification</a>).
  * <p>
  * <em>Warning:</em> the expanded form can be used in certain JCR methods, but
