@@ -32,7 +32,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -614,6 +614,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @see NodeEntry#getNodeEntries()
      */
+    @SuppressWarnings("unchecked")
     public synchronized Iterator<NodeEntry> getNodeEntries() throws RepositoryException {
         Collection<NodeEntry> entries = new ArrayList<NodeEntry>();
         for (Iterator<NodeEntry> it = getCompleteChildNodeEntries().iterator(); it.hasNext();) {
@@ -723,6 +724,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @see NodeEntry#getPropertyEntries()
      */
+    @SuppressWarnings("unchecked")
     public synchronized Iterator<PropertyEntry> getPropertyEntries() {
         Collection<PropertyEntry> props;
         if (getStatus() == Status.EXISTING_MODIFIED) {
@@ -1304,7 +1306,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * with this NodeEntry
      */
     private Iterator<HierarchyEntry> getAllChildEntries(boolean includeAttic) {
-        IteratorChain chain = new IteratorChain();
+        IteratorChain<HierarchyEntry> chain = new IteratorChain<>();
         // attic
         if (includeAttic) {
             Collection<PropertyEntry> attic = propertiesInAttic.values();

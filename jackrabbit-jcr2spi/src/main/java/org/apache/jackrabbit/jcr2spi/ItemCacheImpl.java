@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +35,8 @@ public class ItemCacheImpl implements ItemCache {
 
     private final Map<ItemState, Item> cache;
 
-    @SuppressWarnings("unchecked")
     ItemCacheImpl(int maxSize) {
-        cache = new LRUMap(maxSize);
+        cache = new LRUMap<>(maxSize);
     }
 
     //----------------------------------------------------------< ItemCache >---

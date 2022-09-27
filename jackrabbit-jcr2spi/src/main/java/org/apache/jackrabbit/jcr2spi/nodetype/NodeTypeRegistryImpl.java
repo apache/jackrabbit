@@ -37,7 +37,8 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -75,8 +76,8 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     /**
      * Listeners (soft references)
      */
-    @SuppressWarnings("unchecked")
-    private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners = Collections
+            .synchronizedMap(new ReferenceMap<>(ReferenceStrength.WEAK, ReferenceStrength.WEAK));
 
     /**
      * Create a new <code>NodeTypeRegistry</code>
@@ -569,7 +570,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     }
 
     private void internalUnregister(Name name) {
-        QNodeTypeDefinition ntd = registeredNTDefs.remove(name);
+        registeredNTDefs.remove(name);
         entCache.invalidate(name);
     }
 
@@ -741,7 +742,6 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
             StringBuilder builder = new StringBuilder();
             for (QNodeTypeDefinition ntd : getValues()) {
                 builder.append(ntd.getName());
-                Name[] supertypes = ntd.getSupertypes();
                 builder.append("\n\tSupertypes");
                 for (Name supertype : ntd.getSupertypes()) {
                     builder.append("\n\t\t").append(supertype);
