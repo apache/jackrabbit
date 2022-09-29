@@ -18,13 +18,18 @@ package org.apache.jackrabbit.test.api;
 
 import java.util.UUID;
 
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryStub;
@@ -104,6 +109,9 @@ public class NameTest extends AbstractJCRTest {
             testRootNode.getSession().save();
             String qualifiedName = createdNode.getName();
             assertEquals(expandedName, getExpandedName(qualifiedName));
+        } catch (ItemExistsException | PathNotFoundException | ConstraintViolationException | VersionException | LockException ex) {
+            // those are not acceptable here as per API spec
+            fail("unexpected exception: " + ex);
         } catch (RepositoryException ex) {
             // acceptable; but a NamespaceException would really be more correct
         }
