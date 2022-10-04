@@ -30,7 +30,7 @@ import org.apache.jackrabbit.spi.Path;
  * An implementation of a linked list which provides access to the internal
  * LinkNode which links the entries of the list.
  */
-public class LinkedEntries extends AbstractLinkedList {
+class LinkedEntries extends AbstractLinkedList {
 
     private final EntryFactory factory;
     private final NodeEntry parent;
