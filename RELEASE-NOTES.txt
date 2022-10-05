@@ -1,49 +1,52 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.12
+Release Notes -- Apache Jackrabbit -- Version 2.21.13
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.12, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.13, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.12 is an unstable release cut directly from
+Apache Jackrabbit 2.21.13 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.12
+Changes in Jackrabbit 2.21.13
 -----------------------------
 
-Bug
+Sub-task
 
-    [JCR-4799] - jackrabbit.client.useSystemProperties undone by SSL config: client certificates no longer work
-    [JCR-4808] - 'pedantic' profile should run integration tests
-    [JCR-4814] - FileDataStore: File.renameTo sometimes fails to move temporary file to data record location
+    [JCR-4844] - webapp: remove usage of commons-collections
+    [JCR-4845] - jackrabbit-standalone: Upgrade to commons-collections4
+    [JCR-4846] - jackrabbit-spi-commons: Upgrade to commons-collections4
+    [JCR-4847] - jackrabbit-core: Upgrade to commons-collections4
+    [JCR-4850] - consolidate commons-beanutils versions
+    [JCR-4852] - jackrabbit-jcr2spi: Upgrade to commons-collections4 (except for ChildNodeEntriesImpl)
+    [JCR-4854] - factor out ChildNodeEnriesImpl.LinkedList for better encapsulation
+
+Improvement
+
+    [JCR-4833] - avoid bundle warning about private references [org.apache.commons.cli]
+    [JCR-4849] - spi: document Name.toString() restrictions with respect to invalid namespace names
+
+Test
+
+    [JCR-4831] - add test coverage for behavior when new Oak query features are used
+    [JCR-4837] - add test for 'Removal of version of a node should remove associated labels'
 
 Task
 
-    [JCR-4741] - add test coverage for mandatory non-residual child nodes
-    [JCR-4804] - Update Tika dependency to 2.4.1
-    [JCR-4805] - Update h2db dependency to 2.1.214
-    [JCR-4806] - Update tomcat dependency to 8.5.81
-    [JCR-4809] - set baseline comparisonVersion to latest stable (2.20.6)
-    [JCR-4812] - Update Jackrabbit trunk to Oak 1.44.0
-    [JCR-4815] - Update mockito dependency to 4.6.1
-    [JCR-4816] - webapp: update htmlunit dependency to 2.63.0
-    [JCR-4817] - Update aws java sdk version to 1.12.272
-    [JCR-4818] - Update to jacoco version 0.8.8
-    [JCR-4819] - Update spotbugs-maven-plugin to 4.7.1.1
-    [JCR-4820] - Update maven-assembly-plugin to 3.4.2
-    [JCR-4821] - Update javadoc-plugin dependency to 3.4.0
-    [JCR-4822] - Update pmd-plugin dependency to 3.17.0
-    [JCR-4823] - Update war-plugin dependency to 3.3.2
-    [JCR-4824] - Update antrun plugin dependency to 3.1.0
-    [JCR-4825] - Update to maven bundle plugin to 5.1.8
-    [JCR-4826] - Update maven-jar-plugin to 3.2.2
-    [JCR-4827] - Update animal-sniffer dependency to 1.21
-    [JCR-4828] - Update build-helper-maven-plugin to version 3.3.0
-    [JCR-4829] - Update com.google.guava to 31.1
+    [JCR-4834] - Update tomcat dependency to 8.5.82
+    [JCR-4835] - Update mockito dependency to 4.7.0
+    [JCR-4838] - Update aws java sdk version to 1.12.305
+    [JCR-4839] - Update problematic transitive dependencies in jackrabbit-vfs-ext
+    [JCR-4840] - Update mockito dependency to 4.8.0
+    [JCR-4841] - webapp: update htmlunit dependency to 2.64.0
+    [JCR-4842] - it-osgi: update felix.framework to 7.0.5
+    [JCR-4843] - remove json-simple dependency from webapp
+    [JCR-4851] - Update aws java sdk version to 1.12.312
+    [JCR-4853] - add test coverage for creating nodes using expanded names
 
 
 For more detailed information about all the changes in this and other
