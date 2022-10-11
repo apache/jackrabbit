@@ -47,6 +47,7 @@ Task
     [JCR-4843] - remove json-simple dependency from webapp
     [JCR-4851] - Update aws java sdk version to 1.12.312
     [JCR-4853] - add test coverage for creating nodes using expanded names
+    [JCR-4856] - Update tomcat dependency to 8.5.83
 
 
 For more detailed information about all the changes in this and other
