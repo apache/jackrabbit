@@ -16,16 +16,23 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import java.util.UUID;
+
+import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.Workspace;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryStub;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
-import javax.jcr.Value;
-import javax.jcr.PropertyType;
-import javax.jcr.Property;
-import javax.jcr.Workspace;
 
 /**
  * <code>NameTest</code>...
@@ -87,6 +94,40 @@ public class NameTest extends AbstractJCRTest {
         Property p = testRootNode.setProperty(propName, getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE1, RepositoryStub.PROP_PROP_TYPE1, "test"));
 
         assertEquals(propertyName1, p.getName());
+    }
+
+    /**
+     * Test whether a node can be created with an expanded name (using a previously unused namespace name).
+     * 
+     * @throws RepositoryException
+     */
+    public void testExpandedNameNodeUnmappedNamespace() throws RepositoryException {
+        String ns = "urn:uuid:" + UUID.randomUUID().toString();
+        String expandedName = "{" + ns + "}test";
+        try {
+            Node createdNode = testRootNode.addNode(expandedName);
+            testRootNode.getSession().save();
+            String qualifiedName = createdNode.getName();
+            assertEquals(expandedName, getExpandedName(qualifiedName));
+        } catch (ItemExistsException | PathNotFoundException | ConstraintViolationException | VersionException | LockException ex) {
+            // those are not acceptable here as per API spec
+            fail("unexpected exception: " + ex);
+        } catch (RepositoryException ex) {
+            // acceptable; but a NamespaceException would really be more correct
+        }
+    }
+
+    /**
+     * Test whether a node can be created with something looking like an expanded name which is not
+     * 
+     * @throws RepositoryException
+     */
+    public void testReallyNotAndExpandedName() throws RepositoryException {
+        String notANamespace = UUID.randomUUID().toString();
+        String name = "{" + notANamespace + "}test";
+        Node createdNode = testRootNode.addNode(name);
+        testRootNode.getSession().save();
+        assertEquals(name, createdNode.getName());
     }
 
     /**
