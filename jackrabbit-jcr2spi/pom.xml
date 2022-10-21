@@ -102,6 +102,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>oak-jackrabbit-api</artifactId>
+      <version>${oak-jackrabbit-api.version.implemented}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>

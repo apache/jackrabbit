@@ -542,6 +542,7 @@ org.apache.jackrabbit.test.api.observation.EventJournalTest
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>oak-jackrabbit-api</artifactId>
+      <version>${oak-jackrabbit-api.version.implemented}</version>
       <scope>provided</scope>
     </dependency>
 
