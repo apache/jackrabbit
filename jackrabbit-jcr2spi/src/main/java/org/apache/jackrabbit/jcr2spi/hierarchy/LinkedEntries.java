@@ -22,7 +22,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.collections.list.AbstractLinkedList;
+import org.apache.commons.collections4.list.AbstractLinkedList;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
@@ -30,7 +30,11 @@ import org.apache.jackrabbit.spi.Path;
  * An implementation of a linked list which provides access to the internal
  * LinkNode which links the entries of the list.
  */
+@SuppressWarnings("rawtypes")
 class LinkedEntries extends AbstractLinkedList {
+
+    private Node<?> header;
+    private volatile int modCount;
 
     private final EntryFactory factory;
     private final NodeEntry parent;
@@ -40,6 +44,26 @@ class LinkedEntries extends AbstractLinkedList {
         this.factory = factory;
         this.parent = parent;
         init();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void addNode(Node nodeToInsert, Node insertBeforeNode) {
+        super.addNode(nodeToInsert, insertBeforeNode);
+        modCount++;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void removeNode(Node node) {
+        super.removeNode(node);
+        modCount++;
+    }
+
+    @Override
+    protected void removeAllNodes() {
+        super.removeAllNodes();
+        modCount++;
     }
 
     /**
@@ -76,7 +100,7 @@ class LinkedEntries extends AbstractLinkedList {
      */
     LinkedEntries.LinkNode add(NodeEntry cne, int index) {
         LinkedEntries.LinkNode ln = new LinkedEntries.LinkNode(cne, index);
-        addNode(ln, header);
+        addNode(ln, getHeader());
         return ln;
     }
 
@@ -95,7 +119,7 @@ class LinkedEntries extends AbstractLinkedList {
         if (insertAfter == null) {
             // insert at the beginning
             newNode = new LinkedEntries.LinkNode(cne, index);
-            addNode(newNode, header);
+            addNode(newNode, getHeader());
         } else if (insertAfter.getNextLinkNode() == null) {
             newNode = add(cne, index);
         } else {
@@ -130,7 +154,7 @@ class LinkedEntries extends AbstractLinkedList {
     void reorderNode(LinkedEntries.LinkNode insert, LinkedEntries.LinkNode before) {
         removeNode(insert);
         if (before == null) {
-            addNode(insert, header);
+            addNode(insert, getHeader());
         } else {
             addNode(insert, before);
         }
@@ -155,7 +179,8 @@ class LinkedEntries extends AbstractLinkedList {
      */
     @Override
     protected Node createHeaderNode() {
-        return new LinkedEntries.LinkNode();
+        header = new LinkedEntries.LinkNode();
+        return header;
     }
 
     /**
@@ -178,6 +203,7 @@ class LinkedEntries extends AbstractLinkedList {
             qName = null;
         }
 
+        @SuppressWarnings("unchecked")
         protected LinkNode(Object value, int index) {
             // add soft reference from linkNode to the NodeEntry (value)
             // unless the entry is a SNSibling. TODO: review again.
@@ -190,6 +216,7 @@ class LinkedEntries extends AbstractLinkedList {
             throw new UnsupportedOperationException("Not implemented");
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         protected Object getValue() {
             Object val = super.getValue();
@@ -203,7 +230,7 @@ class LinkedEntries extends AbstractLinkedList {
             }
             // if the nodeEntry has been g-collected in the mean time
             // create a new NodeEntry in order to avoid returning null.
-            if (ne == null && this != header) {
+            if (ne == null && this != getHeader()) {
                 ne = factory.createNodeEntry(parent, qName, null);
                 super.setValue(new SoftReference<NodeEntry>(ne));
             }
@@ -242,7 +269,7 @@ class LinkedEntries extends AbstractLinkedList {
     //----------------------------------------------------------------------
     private class LinkNodeIterator implements Iterator<LinkedEntries.LinkNode> {
 
-        private LinkedEntries.LinkNode next = ((LinkedEntries.LinkNode) header).getNextLinkNode();
+        private LinkedEntries.LinkNode next = getHeader().getNextLinkNode();
         private final int expectedModCount = modCount;
 
         public boolean hasNext() {
