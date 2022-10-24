@@ -18,50 +18,21 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import static org.mockito.Mockito.mock;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.ConcurrentModificationException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.Iterator;
 
 import junit.framework.TestCase;
 
 public class LinkedEntriesTest extends TestCase {
 
-    public void testConccurentModification() throws Throwable {
+    public void testLinkedEntries() {
+        LinkedEntries linkedEntries = new LinkedEntries(null, null);
+        Iterator<LinkedEntries.LinkNode> it = linkedEntries.linkNodeIterator();
+        linkedEntries.add(mock(NodeEntry.class), 0);
         try {
-            internalTestConcurrentModification();
+            it.next();
             fail("ConcurrentModificationException expected");
         } catch (ConcurrentModificationException expected) {
-        }
-    }
-
-    private void internalTestConcurrentModification() throws Throwable {
-        ExecutorService executorService = null;
-        try {
-            executorService = Executors.newFixedThreadPool(100);
-
-            LinkedEntries entries = new LinkedEntries(null, null);
-            Collection<Callable<Object>> futures = new ArrayList<>();
-            for (int i = 0; i < 10000; i++) {
-                NodeEntry nodeEntry = mock(NodeEntry.class);
-                futures.add(() -> entries.getLinkNode(nodeEntry));
-                futures.add(() -> {
-                    entries.add(nodeEntry);
-                    return null;
-                });
-            }
-            for (Future<?> future : executorService.invokeAll(futures)) {
-                try {
-                    future.get();
-                } catch (Exception e) {
-                    throw e.getCause();
-                }
-            }
-        } finally {
-            executorService.shutdown();
         }
     }
 }
