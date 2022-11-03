@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit -- Version 2.20.6
+Release Notes -- Apache Jackrabbit -- Version 2.20.7
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.20.6, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.20.7, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
@@ -18,34 +18,57 @@ The minimum Java version for this release is Java 8. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.20.6
+Changes in Jackrabbit 2.20.7
 ----------------------------
 
 Bug
 
-    [JCR-4766] - JcrRemotingServlet should use 'application/json' media type for JSON response
+    [JCR-4799] - jackrabbit.client.useSystemProperties undone by SSL config: client certificates no longer work
+    [JCR-4814] - FileDataStore: File.renameTo sometimes fails to move temporary file to data record location
+
+Improvement
+
+    [JCR-4833] - avoid bundle warning about private references [org.apache.commons.cli]
+    [JCR-4849] - spi: document Name.toString() restrictions with respect to invalid namespace names
+
+Test
+
+    [JCR-4831] - add test coverage for behavior when new Oak query features are used
+    [JCR-4837] - add test for 'Removal of version of a node should remove associated labels'
 
 Task
 
-    [JCR-4764] - Update Tika dependency to 2.3.0
-    [JCR-4765] - Update h2db dependency to 2.1.210
-    [JCR-4774] - fix jackrabbit-it-osgi logging config
-    [JCR-4775] - fix dangling javadoc links for Apache HTTP libs
-    [JCR-4776] - use slf4j-reload4j instead of slf4-log4j12
-    [JCR-4777] - Update Logback version to 1.2.11
-    [JCR-4778] - Update slf4j dependency to 1.7.36
-    [JCR-4779] - Update mockito dependency to 4.4.0
-    [JCR-4780] - webapp: update htmlunit dependency to 2.60.0
-    [JCR-4781] - Update tomcat dependency to 8.5.78
-    [JCR-4782] - Update h2db dependency to 2.1.212
-    [JCR-4783] - it-osgi: update felix.framework to 7.0.3
-    [JCR-4787] - Update Tika dependency to 2.4.0
-    [JCR-4789] - webapp: update htmlunit dependency to 2.61.0
-    [JCR-4790] - Update mockito dependency to 4.5.1
-    [JCR-4791] - Update aws java sdk version to 1.12.223
-    [JCR-4792] - Update tomcat dependency to 8.5.79
-    [JCR-4793] - Update mockito dependency to 4.6.0
-    [JCR-4794] - it-osgi: update felix.framework to 7.0.4
+    [JCR-4741] - add test coverage for mandatory non-residual child nodes
+    [JCR-4804] - Update Tika dependency to 2.4.1
+    [JCR-4805] - Update h2db dependency to 2.1.214
+    [JCR-4806] - Update tomcat dependency to 8.5.81
+    [JCR-4812] - Update Jackrabbit trunk to Oak 1.44.0
+    [JCR-4815] - Update mockito dependency to 4.6.1
+    [JCR-4816] - webapp: update htmlunit dependency to 2.63.0
+    [JCR-4817] - Update aws java sdk version to 1.12.272
+    [JCR-4818] - Update to jacoco version 0.8.8
+    [JCR-4819] - Update spotbugs-maven-plugin to 4.7.1.1
+    [JCR-4820] - Update maven-assembly-plugin to 3.4.2
+    [JCR-4821] - Update javadoc-plugin dependency to 3.4.0
+    [JCR-4822] - Update pmd-plugin dependency to 3.17.0
+    [JCR-4823] - Update war-plugin dependency to 3.3.2
+    [JCR-4824] - Update antrun plugin dependency to 3.1.0
+    [JCR-4825] - Update to maven bundle plugin to 5.1.8
+    [JCR-4826] - Update maven-jar-plugin to 3.2.2
+    [JCR-4827] - Update animal-sniffer dependency to 1.21
+    [JCR-4828] - Update build-helper-maven-plugin to version 3.3.0
+    [JCR-4829] - Update com.google.guava to 31.1
+    [JCR-4834] - Update tomcat dependency to 8.5.82
+    [JCR-4835] - Update mockito dependency to 4.7.0
+    [JCR-4838] - Update aws java sdk version to 1.12.305
+    [JCR-4839] - Update problematic transitive dependencies in jackrabbit-vfs-ext
+    [JCR-4840] - Update mockito dependency to 4.8.0
+    [JCR-4841] - webapp: update htmlunit dependency to 2.64.0
+    [JCR-4842] - it-osgi: update felix.framework to 7.0.5
+    [JCR-4843] - remove json-simple dependency from webapp
+    [JCR-4851] - Update aws java sdk version to 1.12.312
+    [JCR-4853] - add test coverage for creating nodes using expanded names
+    [JCR-4856] - Update tomcat dependency to 8.5.83
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
