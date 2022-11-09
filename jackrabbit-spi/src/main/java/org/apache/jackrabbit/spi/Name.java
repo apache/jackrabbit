@@ -25,13 +25,23 @@ import java.io.Serializable;
  * <p>
  * A <code>Name</code> is immutable once created.
  * <p>
- * The String representation of a <code>Name</code> object must be in the
- * format "<code>{namespaceURI}localPart</code>".
+ * The String representation of a {@link Name} object must be in the format
+ * "<code>{namespaceURI}localPart</code>" (called the "expanded form" in the
+ * <a href=
+ * "https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.5.1%20Expanded%20Form">Section
+ * 3.2.5.1 of the JCR 2.0 specification</a>).
+ * <p>
+ * <em>Warning:</em> the expanded form can be used in certain JCR methods, but
+ * will not work in case the namespace URI is not an empty string nor an
+ * (absolute) URI (as per
+ * <a href="https://www.rfc-editor.org/rfc/rfc3986#section-3">RFC 3986, Section
+ * 3</a>).
  * <p>
  * An implementation of the <code>Name</code> interface must implement the
  * {@link Object#equals(Object)} method such that two Name objects are equal if
  * both the namespace URI and the local part are equal.
  */
+@SuppressWarnings("rawtypes")
 public interface Name extends Comparable, Cloneable, Serializable {
 
     // default namespace (empty uri)
