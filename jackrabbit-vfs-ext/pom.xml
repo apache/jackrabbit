@@ -50,7 +50,30 @@
               <groupId>commons-logging</groupId>
               <artifactId>commons-logging</artifactId>
             </exclusion>
+            <exclusion>
+              <!-- see JCR-4839 -->
+              <groupId>org.apache.hadoop</groupId>
+              <artifactId>hadoop-hdfs-client</artifactId>
+            </exclusion>
           </exclusions>
+        </dependency>
+        <!-- see JCR-4839 -->
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-hdfs-client</artifactId>
+          <version>3.3.4</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.jetbrains.kotlin</groupId>
+              <artifactId>kotlin-stdlib-common</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+        <!-- see JCR-4839 -->
+        <dependency>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+          <version>1.7.10</version>
         </dependency>
         <dependency>
           <groupId>org.apache.commons</groupId>
