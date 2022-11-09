@@ -49,7 +49,7 @@
         <configuration>
           <instructions>
             <Export-Package>
-              org.apache.jackrabbit.standalone
+              org.apache.jackrabbit.standalone, org.apache.commons.cli
             </Export-Package>
             <Embed-Dependency>
               *;inline=*.txt|*.html|*.jsp|*.xml|*.jar|*.properties|remoting/**|bootstrap/**|javax/**|repackage/**|images/**|com/**|ch/**|jline/**|Resources/**|css/**|schema*/**|EDU/**|error/**|org/**|META-INF/*.tld|META-INF/maven/**|META-INF/services/**|WEB-INF/config.xml|WEB-INF/*.properties|WEB-INF/templates/**
