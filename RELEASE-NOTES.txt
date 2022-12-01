@@ -1,53 +1,42 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.13
+Release Notes -- Apache Jackrabbit -- Version 2.21.14
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.13, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.14, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.13 is an unstable release cut directly from
+Apache Jackrabbit 2.21.14 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.13
+Changes in Jackrabbit 2.21.14
 -----------------------------
 
 Sub-task
 
-    [JCR-4844] - webapp: remove usage of commons-collections
-    [JCR-4845] - jackrabbit-standalone: Upgrade to commons-collections4
-    [JCR-4846] - jackrabbit-spi-commons: Upgrade to commons-collections4
-    [JCR-4847] - jackrabbit-core: Upgrade to commons-collections4
-    [JCR-4850] - consolidate commons-beanutils versions
-    [JCR-4852] - jackrabbit-jcr2spi: Upgrade to commons-collections4 (except for ChildNodeEntriesImpl)
-    [JCR-4854] - factor out ChildNodeEnriesImpl.LinkedList for better encapsulation
-
-Improvement
-
-    [JCR-4833] - avoid bundle warning about private references [org.apache.commons.cli]
-    [JCR-4849] - spi: document Name.toString() restrictions with respect to invalid namespace names
-
-Test
-
-    [JCR-4831] - add test coverage for behavior when new Oak query features are used
-    [JCR-4837] - add test for 'Removal of version of a node should remove associated labels'
+    [JCR-4857] - jackrabbit-it-osgi: remove reference to commons-collections
+    [JCR-4859] - jcr2spi: add test coverage for LinkedEntries
+    [JCR-4862] - jackrabbit-jcr2spi: Upgrade LinkedEntries to commons-collections4
+    [JCR-4863] - parent: remove commons-collections reference
 
 Task
 
-    [JCR-4834] - Update tomcat dependency to 8.5.82
-    [JCR-4835] - Update mockito dependency to 4.7.0
-    [JCR-4838] - Update aws java sdk version to 1.12.305
-    [JCR-4839] - Update problematic transitive dependencies in jackrabbit-vfs-ext
-    [JCR-4840] - Update mockito dependency to 4.8.0
-    [JCR-4841] - webapp: update htmlunit dependency to 2.64.0
-    [JCR-4842] - it-osgi: update felix.framework to 7.0.5
-    [JCR-4843] - remove json-simple dependency from webapp
-    [JCR-4851] - Update aws java sdk version to 1.12.312
-    [JCR-4853] - add test coverage for creating nodes using expanded names
-    [JCR-4856] - Update tomcat dependency to 8.5.83
+    [JCR-4608] - Upgrade to commons-collections4
+    [JCR-4858] - webapp: update htmlunit dependency to 2.65.1
+    [JCR-4860] - relax jackrabbit-api version requirements where not needed
+    [JCR-4861] - enable unit tests in jcr2spi
+    [JCR-4865] - webapp: update htmlunit dependency to 2.66.0
+    [JCR-4866] - Update mockito dependency to 4.8.1
+    [JCR-4867] - set baseline comparisonVersion to latest stable (2.20.7)
+    [JCR-4868] - Update mockito dependency to 4.9.0
+    [JCR-4870] - webapp: update htmlunit dependency to 2.67.0
+    [JCR-4871] - Update tomcat dependency to 8.5.84
+    [JCR-4872] - update aws java sdk version to 1.12.349
+    [JCR-4873] - Update httpcore dependency to 4.4.16
+    [JCR-4874] - Update easymock dependency to 5.0.1
 
 
 For more detailed information about all the changes in this and other
