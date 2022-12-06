@@ -68,7 +68,16 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
            <excludes>
-              <exclude>**/*</exclude>
+              <!-- exclude tests run from other projects requiring a repo (see JCR-4861) -->
+              <exclude>**/jcr2spi/*</exclude>
+              <exclude>**/jcr2spi/lock/**</exclude>
+              <exclude>**/jcr2spi/name/**</exclude>
+              <exclude>**/jcr2spi/nodetype/**</exclude>
+              <exclude>**/jcr2spi/observation/**</exclude>
+              <exclude>**/jcr2spi/query/**</exclude>
+              <exclude>**/jcr2spi/security/**</exclude>
+              <exclude>**/jcr2spi/version/**</exclude>
+              <exclude>**/jcr2spi/xml/**</exclude>
           </excludes>
          <systemProperties>
             <property>
