@@ -304,7 +304,6 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
     <dependency>
       <groupId>commons-beanutils</groupId>
       <artifactId>commons-beanutils</artifactId>
-      <version>1.9.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
