@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.chain.Context;
-import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections4.IteratorUtils;
 
 /**
  * Utility class for getting and setting context attributes.
@@ -351,7 +351,7 @@ public final class CommandHelper {
     }
 
     /**
-     * Gets the <code>Item</code> s under the given <code>Node</code> that
+     * Gets the <code>Item</code>s under the given <code>Node</code> that
      * match the pattern
      * @param ctx
      *        the <code>Context</code>
@@ -365,10 +365,10 @@ public final class CommandHelper {
      *         if the underlying repository throws a
      *         <code>RepositoryException</code>
      */
-    public static Iterator getItems(Context ctx, Node node, String pattern)
+    @SuppressWarnings("unchecked")
+    public static Iterator<Item> getItems(Context ctx, Node node, String pattern)
             throws RepositoryException {
         return IteratorUtils.chainedIterator(getNodes(ctx, node, pattern),
             getProperties(ctx, node, pattern));
     }
-
 }

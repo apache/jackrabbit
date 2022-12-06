@@ -23,10 +23,9 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.jackrabbit.standalone.cli.CommandHelper;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.iterators.IteratorChain;
 
 /**
  * Command Line
