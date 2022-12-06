@@ -29,7 +29,7 @@ import java.util.Properties;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections4.iterators.AbstractIteratorDecorator;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -982,13 +982,14 @@ public class IndexingConfigurationImpl
          *                evaluated.
          * @return expression result.
          */
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         boolean evaluate(final NodeState context) {
             // get iterator along specified axis
             Iterator<NodeState> nodeStates;
             if (axis == SELF) {
                 nodeStates = Collections.singletonList(context).iterator();
             } else if (axis == CHILD) {
-                nodeStates = (Iterator<NodeState>) new AbstractIteratorDecorator(
+                nodeStates = new AbstractIteratorDecorator(
                         context.getChildNodeEntries().iterator()) {
                     public Object next() {
                         ChildNodeEntry cne =

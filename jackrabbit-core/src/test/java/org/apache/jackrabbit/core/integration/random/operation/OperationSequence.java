@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.integration.random.operation;
 
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 
 import javax.jcr.NodeIterator;
@@ -31,13 +31,14 @@ public class OperationSequence extends Operation {
 
     private final Operation[] ops;
 
-    public OperationSequence(Session s, List operations) {
+    public OperationSequence(Session s, List<Operation> operations) {
         super(s, "/");
-        this.ops = (Operation[]) operations.toArray(new Operation[operations.size()]);
+        this.ops = operations.toArray(new Operation[operations.size()]);
     }
 
+    @SuppressWarnings("unchecked")
     public NodeIterator execute() throws Exception {
-        IteratorChain chain = new IteratorChain();
+        IteratorChain<NodeIterator> chain = new IteratorChain<>();
         for (int i = 0; i < ops.length; i++) {
             chain.addIterator(ops[i].execute());
         }

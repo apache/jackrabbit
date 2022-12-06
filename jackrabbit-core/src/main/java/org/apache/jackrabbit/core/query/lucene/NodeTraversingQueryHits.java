@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.jackrabbit.core.NodeImpl;
 
 import javax.jcr.Node;
@@ -142,7 +142,7 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
         /**
          * Initializes the iterator chain once.
          */
-        @SuppressWarnings({"unchecked"})
+        @SuppressWarnings({"unchecked", "rawtypes"})
         private void init() {
             if (selfAndChildren == null) {
                 List<Iterator<Node>> allIterators = new ArrayList<Iterator<Node>>();

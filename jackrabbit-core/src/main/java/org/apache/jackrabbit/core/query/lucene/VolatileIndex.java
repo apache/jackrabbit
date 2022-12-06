@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
@@ -39,8 +39,7 @@ class VolatileIndex extends AbstractIndex {
     /**
      * Map of pending documents to add to the index
      */
-    @SuppressWarnings("unchecked")
-    private final Map<String, Document> pending = new LinkedMap();
+    private final Map<String, Document> pending = new LinkedMap<>();
 
     /**
      * Number of documents that are buffered before they are added to the index.

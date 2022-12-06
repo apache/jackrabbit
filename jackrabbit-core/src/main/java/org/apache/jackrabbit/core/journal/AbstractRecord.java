@@ -25,8 +25,8 @@ import java.util.Map;
 
 import javax.jcr.NamespaceException;
 
-import org.apache.commons.collections.BidiMap;
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -64,7 +64,7 @@ public abstract class AbstractRecord implements Record {
     /**
      * Maps NodeId to Integer index.
      */
-    private final BidiMap nodeIdIndex = new DualHashBidiMap();
+    private final BidiMap<NodeId, Integer> nodeIdIndex = new DualHashBidiMap<>();
 
     /**
      * Namespace resolver.
@@ -254,7 +254,7 @@ public abstract class AbstractRecord implements Record {
             if (index == -1) {
                 return null;
             } else {
-                return (NodeId) nodeIdIndex.getKey(index);
+                return nodeIdIndex.getKey(index);
             }
         } else if (uuidType == UUID_LITERAL) {
             byte[] b = new byte[NodeId.UUID_BYTE_LENGTH];
@@ -326,7 +326,7 @@ public abstract class AbstractRecord implements Record {
      * @return cache index of existing entry or <code>-1</code> to indicate the entry was added
      */
     private int getOrCreateIndex(NodeId nodeId) {
-        Integer index = (Integer) nodeIdIndex.get(nodeId);
+        Integer index = nodeIdIndex.get(nodeId);
         if (index == null) {
             nodeIdIndex.put(nodeId, nodeIdIndex.size());
             return -1;

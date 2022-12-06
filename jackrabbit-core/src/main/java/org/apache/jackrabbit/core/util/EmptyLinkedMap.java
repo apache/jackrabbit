@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 
 import java.util.Map;
 import java.util.Set;
@@ -26,13 +26,14 @@ import java.util.Collections;
 /**
  * <code>EmptyLinkedMap</code> implements an empty unmodifiable {@link LinkedMap}.
  */
-public class EmptyLinkedMap extends LinkedMap {
+public class EmptyLinkedMap<K, V> extends LinkedMap<K, V> {
 
     private static final long serialVersionUID = -9165910643562370800L;
 
     /**
      * The only instance of this class.
      */
+    @SuppressWarnings("rawtypes")
     public static final LinkedMap INSTANCE = new EmptyLinkedMap();
 
     private EmptyLinkedMap() {
@@ -42,7 +43,7 @@ public class EmptyLinkedMap extends LinkedMap {
     /**
      * @throws UnsupportedOperationException always.
      */
-    public Object remove(int i) {
+    public V remove(int i) {
         throw new UnsupportedOperationException();
     }
 
@@ -56,13 +57,14 @@ public class EmptyLinkedMap extends LinkedMap {
     /**
      * @throws UnsupportedOperationException always.
      */
-    public Object put(Object o, Object o1) {
+    public V put(Object o, Object o1) {
         throw new UnsupportedOperationException();
     }
 
     /**
      * @throws UnsupportedOperationException always.
      */
+    @SuppressWarnings("rawtypes")
     public void putAll(Map map) {
         throw new UnsupportedOperationException();
     }
@@ -70,7 +72,7 @@ public class EmptyLinkedMap extends LinkedMap {
     /**
      * @throws UnsupportedOperationException always.
      */
-    public Object remove(Object o) {
+    public V remove(Object o) {
         throw new UnsupportedOperationException();
     }
 
@@ -79,8 +81,8 @@ public class EmptyLinkedMap extends LinkedMap {
      *
      * @return an unmodifiable empty set.
      */
-    public Set entrySet() {
-        return Collections.EMPTY_SET;
+    public Set<Map.Entry<K, V>> entrySet() {
+        return Collections.emptySet();
     }
 
     /**
@@ -88,8 +90,8 @@ public class EmptyLinkedMap extends LinkedMap {
      *
      * @return an unmodifiable empty set.
      */
-    public Set keySet() {
-        return Collections.EMPTY_SET;
+    public Set<K> keySet() {
+        return Collections.emptySet();
     }
 
     /**
@@ -97,8 +99,8 @@ public class EmptyLinkedMap extends LinkedMap {
      *
      * @return an unmodifiable empty collection.
      */
-    public Collection values() {
-        return Collections.EMPTY_LIST;
+    public Collection<V> values() {
+        return Collections.emptyList();
     }
 
     //----------------------------------------------------< Cloneable support >
@@ -108,7 +110,8 @@ public class EmptyLinkedMap extends LinkedMap {
      *
      * @return {@link #INSTANCE}.
      */
-    public Object clone() {
+    @SuppressWarnings("unchecked")
+    public LinkedMap<K, V> clone() {
         return INSTANCE;
     }
 

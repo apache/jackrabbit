@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.IteratorChain;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -160,6 +160,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     /**
      * @see PrincipalProvider#findPrincipals(String, int)
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public PrincipalIterator findPrincipals(String simpleFilter, int searchType) {
         checkInitialized();
         switch (searchType) {

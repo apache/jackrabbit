@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.security.Principal;
 import java.util.Properties;
@@ -47,7 +47,7 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
     private boolean includeNegative;
 
     /** the principal cache */
-    private LRUMap cache;
+    private LRUMap<String, Principal> cache;
 
     /**
      * Create a new instance of <code>AbstractPrincipalProvider</code>.
@@ -126,7 +126,7 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
         }
 
         int maxSize = Integer.parseInt(options.getProperty(MAXSIZE_KEY, "1000"));
-        cache = new LRUMap(maxSize);
+        cache = new LRUMap<>(maxSize);
         includeNegative = Boolean.parseBoolean(options.getProperty(NEGATIVE_ENTRY_KEY, "false"));
         
         initialized = true;

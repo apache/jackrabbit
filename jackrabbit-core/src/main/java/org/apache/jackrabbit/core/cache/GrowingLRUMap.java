@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.cache;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.collections4.map.AbstractLinkedMap;
 
 /**
  * <code>GrowingLRUMap</code> extends the LRUMap such that it can grow from
  * the specified <code>initialSize</code> to the specified <code>maxSize</code>;
  */
-public class GrowingLRUMap extends LRUMap {
+public class GrowingLRUMap<K, V> extends LRUMap<K, V> {
 
     private final int maxSize;
 
@@ -32,7 +33,7 @@ public class GrowingLRUMap extends LRUMap {
     }
 
     @Override
-    protected boolean removeLRU(LinkEntry entry) {
+    protected boolean removeLRU(AbstractLinkedMap.LinkEntry<K, V> entry) {
         return size() > maxSize;
     }
 }

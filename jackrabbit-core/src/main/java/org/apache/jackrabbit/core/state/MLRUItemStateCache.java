@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import java.util.List;
 
-import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.jackrabbit.core.cache.ConcurrentCache;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -27,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An <code>ItemStateCache</code> implementation that internally uses a
- * {@link LinkedMap} to maintain a cache of <code>ItemState</code> objects. The
+ * {@link ConcurrentCache} to maintain a cache of <code>ItemState</code> objects. The
  * cache uses a rough estimate of the memory consumption of the cached item
  * states for calculating the maximum number of entries. The oldest entries
  * are flushed once the cache size has exceeded a certain limit.

@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
@@ -123,7 +123,6 @@ class CachingIndexReader extends FilterIndexReader {
      *                  when this index reader is constructed.
      * @throws IOException if an error occurs while reading from the index.
      */
-    @SuppressWarnings("unchecked")
     CachingIndexReader(IndexReader delegatee,
                        DocNumberCache cache,
                        boolean initCache)
@@ -139,7 +138,7 @@ class CachingIndexReader extends FilterIndexReader {
         }
         // limit cache to 1% of maxDoc(), but at least 10.
         this.docNumber2id = Collections.synchronizedMap(
-                new LRUMap(Math.max(10, delegatee.maxDoc() / 100)));
+                new LRUMap<>(Math.max(10, delegatee.maxDoc() / 100)));
         this.termDocsCache = new TermDocsCache(delegatee, FieldNames.PROPERTIES);
     }
 

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
@@ -33,9 +33,8 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     private final Map<Path, Result> cache;
     private final Object monitor = new Object();
 
-    @SuppressWarnings("unchecked")
     protected AbstractCompiledPermissions() {
-        cache = new LRUMap(1000);
+        cache = new LRUMap<>(1000);
     }
 
     /**

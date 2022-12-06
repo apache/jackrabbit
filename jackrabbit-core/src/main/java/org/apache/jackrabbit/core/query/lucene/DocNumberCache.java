@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,8 @@ final class DocNumberCache {
     /**
      * LRU Maps where key=uuid value=reader;docNumber
      */
-    private final LRUMap[] docNumbers = new LRUMap[CACHE_SEGMENTS];
+    @SuppressWarnings("unchecked")
+    private final LRUMap<String, Entry>[] docNumbers = new LRUMap[CACHE_SEGMENTS];
 
     /**
      * Timestamp of the last cache statistics log.
@@ -78,7 +79,7 @@ final class DocNumberCache {
             size = 0x40;
         }
         for (int i = 0; i < docNumbers.length; i++) {
-            docNumbers[i] = new LRUMap(size);
+            docNumbers[i] = new LRUMap<>(size);
         }
     }
 
@@ -92,9 +93,9 @@ final class DocNumberCache {
      * @param n the document number.
      */
     void put(String uuid, CachingIndexReader reader, int n) {
-        LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
+        LRUMap<String, Entry> cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
         synchronized (cacheSegment) {
-            Entry e = (Entry) cacheSegment.get(uuid);
+            Entry e = cacheSegment.get(uuid);
             if (e != null) {
                 // existing entry
                 // ignore if reader is older than the one in entry
@@ -125,10 +126,10 @@ final class DocNumberCache {
      * @return cache entry or <code>null</code>.
      */
     Entry get(String uuid) {
-        LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
+        LRUMap<String, Entry> cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
         Entry entry;
         synchronized (cacheSegment) {
-            entry = (Entry) cacheSegment.get(uuid);
+            entry = cacheSegment.get(uuid);
         }
         if (log.isInfoEnabled()) {
             accesses++;
@@ -143,7 +144,7 @@ final class DocNumberCache {
                 }
                 StringBuffer statistics = new StringBuffer();
                 int inUse = 0;
-                for (LRUMap docNumber : docNumbers) {
+                for (LRUMap<String, Entry> docNumber : docNumbers) {
                     inUse += docNumber.size();
                 }
                 statistics.append("size=").append(inUse);
