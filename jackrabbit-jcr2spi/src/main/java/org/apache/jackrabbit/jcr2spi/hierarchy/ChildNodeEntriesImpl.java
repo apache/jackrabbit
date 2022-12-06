@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,7 +27,6 @@ import java.util.NoSuchElementException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.list.AbstractLinkedList;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.Name;
@@ -50,17 +46,17 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     private boolean complete = false;
 
     /**
-     * Linked list of {@link NodeEntry} instances.
-     */
-    private final LinkedEntries entries = new LinkedEntries();
-
-    /**
      * Map used for lookup by name.
      */
     private final NameMap entriesByName = new NameMap();
 
     private final NodeEntry parent;
     private final EntryFactory factory;
+
+    /**
+     * Linked list of {@link NodeEntry} instances.
+     */
+    private final LinkedEntries entries;
 
      /**
       * Create a new <code>ChildNodeEntries</code> collection from the given
@@ -78,6 +74,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory, Iterator<ChildInfo> childNodeInfos) {
          this.parent = parent;
          this.factory = factory;
+         this.entries = new LinkedEntries(factory, parent);
 
          if (childNodeInfos != null) {
              while (childNodeInfos.hasNext()) {
@@ -475,248 +472,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     //-------------------------------------------------< AbstractLinkedList >---
-    /**
-     * An implementation of a linked list which provides access to the internal
-     * LinkNode which links the entries of the list.
-     */
-    private final class LinkedEntries extends AbstractLinkedList {
-
-        LinkedEntries() {
-            super();
-            init();
-        }
-
-        /**
-         * Returns the matching <code>LinkNode</code> from a list or a single
-         * <code>LinkNode</code>. This method will return <code>null</code>
-         * if none of the entries matches either due to missing entry for given
-         * state name or due to missing availability of the <code>NodeEntry</code>.
-         *
-         * @param nodeEntry the <code>NodeEntry</code> that is compared to the
-         * resolution of any <code>NodeEntry</code> that matches by name.
-         * @return the matching <code>LinkNode</code> or <code>null</code>
-         */
-        private LinkedEntries.LinkNode getLinkNode(NodeEntry nodeEntry) {
-            for (Iterator<LinkedEntries.LinkNode> it = linkNodeIterator(); it.hasNext();) {
-                LinkedEntries.LinkNode ln = it.next();
-                if (ln.getNodeEntry() == nodeEntry) {
-                    return ln;
-                }
-            }
-            // not found
-            return null;
-        }
-
-        private LinkedEntries.LinkNode getHeader() {
-            return (LinkedEntries.LinkNode) header;
-        }
-
-        /**
-         * Adds a child node entry at the end of this list.
-         *
-         * @param cne the child node entry to add.
-         * @param index
-         * @return the LinkNode which refers to the added <code>NodeEntry</code>.
-         */
-        LinkedEntries.LinkNode add(NodeEntry cne, int index) {
-            LinkedEntries.LinkNode ln = new LinkedEntries.LinkNode(cne, index);
-            addNode(ln, header);
-            return ln;
-        }
-
-        /**
-         * Adds the given child node entry to this list after the specified
-         * <code>entry</code> or at the beginning if <code>entry</code> is
-         * <code>null</code>.
-         *
-         * @param cne the child node entry to add.
-         * @param index
-         * @param insertAfter after which to insert the new entry
-         * @return the LinkNode which refers to the added <code>NodeEntry</code>.
-         */
-        LinkedEntries.LinkNode addAfter(NodeEntry cne, int index, LinkedEntries.LinkNode insertAfter) {
-            LinkedEntries.LinkNode newNode;
-            if (insertAfter == null) {
-                // insert at the beginning
-                newNode = new LinkedEntries.LinkNode(cne, index);
-                addNode(newNode, header);
-            } else if (insertAfter.getNextLinkNode() == null) {
-                newNode = add(cne, index);
-            } else {
-                newNode = new LinkedEntries.LinkNode(cne, index);
-                addNode(newNode, insertAfter.getNextLinkNode());
-            }
-            return newNode;
-        }
-
-        /**
-         * Remove the LinkEntry the contains the given NodeEntry as value.
-         *
-         * @param cne NodeEntry to be removed.
-         * @return LinkedEntries.LinkNode that has been removed.
-         */
-        LinkedEntries.LinkNode removeNodeEntry(NodeEntry cne) {
-            LinkedEntries.LinkNode ln = getLinkNode(cne);
-            if (ln != null) {
-                ln.remove();
-            }
-            return ln;
-        }
-
-        /**
-         * Reorders an existing <code>LinkNode</code> before another existing
-         * <code>LinkNode</code>. If <code>before</code> is <code>null</code>
-         * the <code>insert</code> node is moved to the end of the list.
-         *
-         * @param insert the node to reorder.
-         * @param before the node where to reorder node <code>insert</code>.
-         */
-        void reorderNode(LinkedEntries.LinkNode insert, LinkedEntries.LinkNode before) {
-            removeNode(insert);
-            if (before == null) {
-                addNode(insert, header);
-            } else {
-                addNode(insert, before);
-            }
-        }
-
-        /**
-         * Create a new <code>LinkNode</code> for a given {@link NodeEntry}
-         * <code>value</code>.
-         *
-         * @param value a child node entry.
-         * @return a wrapping {@link LinkedEntries.LinkNode}.
-         * @see AbstractLinkedList#createNode(Object)
-         */
-        @Override
-        protected Node createNode(Object value) {
-            return new LinkedEntries.LinkNode(value, Path.INDEX_DEFAULT);
-        }
-
-        /**
-         * @return a new <code>LinkNode</code>.
-         * @see AbstractLinkedList#createHeaderNode()
-         */
-        @Override
-        protected Node createHeaderNode() {
-            return new LinkedEntries.LinkNode();
-        }
-
-        /**
-         * @return iterator over all LinkNode entries in this list.
-         */
-        private Iterator<LinkedEntries.LinkNode> linkNodeIterator() {
-            return new LinkNodeIterator();
-        }
-
-        //----------------------------------------------------------------------
-        /**
-         * Extends the <code>AbstractLinkedList.Node</code>.
-         */
-        private final class LinkNode extends Node {
-
-            private final Name qName;
-
-            protected LinkNode() {
-                super();
-                qName = null;
-            }
-
-            protected LinkNode(Object value, int index) {
-                // add soft reference from linkNode to the NodeEntry (value)
-                // unless the entry is a SNSibling. TODO: review again.
-                super(index > Path.INDEX_DEFAULT ? value : new SoftReference<Object>(value));
-                qName = ((NodeEntry) value).getName();
-            }
-
-            @Override
-            protected void setValue(Object value) {
-                throw new UnsupportedOperationException("Not implemented");
-            }
-
-            @Override
-            protected Object getValue() {
-                Object val = super.getValue();
-                NodeEntry ne;
-                if (val == null) {
-                    ne = null;
-                } else if (val instanceof Reference) {
-                    ne = (NodeEntry) ((Reference) val).get();
-                } else {
-                    ne = (NodeEntry) val;
-                }
-                // if the nodeEntry has been g-collected in the mean time
-                // create a new NodeEntry in order to avoid returning null.
-                if (ne == null && this != header) {
-                    ne = factory.createNodeEntry(parent, qName, null);
-                    super.setValue(new SoftReference<NodeEntry>(ne));
-                }
-                return ne;
-            }
-
-            /**
-             * @return the wrapped <code>NodeEntry</code>.
-             */
-            public NodeEntry getNodeEntry() {
-                return (NodeEntry) getValue();
-            }
-
-            /**
-             * Removes this <code>LinkNode</code> from the linked list.
-             */
-            public void remove() {
-                removeNode(this);
-            }
-
-            /**
-             * @return the next LinkNode.
-             */
-            public LinkedEntries.LinkNode getNextLinkNode() {
-                return (LinkedEntries.LinkNode) super.getNextNode();
-            }
-
-            /**
-             * @return the next LinkNode.
-             */
-            public LinkedEntries.LinkNode getPreviousLinkNode() {
-                return (LinkedEntries.LinkNode) super.getPreviousNode();
-            }
-        }
-
-        //----------------------------------------------------------------------
-        private class LinkNodeIterator implements Iterator<LinkedEntries.LinkNode> {
-
-            private LinkedEntries.LinkNode next = ((LinkedEntries.LinkNode) header).getNextLinkNode();
-            private final int expectedModCount = modCount;
-
-            public boolean hasNext() {
-                checkModCount();
-                return next != header;
-            }
-
-            public LinkedEntries.LinkNode next() {
-                checkModCount();
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-                LinkedEntries.LinkNode n = next;
-                next = next.getNextLinkNode();
-                return n;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException("remove");
-            }
-
-            private void checkModCount() {
-                if (expectedModCount != modCount) {
-                    throw new ConcurrentModificationException();
-                }
-            }
-        }
-    }
-
-
 
     //--------------------------------------------------------------------------
     /**
