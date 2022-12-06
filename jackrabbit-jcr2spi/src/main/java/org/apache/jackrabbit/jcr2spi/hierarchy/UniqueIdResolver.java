@@ -23,7 +23,8 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
      * Creates a new <code>UniqueIdResolver</code>.
      */
     public UniqueIdResolver(ItemStateFactory isf) {
-        this.lookUp = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        this.lookUp = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.SOFT);
         this.isf = isf;
         isf.addCreationListener(this);
     }

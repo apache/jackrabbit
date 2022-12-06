@@ -37,7 +37,8 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.Name;
@@ -112,9 +113,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         this.valueFactory = mgrProvider.getJcrValueFactory();
 
         // setup caches with soft references to node type
-        ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-        pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
-        ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        ntCache = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.SOFT);
+        pdCache = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.SOFT);
+        ndCache = new ReferenceMap<>(ReferenceStrength.HARD, ReferenceStrength.SOFT);
     }
 
     private EffectiveNodeTypeProvider entProvider() {
