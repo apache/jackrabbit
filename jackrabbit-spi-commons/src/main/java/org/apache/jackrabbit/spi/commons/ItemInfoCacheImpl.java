@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.ItemInfoCache;

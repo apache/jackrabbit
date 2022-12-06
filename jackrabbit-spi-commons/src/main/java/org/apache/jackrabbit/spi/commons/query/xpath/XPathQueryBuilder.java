@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.xpath;
 
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.Path;
@@ -237,7 +238,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     /**
      * Map of reusable XPath parser instances indexed by NamespaceResolver.
      */
-    private static final Map parsers = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    private static final Map<NameResolver, XPath> parsers = new ReferenceMap<>(ReferenceStrength.WEAK, ReferenceStrength.WEAK);
 
     /**
      * The root <code>QueryNode</code>
@@ -286,7 +287,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             // get parser
             XPath parser;
             synchronized (parsers) {
-                parser = (XPath) parsers.get(resolver);
+                parser = parsers.get(resolver);
                 if (parser == null) {
                     parser = new XPath(new StringReader(statement));
                     parsers.put(resolver, parser);

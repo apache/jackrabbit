@@ -42,7 +42,8 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.NamespaceException;
@@ -77,7 +78,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
     /**
      * Map of reusable JCRSQL parser instances indexed by NamespaceResolver.
      */
-    private static Map parsers = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    private static Map<NameResolver, JCRSQLParser> parsers = new ReferenceMap<>(ReferenceStrength.WEAK, ReferenceStrength.WEAK);
 
     /**
      * The root node of the sql query syntax tree
@@ -148,7 +149,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
             // get parser
             JCRSQLParser parser;
             synchronized (parsers) {
-                parser = (JCRSQLParser) parsers.get(resolver);
+                parser = parsers.get(resolver);
                 if (parser == null) {
                     parser = new JCRSQLParser(new StringReader(statement));
                     parser.setNameResolver(resolver);

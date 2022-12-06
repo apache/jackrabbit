@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.spi.commons.iterator;
 
-import org.apache.commons.collections.iterators.ArrayIterator;
-import org.apache.commons.collections.iterators.EmptyIterator;
-import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.iterators.SingletonIterator;
-import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.collections4.iterators.ArrayIterator;
+import org.apache.commons.collections4.iterators.EmptyIterator;
+import org.apache.commons.collections4.iterators.FilterIterator;
+import org.apache.commons.collections4.iterators.IteratorChain;
+import org.apache.commons.collections4.iterators.SingletonIterator;
+import org.apache.commons.collections4.iterators.TransformIterator;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * Utility class containing type safe adapters for some of the iterators of
+ * Historical utility class containing type safe adapters for some of the iterators of
  * commons-collections.
  */
 public final class Iterators {
@@ -49,9 +49,8 @@ public final class Iterators {
      * @param element
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> singleton(T element) {
-        return new SingletonIterator(element);
+        return new SingletonIterator<T>(element);
     }
 
     /**
@@ -60,9 +59,8 @@ public final class Iterators {
      * @param <T>
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> empty() {
-        return EmptyIterator.INSTANCE;
+        return EmptyIterator.emptyIterator();
     }
 
     /**
@@ -74,9 +72,8 @@ public final class Iterators {
      * @param iterator2
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> iteratorChain(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2) {
-        return new IteratorChain(iterator1, iterator2);
+        return new IteratorChain<T>(iterator1, iterator2);
     }
 
     /**
@@ -86,9 +83,8 @@ public final class Iterators {
      * @param iterators
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> iteratorChain(Iterator<? extends T>[] iterators) {
-        return new IteratorChain(iterators);
+        return new IteratorChain<T>(iterators);
     }
 
     /**
@@ -98,9 +94,8 @@ public final class Iterators {
      * @param iterators
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> iteratorChain(Collection<Iterator<? extends T>> iterators) {
-        return new IteratorChain(iterators);
+        return new IteratorChain<T>(iterators);
     }
 
     /**
@@ -112,9 +107,8 @@ public final class Iterators {
      * @param to  the index to finish iterating at.
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> arrayIterator(T[] values, int from, int to) {
-        return new ArrayIterator(values, from, to);
+        return new ArrayIterator<T>(values, from, to);
     }
 
     /**
@@ -127,13 +121,12 @@ public final class Iterators {
      * @return
      * @deprecated use {@link #filterIterator(Iterator, java.util.function.Predicate)} instead
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> filterIterator(Iterator<? extends T> iterator,
             final Predicate<? super T> predicate) {
 
-        return new FilterIterator(iterator, new org.apache.commons.collections.Predicate() {
-            public boolean evaluate(Object object) {
-                return predicate.evaluate((T) object);
+        return new FilterIterator<T>(iterator, new org.apache.commons.collections4.Predicate<T>() {
+            public boolean evaluate(T object) {
+                return predicate.evaluate(object);
             }
         });
     }
@@ -147,13 +140,12 @@ public final class Iterators {
      * @param predicate
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static <T> Iterator<T> filterIterator(Iterator<? extends T> iterator,
             final java.util.function.Predicate<? super T> predicate) {
 
-        return new FilterIterator(iterator, new org.apache.commons.collections.Predicate() {
-            public boolean evaluate(Object object) {
-                return predicate.test((T) object);
+        return new FilterIterator<T>(iterator, new org.apache.commons.collections4.Predicate<T>() {
+            public boolean evaluate(T object) {
+                return predicate.test(object);
             }
         });
     }
@@ -162,22 +154,20 @@ public final class Iterators {
      * Returns an iterator with elements of an original  <code>iterator</code> transformed by
      * a <code>transformer</code>.
      *
-     * @param <T>
      * @param <R>
      * @param <S>
      * @param iterator
      * @param transformer
      * @return
      */
-    @SuppressWarnings("unchecked")
-    public static <T, R, S extends T> Iterator<R> transformIterator(Iterator<? extends T> iterator,
-            final Transformer<S, ? super R> transformer) {
+    public static <S, R> Iterator<R> transformIterator(Iterator<S> iterator, final Transformer<S, R> transformer) {
 
-        return new TransformIterator(iterator, new org.apache.commons.collections.Transformer() {
-            public Object transform(Object input) {
-                return transformer.transform((S) input);
+        org.apache.commons.collections4.Transformer<S, R> tf = new org.apache.commons.collections4.Transformer<S, R>() {
+            public R transform(S input) {
+                return transformer.transform(input);
             }
-        });
+        };
+        return new TransformIterator<S, R>(iterator, tf);
     }
 
     /**
