@@ -237,6 +237,7 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>oak-jackrabbit-api</artifactId>
+      <version>${oak-jackrabbit-api.version.implemented}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>

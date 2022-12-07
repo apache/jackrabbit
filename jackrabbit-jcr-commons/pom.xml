@@ -75,6 +75,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>oak-jackrabbit-api</artifactId>
+      <version>${oak-jackrabbit-api.version.used}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
