@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  * functionality and supports cross workspace copy and cloning.
  * 
- * <h3 id="bread">Batch Read</h3>
+ * <h2 id="bread">Batch Read</h2>
  *
  * Upon RepositoryService.getItemInfos a JSON object is composed containing
  * the information for the requested node and its child items up to a
@@ -131,7 +131,7 @@ import org.slf4j.LoggerFactory;
  *   JSON value must not have any trailing ".0" removed.
  * </pre>
  *
- * <h3 id="mread">Multi Read</h3>
+ * <h2 id="mread">Multi Read</h2>
  * <p>
  * Since Jackrabbit 2.3.6 it is also possible to request multiple subtrees
  * in a single request. This is done by adding one or more ":include"
@@ -148,14 +148,14 @@ import org.slf4j.LoggerFactory;
  * {"nodes":{"/parent/child1":{...},"/parent/child2":{...}}}
  * </pre>
  *
- * <h3 id="bwrite">Batch Write</h3>
+ * <h2 id="bwrite">Batch Write</h2>
  *
  * The complete SPI Batch is sent to the server in a single request, currently a
  * POST request containing a custom ":diff" parameter.
  * <br>
  * <i>NOTE</i> that this is targeted to be replaced by a PATCH request.
  *
- * <h4>Diff format</h4>
+ * <h3>Diff format</h3>
  *
  * The diff parameter currently consists of JSON-like key-value pairs with the
  * following special requirements:
