@@ -87,3 +87,4 @@ Trademarks
 
 Apache Jackrabbit, Jackrabbit, Apache, the Apache feather logo, and the Apache
 Jackrabbit project logo are trademarks of The Apache Software Foundation.
+
