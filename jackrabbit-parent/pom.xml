@@ -361,6 +361,10 @@
           <version>3.3.0</version>
         </plugin>
         <plugin>
+          <artifactId>maven-rar-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-war-plugin</artifactId>
           <version>3.3.2</version>
         </plugin>
