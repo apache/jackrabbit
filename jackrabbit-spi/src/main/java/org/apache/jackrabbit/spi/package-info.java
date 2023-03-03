@@ -31,7 +31,7 @@
  * local namespace resolution to prefixes.</li>
  * </ul>
  *
- * <h3>Observation</h3>
+ * <h2>Observation</h2>
  * Because one of the goals of this SPI is to make it easier to implement a
  * remoting layer using various existing protocols, the observation mechanism
  * has been design with this goal in mind. Instead of a listener registration

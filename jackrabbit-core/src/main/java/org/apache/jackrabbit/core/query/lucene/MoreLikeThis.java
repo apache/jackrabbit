@@ -84,7 +84,7 @@ import java.util.ArrayList;
  *
  *
  * <p>
- * <h3>Initial Usage</h3>
+ * <h2>Initial Usage</h2>
  *
  * This class has lots of options to try to make it efficient and flexible.
  *
@@ -112,7 +112,7 @@ import java.util.ArrayList;
  * <li> call the searcher to find the similar docs
  * </ol>
  *
- * <h3>More Advanced Usage</h3>
+ * <h2>More Advanced Usage</h2>
  *
  * You may want to use {@link #setFieldNames setFieldNames(...)} so you can examine
  * multiple fields (e.g. body and title) for similarity.
