@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>23</version>
+    <version>28</version>
     <relativePath />
   </parent>
 
@@ -61,6 +61,9 @@
     <skip.coverage>true</skip.coverage>
     <minimum.line.coverage>0.0</minimum.line.coverage>
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
+    <!-- build time stamp: should be updated prior to a release -->
+    <!-- see https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
