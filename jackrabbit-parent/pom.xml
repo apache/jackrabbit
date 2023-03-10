@@ -402,7 +402,7 @@
               </goals>
               <configuration>
                 <!-- this should refer to the latest stable release -->
-                <comparisonVersion>2.20.8</comparisonVersion>
+                <comparisonVersion>2.20.9</comparisonVersion>
               </configuration>
             </execution>
           </executions>
