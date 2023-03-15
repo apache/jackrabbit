@@ -26,7 +26,6 @@ import junit.framework.TestCase;
 import javax.jcr.NamespaceException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <code>NameParserTest</code>...
@@ -92,7 +91,7 @@ public class NameParserTest extends TestCase {
     public void testExpandedJcrNames() throws NamespaceException, IllegalNameException {
         NamespaceResolver resolver = new TestNamespaceResolver();
 
-        List<String[]> valid = new ArrayList<String[]>();
+        List<String[]> valid = new ArrayList<>();
         // valid qualified jcr-names:
         // String-array consisting of { jcrName , uri , localName }
         valid.add(new String[] {"abc:{c}", "abc", "{c}"});
@@ -125,8 +124,7 @@ public class NameParserTest extends TestCase {
         valid.add(new String[] {"{abc:}def", "abc:", "def"});
         valid.add(new String[] {"{}abc", "", "abc"});
 
-        for (Object aValid : valid) {
-            String[] strs = (String[]) aValid;
+        for (String[] strs : valid) {
             try {
                 Name n = NameParser.parse(strs[0], resolver, factory);
                 assertEquals("URI mismatch", strs[1], n.getNamespaceURI());
@@ -158,8 +156,7 @@ public class NameParserTest extends TestCase {
         invalid.add("{http://jackrabbit.apache.org}");
         invalid.add("{}");
 
-        for (Object anInvalid : invalid) {
-            String jcrName = (String) anInvalid;
+        for (String jcrName : invalid) {
             try {
                 NameParser.parse(jcrName, resolver, factory);
                 fail("Parsing '" + jcrName + "' should fail. Not a valid jcr name.");
@@ -231,8 +228,7 @@ public class NameParserTest extends TestCase {
         invalid.add("{/jackrabbit/a/b/c}abc");
 
 
-        for (Object anInvalid : invalid) {
-            String jcrName = (String) anInvalid;
+        for (String jcrName : invalid) {
             try {
                 NameParser.checkFormat(jcrName);
                 fail("Checking format of '" + jcrName + "' should fail. Not a valid jcr name.");
@@ -241,7 +237,16 @@ public class NameParserTest extends TestCase {
             }
         }
     }
-    
+
+    public void testMessage() {
+        try {
+            NameParser.checkFormat("horizontal\ttab");
+            fail("should fail with IllegalNameException");
+        } catch (IllegalNameException ex) {
+            assertTrue("message should contain 'U+0009'", ex.getMessage().indexOf("U+0009") >= 0);
+        }
+    }
+
     /**
      * Dummy NamespaceResolver that only knows the empty namespace and
      * namespaces containing either 'jackrabbit' or 'abc'. Used to test

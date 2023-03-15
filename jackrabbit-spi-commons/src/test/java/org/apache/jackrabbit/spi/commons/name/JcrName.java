@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons.name;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>JcrName</code>...
@@ -28,7 +29,7 @@ public final class JcrName {
     public final String name;
 
     // create tests
-    private static ArrayList list = new ArrayList();
+    private static List<JcrName> list = new ArrayList<>();
     static {
         // valid names
         list.add(new JcrName("a", "", "a"));
@@ -48,7 +49,7 @@ public final class JcrName {
         list.add(new JcrName("a\"", "", "a\""));                 // double quote
         list.add(new JcrName("\"a", "", "\"a"));
         list.add(new JcrName("ab\"c", "", "ab\"c"));
-        list.add(new JcrName("prefix:ab\"c", "prefix", "ab\"c"));       
+        list.add(new JcrName("prefix:ab\"c", "prefix", "ab\"c"));
 
         // expanded names
         list.add(new JcrName("{}a", "", "a"));
@@ -89,9 +90,13 @@ public final class JcrName {
         list.add(new JcrName("|name"));
         list.add(new JcrName("name|"));
         list.add(new JcrName("prefix:name|name"));
+
+        // invalid whitespace
+        list.add(new JcrName("horizontal\ttab"));
+        list.add(new JcrName("line\nfeed"));
     }
 
-    private static JcrName[] tests = (JcrName[]) list.toArray(new JcrName[list.size()]);
+    private static JcrName[] tests = list.toArray(new JcrName[list.size()]);
 
     public static JcrName[] getTests() {
         return tests;
@@ -108,7 +113,7 @@ public final class JcrName {
     }
 
     public boolean isValid() {
-        return name!=null;
+        return name != null;
     }
 
     public String toString() {
