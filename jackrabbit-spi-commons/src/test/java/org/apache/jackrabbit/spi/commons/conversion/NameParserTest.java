@@ -243,7 +243,7 @@ public class NameParserTest extends TestCase {
             NameParser.checkFormat("horizontal\ttab");
             fail("should fail with IllegalNameException");
         } catch (IllegalNameException ex) {
-            assertTrue("message should contain 'U+0009'", ex.getMessage().indexOf("U+0009") >= 0);
+            assertTrue("message should contain '\\u0009'", ex.getMessage().indexOf("'\\u0009'") >= 0);
         }
     }
 

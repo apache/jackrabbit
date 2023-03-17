@@ -195,7 +195,7 @@ public class NameParser {
 
     private static String asDisplayableString(char c) {
         if (Character.isWhitespace(c)) {
-            return String.format("U+%04x", (int)c);
+            return String.format("'\\u%04x'", (int)c);
         } else {
             return "'" + c + "'";
         }
