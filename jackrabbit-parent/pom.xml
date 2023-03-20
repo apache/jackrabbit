@@ -51,7 +51,7 @@
     <!-- OAK version used in componenents that *use* oak-jackrabbit-api -->
     <oak-jackrabbit-api.version.used>1.22.14</oak-jackrabbit-api.version.used>
     <jetty.version>9.2.30.v20200428</jetty.version>
-    <tika.version>2.4.1</tika.version>
+    <tika.version>2.7.0</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.36</slf4j.api.version>
     <slf4j.version>1.7.36</slf4j.version> <!-- sync with logback version -->

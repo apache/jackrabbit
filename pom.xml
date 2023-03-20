@@ -43,11 +43,11 @@
     <module>jackrabbit-aws-ext</module>
     <module>jackrabbit-vfs-ext</module>
     <module>jackrabbit-core</module>
-    <module>jackrabbit-webdav</module>
-    <module>jackrabbit-jcr-server</module>
+    <module>jackrabbit-webdav-project</module>
+    <module>jackrabbit-jcr-server-project</module>
     <module>jackrabbit-jcr-rmi</module>
-    <module>jackrabbit-jcr-servlet</module>
-    <module>jackrabbit-webapp</module>
+    <module>jackrabbit-jcr-servlet-project</module>
+    <module>jackrabbit-webapp-project</module>
     <module>jackrabbit-jca</module>
     <module>jackrabbit-spi</module>
     <module>jackrabbit-spi-commons</module>

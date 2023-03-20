@@ -21,9 +21,9 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-parent</artifactId>
+    <artifactId>jackrabbit-jcr-servlet-project</artifactId>
     <version>2.21.16-SNAPSHOT</version>
-    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
+    <relativePath>../jackrabbit-jcr-servlet-project</relativePath>
   </parent>
 
   <artifactId>jackrabbit-jcr-servlet</artifactId>
@@ -36,30 +36,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.jcr</groupId>
-      <artifactId>jcr</artifactId>
-    </dependency>
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-jcr-rmi</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-core</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
     </dependency>
   </dependencies>
 
