@@ -96,7 +96,7 @@ public class NameParser {
                 trailingSpaces = true;
             } else if (c == '[' || c == ']' || c == '*' || c == '|') {
                 throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
-            } else if (Character.isWhitespace(c)) {
+            } else if (Character.isWhitespace(c) && c < 128) {
                 throw new IllegalNameException("Whitespace character " + asDisplayableString(c) + " not allowed in name");
             } else if (c == '/') {
                 if (state == STATE_URI_START) {
@@ -194,10 +194,20 @@ public class NameParser {
     }
 
     private static String asDisplayableString(char c) {
-        if (Character.isWhitespace(c)) {
-            return String.format("'\\u%04x'", (int)c);
+        if (c >= ' ' && c < 127) {
+            return Character.toString(c);
+        } else if (c == '\b') {
+            return "\\b";
+        } else if (c == '\f') {
+            return "\\f";
+        } else if (c == '\n') {
+            return "\\n";
+        } else if (c == '\r') {
+            return "\\r";
+        } else if (c == '\t') {
+            return "\\t";
         } else {
-            return "'" + c + "'";
+            return String.format("\\u%04x", (int) c);
         }
     }
 
