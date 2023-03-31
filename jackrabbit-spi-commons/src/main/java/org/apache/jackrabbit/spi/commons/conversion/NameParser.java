@@ -80,27 +80,29 @@ public class NameParser {
                     }
                     prefix = jcrName.substring(0, i);
                     if (!XMLChar.isValidNCName(prefix)) {
-                        throw new IllegalNameException("Invalid name prefix: "+ prefix);
+                        throw new IllegalNameException("Invalid name prefix: " + prefix);
                     }
                     state = STATE_NAME_START;
                 } else if (state == STATE_URI) {
                     // ignore -> validation of uri later on.
                 } else {
-                    throw new IllegalNameException("'" + c + "' not allowed in name");
+                    throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
                 }
                 trailingSpaces = false;
             } else if (c == ' ') {
                 if (state == STATE_PREFIX_START || state == STATE_NAME_START) {
-                    throw new IllegalNameException("'" + c + "' not valid name start");
+                    throw new IllegalNameException(asDisplayableString(c) + " not valid name start");
                 }
                 trailingSpaces = true;
-            } else if (Character.isWhitespace(c) || c == '[' || c == ']' || c == '*' || c == '|') {
-                throw new IllegalNameException("'" + c + "' not allowed in name");
+            } else if (c == '[' || c == ']' || c == '*' || c == '|') {
+                throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
+            } else if (Character.isWhitespace(c)) {
+                throw new IllegalNameException("Whitespace character " + asDisplayableString(c) + " not allowed in name");
             } else if (c == '/') {
                 if (state == STATE_URI_START) {
                     state = STATE_URI;
                 } else if (state != STATE_URI) {
-                    throw new IllegalNameException("'" + c + "' not allowed in name");
+                    throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
                 }
                 trailingSpaces = false;
             } else if (c == '{') {
@@ -189,6 +191,14 @@ public class NameParser {
 
         String localName = (nameStart == 0 ? jcrName : jcrName.substring(nameStart, len));
         return factory.create(uri, localName);
+    }
+
+    private static String asDisplayableString(char c) {
+        if (Character.isWhitespace(c)) {
+            return String.format("'\\u%04x'", (int)c);
+        } else {
+            return "'" + c + "'";
+        }
     }
 
     /**
