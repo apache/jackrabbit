@@ -313,14 +313,10 @@
       </plugin>
     </plugins>
     <pluginManagement>
-      <!-- JCRSITE-9: Fix versions of key Maven plugins      -->
-      <!-- Note that many plugin versions are set already in -->
-      <!-- the Apache parent POM.                            -->
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
-          <version>2.5.3</version>
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <goals>deploy</goals>
