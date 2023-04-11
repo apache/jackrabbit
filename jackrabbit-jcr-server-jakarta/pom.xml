@@ -21,6 +21,7 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-jcr-server-project</artifactId>
     <version>2.21.16-SNAPSHOT</version>
+    <relativePath>../jackrabbit-jcr-server-project</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-server-jakarta</artifactId>
   <build>
