@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.20.9
+Release Notes -- Apache Jackrabbit -- Version 2.20.10
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.20.9, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.20.10, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.20.9 is an incremental feature release based on
+Apache Jackrabbit 2.20.10 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.20.x releases are considered stable and targeted for production use.
 
@@ -18,35 +18,29 @@ The minimum Java version for this release is Java 8. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.20.9
-----------------------------
+Changes in Jackrabbit 2.20.10
+-----------------------------
+
+Sub-task
+
+    [JCR-4857] - jackrabbit-it-osgi: remove reference to commons-collections
+
+Bug
+
+    [JCR-4917] - spi-commons: NameParser is too picky (allow non-ASCII whitespace)
 
 Task
 
-    [JCR-4868] - Update mockito dependency to 4.9.0
-    [JCR-4877] - Update httpclient/mime dependencies to 4.5.14
-    [JCR-4878] - Javadoc fixes
-    [JCR-4879] - update checkstyle-plugin dependency to 3.2.0
-    [JCR-4880] - Update javadoc-plugin dependency to 3.4.1
-    [JCR-4881] - Update maven-jar-plugin to 3.3.0
-    [JCR-4882] - Update animal-sniffer plugin dependency to 1.22
-    [JCR-4883] - Update pmd-plugin dependency to 3.19.0
-    [JCR-4884] - Update spotbugs-maven-plugin to 4.7.3.0
-    [JCR-4885] - update Apache parent pom to version 28
-    [JCR-4886] - Update Jackrabbit trunk to Oak 1.46.0
-    [JCR-4888] - update Apache parent pom to version 29
-    [JCR-4889] - Update javacc-maven-plugin to version 3.0.1
-    [JCR-4893] - Update mockito dependency to 4.11.0
-    [JCR-4894] - webapp: update htmlunit dependency to 2.69.0
-    [JCR-4895] - update aws java sdk version to 1.12.383
-    [JCR-4896] - Update easymock dependency to 5.1.0
-    [JCR-4897] - update kotlin-stdlib dependency to 1.8.0
-    [JCR-4898] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.14
-    [JCR-4899] - Update tomcat dependency to 8.5.85
-    [JCR-4900] - Update oak-jackrabbit-api.version.implemented in trunk and 2.20 to Oak 1.48.0
-    [JCR-4901] - webapp: update htmlunit dependency to 2.70.0
-    [JCR-4903] - update checkstyle-plugin dependency to 3.2.1
-    [JCR-4905] - Update pmd-plugin dependency to 3.20.0
+    [JCR-4908] - Update commons file-upload dependency to 1.5
+    [JCR-4909] - specify maven-rar-plugin dependency
+    [JCR-4910] - Update tomcat dependency to 8.5.86
+    [JCR-4913] - spi-commons: improve error messages for org.apache.jackrabbit.spi.commons.conversion.NameParser.parse
+    [JCR-4918] - vfs-ext: update hadoop-hdfs-client dependency to 3.3.5
+    [JCR-4919] - Update tomcat dependency to 8.5.87
+    [JCR-4920] - Remove maven-assembly-plugin dependency (use the one provided by Apache parent pom)
+    [JCR-4921] - remove surefire/failsafe dependencies (use the ones provided by Apache parent pom)
+    [JCR-4922] - Remove javadoc-plugin dependency (use the one provided by Apache parent pom)
+    [JCR-4923] - Remove release-plugin dependency (use the one provided by Apache parent pom)
 
 
 For more detailed information about all the changes in this and other
