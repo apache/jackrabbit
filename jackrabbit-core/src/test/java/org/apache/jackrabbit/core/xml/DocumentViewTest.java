@@ -127,4 +127,41 @@ public class DocumentViewTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Test case for
+     * <a href="https://issues.apache.org/jira/browse/JCR-4935">JCR-4935</a>:
+     * session.exportDocumentView() generates unparsable XML if a JCR Property contains invalid XML character
+     */
+    public void testInvalidXmlCharacter() throws Exception {
+
+        Node root = superuser.getRootNode();
+
+        Node node = root.addNode("invalid-xml-character-test", "nt:unstructured");
+        node.setProperty("0x3", "\u0003");
+        node.setProperty("0xB", "\u000B");
+        node.setProperty("0xC", "\u000C");
+        node.setProperty("0x19", "\u0019");
+        node.setProperty("0xD800", "\uD800");
+        node.setProperty("0xFFFE", "\uFFFE");
+        node.setProperty("0xD800", "\uD800");
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        superuser.exportDocumentView("/invalid-xml-character-test", buffer, true, true);
+        superuser.refresh(false);
+
+        superuser.importXML(
+                "/", new ByteArrayInputStream(buffer.toByteArray()),
+                ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+
+        node = root.getNode("invalid-xml-character-test");
+        assertEquals("", node.getProperty("0x3").getString());
+        assertEquals("", node.getProperty("0xB").getString());
+        assertEquals("", node.getProperty("0xC").getString());
+        assertEquals("", node.getProperty("0x19").getString());
+        assertEquals("", node.getProperty("0xD800").getString());
+        assertEquals("", node.getProperty("0xFFFE").getString());
+        assertEquals("", node.getProperty("0xD800").getString());
+    }
+
+
 }

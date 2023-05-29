@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.jackrabbit.util.XMLChar;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -139,7 +140,7 @@ public class ToXmlContentHandler extends DefaultHandler {
                     writer.write("&quot;");
                 } else if (attribute && ch[i] == '\'') {
                     writer.write("&apos;");
-                } else {
+                } else if (XMLChar.isValid(ch[i])){
                     writer.write(ch[i]);
                 }
             } catch (IOException e) {
@@ -275,5 +276,4 @@ public class ToXmlContentHandler extends DefaultHandler {
     public String toString() {
         return writer.toString();
     }
-
 }
