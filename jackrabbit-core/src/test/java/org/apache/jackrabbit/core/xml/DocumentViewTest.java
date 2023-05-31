@@ -154,13 +154,13 @@ public class DocumentViewTest extends AbstractJCRTest {
                 ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
 
         node = root.getNode("invalid-xml-character-test");
-        assertEquals("", node.getProperty("0x3").getString());
-        assertEquals("", node.getProperty("0xB").getString());
-        assertEquals("", node.getProperty("0xC").getString());
-        assertEquals("", node.getProperty("0x19").getString());
-        assertEquals("", node.getProperty("0xD800").getString());
-        assertEquals("", node.getProperty("0xFFFE").getString());
-        assertEquals("", node.getProperty("0xD800").getString());
+        assertEquals("\\u0003", node.getProperty("0x3").getString());
+        assertEquals("\\u000b", node.getProperty("0xB").getString());
+        assertEquals("\\u000c", node.getProperty("0xC").getString());
+        assertEquals("\\u0019", node.getProperty("0x19").getString());
+        assertEquals("\\ud800", node.getProperty("0xD800").getString());
+        assertEquals("\\ufffe", node.getProperty("0xFFFE").getString());
+        assertEquals("\\ud800", node.getProperty("0xD800").getString());
     }
 
 

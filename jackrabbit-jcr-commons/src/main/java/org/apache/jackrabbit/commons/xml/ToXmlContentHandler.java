@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.XMLChar;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -140,14 +141,34 @@ public class ToXmlContentHandler extends DefaultHandler {
                     writer.write("&quot;");
                 } else if (attribute && ch[i] == '\'') {
                     writer.write("&apos;");
-                } else if (XMLChar.isValid(ch[i])){
-                    writer.write(ch[i]);
+                } else {
+                    if (XMLChar.isValid(ch[i])) {
+                        writer.write(ch[i]);
+                    } else {
+                        writer.append(escapeIllegalXmlChar(ch[i]));
+                    }
                 }
             } catch (IOException e) {
                 throw new SAXException(
                         "Failed to output XML character: " + ch[i], e);
             }
         }
+    }
+
+    /**
+     * Escape invalid xml characters to Unicode code points,
+     * similar to  FileVault .
+     *
+     * See https://jackrabbit.apache.org/filevault/docview.html#escaping
+     */
+    private String escapeIllegalXmlChar(char c){
+        StringBuilder buf = new StringBuilder();
+        buf.append("\\u");
+        buf.append(Text.hexTable[(c >> 12) & 15]);
+        buf.append(Text.hexTable[(c >> 8) & 15]);
+        buf.append(Text.hexTable[(c >> 4) & 15]);
+        buf.append(Text.hexTable[c & 15]);
+        return buf.toString();
     }
 
     private void closeStartTagIfOpen() throws SAXException {
