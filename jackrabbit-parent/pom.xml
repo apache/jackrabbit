@@ -50,7 +50,7 @@
     <oak-jackrabbit-api.version.implemented>1.48.0</oak-jackrabbit-api.version.implemented>
     <!-- OAK version used in componenents that *use* oak-jackrabbit-api -->
     <oak-jackrabbit-api.version.used>1.22.15</oak-jackrabbit-api.version.used>
-    <jetty.version>9.2.30.v20200428</jetty.version>
+    <jetty.version>9.4.51.v20230217</jetty.version>
     <tika.version>2.4.1</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.36</slf4j.api.version>
@@ -605,7 +605,7 @@
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-jsp</artifactId>
+        <artifactId>apache-jsp</artifactId>
         <version>${jetty.version}</version>
       </dependency>
       <dependency>

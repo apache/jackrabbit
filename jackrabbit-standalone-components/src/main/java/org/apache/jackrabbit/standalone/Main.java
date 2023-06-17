@@ -45,6 +45,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
@@ -280,6 +281,12 @@ public class Main {
         webapp.setExtractWAR(true);
         webapp.setTempDirectory(tmp);
 
+        Configuration.ClassList classlist = Configuration.ClassList
+                .setServerDefault(server);
+        classlist.addBefore(
+                "org.eclipse.jetty.webapp.JettyWebXmlConfiguration",
+                "org.eclipse.jetty.annotations.AnnotationConfiguration");
+        
         ServletHolder servlet =
             new ServletHolder(JackrabbitRepositoryServlet.class);
         servlet.setInitOrder(1);
