@@ -303,11 +303,6 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-benchmark</artifactId>
       <scope>test</scope>
