@@ -1,36 +1,44 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.16
+Release Notes -- Apache Jackrabbit -- Version 2.21.17
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.16, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.17, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.16 is an unstable release cut directly from
+Apache Jackrabbit 2.21.17 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.16
+Changes in Jackrabbit 2.21.17
 -----------------------------
+
+Sub-task
+
+    [JCR-4948] - core: beanutils leaks dependency to commons-collections in oak-core tests
 
 Bug
 
-    [JCR-4907] - Javadocs have incorrect copyright date
-    [JCR-4917] - spi-commons: NameParser is too picky (allow non-ASCII whitespace)
+    [JCR-4606] - standalone: logback log files created in wrong place
+    [JCR-4949] - get rid of beanutils dependency
 
 Task
 
-    [JCR-4908] - Update commons file-upload dependency to 1.5
-    [JCR-4909] - specify maven-rar-plugin dependency
-    [JCR-4910] - Update tomcat dependency to 8.5.86
-    [JCR-4912] - set baseline comparisonVersion to latest stable (2.20.9)
-    [JCR-4913] - spi-commons: improve error messages for org.apache.jackrabbit.spi.commons.conversion.NameParser.parse
-    [JCR-4918] - vfs-ext: update hadoop-hdfs-client dependency to 3.3.5
-    [JCR-4919] - Update tomcat dependency to 8.5.87
-    [JCR-4922] - Remove javadoc-plugin dependency (use the one provided by Apache parent pom)
-    [JCR-4923] - Remove release-plugin dependency (use the one provided by Apache parent pom)
+    [JCR-4308] - update Jetty to 9.4.*
+    [JCR-4352] - Update lucene-core dependency to 3.6.2
+    [JCR-4925] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.15
+    [JCR-4932] - Update commons-io dependency to 2.12.0
+    [JCR-4933] - Update tomcat dependency to 8.5.88
+    [JCR-4936] - Update tomcat dependency to 8.5.89
+    [JCR-4937] - jcr-tests: get rid of duplicate XMLChar class
+    [JCR-4938] - update remaining copies of XMLChar.java with latest version from Xerces
+    [JCR-4939] - Update commons-io dependency to 2.13.0
+    [JCR-4941] - Update tomcat dependency to 8.5.90
+    [JCR-4942] - spi-commons: bump minor version number of o.a.j.spi.commons.conversion
+    [JCR-4944] - upgrade to Tomcat 9.x
+    [JCR-4947] - update Apache parent pom to version 30
 
 
 For more detailed information about all the changes in this and other
