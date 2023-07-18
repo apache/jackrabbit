@@ -77,7 +77,14 @@ public class JNDIConfig extends AbstractConfig {
     }
 
     public void init(Properties props) throws ServletException {
-        super.init(props);
+        String property = props.getProperty("jndi.enabled");;
+        if (property != null) {
+            setJndiEnabled(property);
+        }
+        property = props.getProperty("jndi.name");;
+        if (property != null) {
+            setJndiName(property);
+        }
         // add all props whose name starts with 'java.namming.' to the env
         Iterator iter = props.keySet().iterator();
         while (iter.hasNext()) {
@@ -89,7 +96,14 @@ public class JNDIConfig extends AbstractConfig {
     }
 
     public void init(ServletConfig ctx) throws ServletException  {
-        super.init(ctx);
+        String property = ctx.getInitParameter("jndi-enabled");
+        if (property != null) {
+            setJndiEnabled(property);
+        }
+        property = ctx.getInitParameter("jndi-name");
+        if (property != null) {
+            setJndiName(property);
+        }
         // add all params whose name starts with 'java.namming.' to the env
         Enumeration names = ctx.getInitParameterNames();
         while (names.hasMoreElements()) {

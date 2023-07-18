@@ -49,13 +49,35 @@ public class BootstrapConfig extends AbstractConfig {
     private RMIConfig rmiConfig = new RMIConfig(this);
 
     public void init(Properties props) throws ServletException {
-        super.init(props);
+        String property = props.getProperty("repository.home");;
+        if (property != null) {
+            setRepositoryHome(property);
+        }
+        property = props.getProperty("repository.config");;
+        if (property != null) {
+            setRepositoryConfig(property);
+        }
+        property = props.getProperty("repository.name");;
+        if (property != null) {
+            setRepositoryName(property);
+        }
         jndiConfig.init(props);
         rmiConfig.init(props);
     }
 
     public void init(ServletConfig ctx) throws ServletException {
-        super.init(ctx);
+        String property = ctx.getInitParameter("repository-home");
+        if (property != null) {
+            setRepositoryHome(property);
+        }
+        property = ctx.getInitParameter("repository-config");
+        if (property != null) {
+            setRepositoryConfig(property);
+        }
+        property = ctx.getInitParameter("repository-name");
+        if (property != null) {
+            setRepositoryName(property);
+        }
         jndiConfig.init(ctx);
         rmiConfig.init(ctx);
     }
@@ -65,6 +87,7 @@ public class BootstrapConfig extends AbstractConfig {
     }
 
     public void setRepositoryHome(String repositoryHome) {
+
         this.repositoryHome = repositoryHome;
     }
 
