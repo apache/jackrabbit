@@ -1,18 +1,21 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.17
+Release Notes -- Apache Jackrabbit -- Version 2.21.18
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.17, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.18, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.17 is an unstable release cut directly from
+Apache Jackrabbit 2.21.18 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.17
+NOTE: 2.21.17 was released from an incorrect SVN tag and actually contains version
+2.21.16. This release contains what was supposed to go into 2.21.17.
+
+Changes in Jackrabbit 2.21.18
 -----------------------------
 
 Sub-task
@@ -38,7 +41,6 @@ Task
     [JCR-4941] - Update tomcat dependency to 8.5.90
     [JCR-4942] - spi-commons: bump minor version number of o.a.j.spi.commons.conversion
     [JCR-4944] - upgrade to Tomcat 9.x
-    [JCR-4947] - update Apache parent pom to version 30
 
 
 For more detailed information about all the changes in this and other
