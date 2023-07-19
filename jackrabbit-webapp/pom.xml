@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.21.16</version>
+    <version>2.21.18</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-webapp</artifactId>
@@ -35,7 +35,7 @@
   <description>Web application that hosts and serves a Jackrabbit content repository</description>
 
   <properties>
-    <tomcat.version>8.5.87</tomcat.version>
+    <tomcat.version>9.0.78</tomcat.version>
   </properties>
 
   <dependencies>
@@ -75,10 +75,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>

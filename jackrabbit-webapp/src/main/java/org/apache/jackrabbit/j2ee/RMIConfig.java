@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.rmi.registry.Registry;
+import java.util.Properties;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -66,8 +67,50 @@ public class RMIConfig extends AbstractConfig {
         this.parentConfig = parentConfig;
     }
 
+    public void init(Properties props) throws ServletException {
+        String property = props.getProperty("rmi.name");;
+        if (property != null) {
+            setRmiName(property);
+        }
+        property = props.getProperty("rmi.enabled");
+        if (property != null) {
+            setRmiEnabled(property);
+        }
+        property = props.getProperty("rmi.port");
+        if (property != null) {
+            setRmiPort(property);
+        }
+        property = props.getProperty("rmi.host");
+        if (property != null) {
+            setRmiHost(property);
+        }
+        property = props.getProperty("rmi.uri");
+        if (property != null) {
+            setRmiUri(property);
+        }
+    }
+
     public void init(ServletConfig ctx) throws ServletException {
-        super.init(ctx);
+        String property = ctx.getInitParameter("rmi-name");
+        if (property != null) {
+            setRmiName(property);
+        }
+        property = ctx.getInitParameter("rmi-enabled");
+        if (property != null) {
+            setRmiEnabled(property);
+        }
+        property = ctx.getInitParameter("rmi-port");
+        if (property != null) {
+            setRmiPort(property);
+        }
+        property = ctx.getInitParameter("rmi-host");
+        if (property != null) {
+            setRmiHost(property);
+        }
+        property = ctx.getInitParameter("rmi-uri");
+        if (property != null) {
+            setRmiUri(property);
+        }
         // enable RMI if either port or url was defined
         rmiEnabled = rmiPort >=0 || rmiUri != null;
     }
