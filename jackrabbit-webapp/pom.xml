@@ -140,17 +140,12 @@
     <plugins>
       <plugin>
         <!-- create a jar in addition to our war, to make our servlets reusable -->
-        <artifactId>maven-antrun-plugin</artifactId>
+        <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <jar basedir="${project.build.outputDirectory}" destfile="${project.build.directory}/jackrabbit-webapp-${project.version}.jar" />
-              </target>
-            </configuration>
+            <phase>prepare-package</phase>
             <goals>
-              <goal>run</goal>
+              <goal>jar</goal>
             </goals>
           </execution>
         </executions>
@@ -169,7 +164,7 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>${project.build.directory}/jackrabbit-webapp-${project.version}.jar</file>
+                  <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
                   <type>jar</type>
                 </artifact>
               </artifacts>
