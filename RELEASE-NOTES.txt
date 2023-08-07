@@ -28,6 +28,11 @@ Task
     [JCR-4955] - set baseline comparisonVersion to latest stable (2.20.11)
     [JCR-4959] - update Apache parent pom to version 30
     [JCR-4960] - Disable RMI by default
+    [JCR-4962] - Update h2db dependency to 2.2.220
+    [JCR-4963] - vfs-ext: update hadoop-hdfs-client dependency to 3.3.6
+    [JCR-4964] - update kotlin-stdlib dependency to 1.9.0
+    [JCR-4965] - webapp: remove Guava test dependency
+    [JCR-4966] - update aws java sdk version to 1.12.523
 
 
 For more detailed information about all the changes in this and other
