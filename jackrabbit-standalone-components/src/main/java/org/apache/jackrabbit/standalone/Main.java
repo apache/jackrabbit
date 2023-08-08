@@ -57,28 +57,8 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) throws Exception {
-        new Main(args).run();
-    }
+        Options options = new Options();
 
-    private final Options options = new Options();
-
-    private final CommandLine command;
-
-    private final RequestLogHandler accessLog = new RequestLogHandler();
-
-    private final WebAppContext webapp = new WebAppContext();
-
-    private final Server server = new Server();
-
-    private final ServerConnector connector = new ServerConnector(server);
-
-    /**
-     * Construct Main application instance.
-     * <P>
-     * <EM>Note:</EM> Constructor is protected because other projects such as Commons VFS can extend this for some reasons
-     *       (e.g, unit testing against Jackrabbit WebDAV).
-     */
-    protected Main(String[] args) throws ParseException {
         options.addOption("?", "help", false, "print this message");
         options.addOption("n", "notice", false, "print copyright notices");
         options.addOption("l", "license", false, "print license information");
@@ -102,19 +82,11 @@ public class Main {
                 "C", "backup-conf", true,
                 "backup repository configuration file");
 
-        command = new DefaultParser().parse(options, args);
-    }
+        CommandLine command = new DefaultParser().parse(options, args);
 
-    /**
-     * Run this Main application.
-     * <P>
-     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests. e.g, Commons-VFS.
-     * @throws Exception if any exception occurs
-     */
-    public void run() throws Exception {
         String defaultFile = "jackrabbit-standalone.jar";
         URL location =
-            Main.class.getProtectionDomain().getCodeSource().getLocation();
+                Main.class.getProtectionDomain().getCodeSource().getLocation();
         if (location != null && "file".equals(location.getProtocol())) {
             File file = new File(location.getPath());
             if (file.isFile()) {
@@ -154,47 +126,101 @@ public class Main {
                 // already logged out
             }
         } else {
-            message("Welcome to Apache Jackrabbit!");
-            message("-------------------------------");
-
             File repository =
-                new File(command.getOptionValue("repo", "jackrabbit"));
-            message("Using repository directory " + repository);
+                    new File(command.getOptionValue("repo", "jackrabbit"));
             repository.mkdirs();
-            File tmp = new File(repository, "tmp");
-            tmp.mkdir();
             File log = new File(repository, "log");
             log.mkdir();
 
-            message("Writing log messages to " + log);
-            prepareServerLog(log);
+            if (!command.hasOption("quiet")) {
+                System.out.println("Using repository directory " + repository);
+                System.out.println("Writing log messages to " + log);
+            }
 
-            if (command.hasOption("backup")) {
-                backup(repository);
+            setSystemPropertyIfMissing(
+                    "jackrabbit.log",
+                    new File(log, "jackrabbit.log").getPath());
+            setSystemPropertyIfMissing(
+                    "jetty.log",
+                    new File(log, "jetty.log").getPath());
+
+            if (command.hasOption("debug")) {
+                setSystemPropertyIfMissing("log.level", "DEBUG");
             } else {
-                message("Starting the server...");
-                prepareWebapp(file, repository, tmp);
-                accessLog.setHandler(webapp);
-                prepareAccessLog(log);
-                server.setHandler(accessLog);
-                prepareConnector();
-                server.addConnector(connector);
-                prepareShutdown();
+                setSystemPropertyIfMissing("log.level", "INFO");
+            }
 
-                try {
-                    server.start();
+            setSystemPropertyIfMissing(
+                    "derby.stream.error.file",
+                    new File(log, "derby.log").getPath());
 
-                    String host = connector.getHost();
-                    if (host == null) {
-                        host = "localhost";
-                    }
-                    message("Apache Jackrabbit is now running at "
-                            +"http://" + host + ":" + connector.getPort() + "/");
-                } catch (Throwable t) {
-                    System.err.println(
-                            "Unable to start the server: " + t.getMessage());
-                    System.exit(1);
+            new Main(command).run(file, repository, log);
+        }
+    }
+
+    private static void setSystemPropertyIfMissing(String key, String value) {
+        if (System.getProperty(key) == null) {
+            System.setProperty(key, value);
+        }
+    }
+
+    private CommandLine command;
+
+    private final RequestLogHandler accessLog = new RequestLogHandler();
+
+    private final WebAppContext webapp = new WebAppContext();
+
+    private final Server server = new Server();
+
+    private final ServerConnector connector = new ServerConnector(server);
+
+    /**
+     * Construct Main application instance.
+     * <P>
+     * <EM>Note:</EM> Constructor is protected because other projects such as Commons VFS can extend this for some reasons
+     *       (e.g, unit testing against Jackrabbit WebDAV).
+     */
+    protected Main(CommandLine command) throws ParseException {
+        this.command = command;
+    }
+
+    /**
+     * Run this Main application.
+     * <P>
+     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests. e.g, Commons-VFS.
+     * @throws Exception if any exception occurs
+     */
+    public void run(File file, File repository, File log) throws Exception {
+        message("Welcome to Apache Jackrabbit!");
+        message("-------------------------------");
+
+        if (command.hasOption("backup")) {
+            backup(repository);
+        } else {
+            message("Starting the server...");
+            File tmp = new File(repository, "tmp");
+            tmp.mkdir();
+            prepareWebapp(file, repository, tmp);
+            accessLog.setHandler(webapp);
+            prepareAccessLog(log);
+            server.setHandler(accessLog);
+            prepareConnector();
+            server.addConnector(connector);
+            prepareShutdown();
+
+            try {
+                server.start();
+
+                String host = connector.getHost();
+                if (host == null) {
+                    host = "localhost";
                 }
+                message("Apache Jackrabbit is now running at "
+                        +"http://" + host + ":" + connector.getPort() + "/");
+            } catch (Throwable t) {
+                System.err.println(
+                        "Unable to start the server: " + t.getMessage());
+                System.exit(1);
             }
         }
     }
@@ -250,24 +276,6 @@ public class Main {
         message("The repository has been successfully copied.");
     }
 
-    private void prepareServerLog(File log)
-            throws IOException {
-        System.setProperty(
-                "jackrabbit.log", new File(log, "jackrabbit.log").getPath());
-        System.setProperty(
-                "jetty.log", new File(log, "jetty.log").getPath());
-
-        if (command.hasOption("debug")) {
-            System.setProperty("log.level", "DEBUG");
-        } else {
-            System.setProperty("log.level", "INFO");
-        }
-
-        System.setProperty(
-                "derby.stream.error.file",
-                new File(log, "derby.log").getPath());
-    }
-
     private void prepareAccessLog(File log) {
         NCSARequestLog ncsa = new NCSARequestLog(
                 new File(log, "access.log.yyyy_mm_dd").getPath());
@@ -321,7 +329,7 @@ public class Main {
         }
     }
 
-    private void copyToOutput(String resource) throws IOException {
+    private static void copyToOutput(String resource) throws IOException {
         InputStream stream = Main.class.getResourceAsStream(resource);
         try {
             IOUtils.copy(stream, System.out);
