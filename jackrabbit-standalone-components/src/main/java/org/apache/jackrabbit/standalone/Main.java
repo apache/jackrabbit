@@ -58,46 +58,13 @@ public class Main {
      */
     public static void main(String[] args) throws Exception {
         Options options = new Options();
+        CommandLine command = createCommand(args, options);
 
-        options.addOption("?", "help", false, "print this message");
-        options.addOption("n", "notice", false, "print copyright notices");
-        options.addOption("l", "license", false, "print license information");
-        options.addOption(
-                "b", "backup", false, "create a backup of the repository");
-        options.addOption(
-                "i", "cli", true, "command line access to a remote repository");
-
-        options.addOption("q", "quiet", false, "disable console output");
-        options.addOption("d", "debug", false, "enable debug logging");
-
-        options.addOption("h", "host", true, "IP address of the HTTP server");
-        options.addOption("p", "port", true, "TCP port of the HTTP server (8080)");
-        options.addOption("f", "file", true, "location of this jar file");
-        options.addOption("r", "repo", true, "repository directory (jackrabbit)");
-        options.addOption("c", "conf", true, "repository configuration file");
-        options.addOption(
-                "R", "backup-repo", true,
-                "backup repository directory (jackrabbit-backupN)");
-        options.addOption(
-                "C", "backup-conf", true,
-                "backup repository configuration file");
-
-        CommandLine command = new DefaultParser().parse(options, args);
-
-        String defaultFile = "jackrabbit-standalone.jar";
-        URL location =
-                Main.class.getProtectionDomain().getCodeSource().getLocation();
-        if (location != null && "file".equals(location.getProtocol())) {
-            File file = new File(location.getPath());
-            if (file.isFile()) {
-                defaultFile = location.getPath();
-            }
-        }
-        File file = new File(command.getOptionValue("file", defaultFile));
+        File jarFile = findJarFileLocation(command);
 
         if (command.hasOption("help")) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("java -jar " + file.getName(), options, true);
+            formatter.printHelp("java -jar " + jarFile.getName(), options, true);
         } else if (command.hasOption("notice")) {
             copyToOutput("/META-INF/NOTICE.txt");
         } else if (command.hasOption("license")) {
@@ -126,53 +93,69 @@ public class Main {
                 // already logged out
             }
         } else {
-            File repository =
-                    new File(command.getOptionValue("repo", "jackrabbit"));
-            repository.mkdirs();
-            File log = new File(repository, "log");
-            log.mkdir();
-
-            if (!command.hasOption("quiet")) {
-                System.out.println("Using repository directory " + repository);
-                System.out.println("Writing log messages to " + log);
-            }
-
-            setSystemPropertyIfMissing(
-                    "jackrabbit.log",
-                    new File(log, "jackrabbit.log").getPath());
-            setSystemPropertyIfMissing(
-                    "jetty.log",
-                    new File(log, "jetty.log").getPath());
-
-            if (command.hasOption("debug")) {
-                setSystemPropertyIfMissing("log.level", "DEBUG");
-            } else {
-                setSystemPropertyIfMissing("log.level", "INFO");
-            }
-
-            setSystemPropertyIfMissing(
-                    "derby.stream.error.file",
-                    new File(log, "derby.log").getPath());
-
-            new Main(command).run(file, repository, log);
+            new Main(command).run(jarFile);
         }
     }
 
+    private static CommandLine createCommand(String[] args, Options options) throws ParseException {
+        options.addOption("?", "help", false, "print this message");
+        options.addOption("n", "notice", false, "print copyright notices");
+        options.addOption("l", "license", false, "print license information");
+        options.addOption(
+                "b", "backup", false, "create a backup of the repository");
+        options.addOption(
+                "i", "cli", true, "command line access to a remote repository");
+
+        options.addOption("q", "quiet", false, "disable console output");
+        options.addOption("d", "debug", false, "enable debug logging");
+
+        options.addOption("h", "host", true, "IP address of the HTTP server");
+        options.addOption("p", "port", true, "TCP port of the HTTP server (8080)");
+        options.addOption("f", "file", true, "location of this jar file");
+        options.addOption("r", "repo", true, "repository directory (jackrabbit)");
+        options.addOption("c", "conf", true, "repository configuration file");
+        options.addOption(
+                "R", "backup-repo", true,
+                "backup repository directory (jackrabbit-backupN)");
+        options.addOption(
+                "C", "backup-conf", true,
+                "backup repository configuration file");
+
+        return new DefaultParser().parse(options, args);
+    }
+    
+    private static File findJarFileLocation(CommandLine command) {
+        String defaultFile = "jackrabbit-standalone.jar";
+        URL location =
+                Main.class.getProtectionDomain().getCodeSource().getLocation();
+        if (location != null && "file".equals(location.getProtocol())) {
+            File file = new File(location.getPath());
+            if (file.isFile()) {
+                defaultFile = location.getPath();
+            }
+        }
+        return new File(command.getOptionValue("file", defaultFile));
+    }
+    
     private static void setSystemPropertyIfMissing(String key, String value) {
         if (System.getProperty(key) == null) {
             System.setProperty(key, value);
         }
     }
 
-    private CommandLine command;
+    private final CommandLine command;
 
-    private final RequestLogHandler accessLog = new RequestLogHandler();
+    private final RequestLogHandler accessLog;
 
-    private final WebAppContext webapp = new WebAppContext();
+    private final WebAppContext webapp;
 
-    private final Server server = new Server();
+    private final Server server;
 
-    private final ServerConnector connector = new ServerConnector(server);
+    private final ServerConnector connector;
+
+    private final File repository; 
+
+    private final File log; 
 
     /**
      * Construct Main application instance.
@@ -180,8 +163,50 @@ public class Main {
      * <EM>Note:</EM> Constructor is protected because other projects such as Commons VFS can extend this for some reasons
      *       (e.g, unit testing against Jackrabbit WebDAV).
      */
-    protected Main(CommandLine command) throws ParseException {
+    private Main(CommandLine command) throws ParseException {
         this.command = command;
+
+        repository = new File(command.getOptionValue("repo", "jackrabbit"));
+        repository.mkdirs();
+        log = new File(repository, "log");
+        log.mkdir();
+
+        if (!command.hasOption("quiet")) {
+            System.out.println("Using repository directory " + repository);
+            System.out.println("Writing log messages to " + log);
+        }
+
+        setSystemPropertyIfMissing(
+                "jackrabbit.log",
+                new File(log, "jackrabbit.log").getPath());
+        setSystemPropertyIfMissing(
+                "jetty.log",
+                new File(log, "jetty.log").getPath());
+
+        if (command.hasOption("debug")) {
+            setSystemPropertyIfMissing("log.level", "DEBUG");
+        } else {
+            setSystemPropertyIfMissing("log.level", "INFO");
+        }
+
+        setSystemPropertyIfMissing(
+                "derby.stream.error.file",
+                new File(log, "derby.log").getPath());
+
+        accessLog = new RequestLogHandler();
+        webapp = new WebAppContext();
+        server = new Server();
+        connector = new ServerConnector(server);
+    }
+
+    /**
+     * Construct Main application instance.
+     * <P>
+     * <EM>Note:</EM> Constructor is protected because other projects such as Commons VFS can extend this for some reasons
+     *       (e.g, unit testing against Jackrabbit WebDAV).
+     */
+    protected Main(String[] args) throws ParseException {
+        this(createCommand(args, new Options()));
     }
 
     /**
@@ -190,7 +215,17 @@ public class Main {
      * <EM>Note:</EM> this is public because this can be used by other projects in unit tests. e.g, Commons-VFS.
      * @throws Exception if any exception occurs
      */
-    public void run(File file, File repository, File log) throws Exception {
+    public void run() throws Exception {
+        run(findJarFileLocation(command));
+    }
+    
+    /**
+     * Run this Main application.
+     * <P>
+     * <EM>Note:</EM> this is public because this can be used by other projects in unit tests. e.g, Commons-VFS.
+     * @throws Exception if any exception occurs
+     */
+    private void run(File jarFile) throws Exception {
         message("Welcome to Apache Jackrabbit!");
         message("-------------------------------");
 
@@ -200,7 +235,7 @@ public class Main {
             message("Starting the server...");
             File tmp = new File(repository, "tmp");
             tmp.mkdir();
-            prepareWebapp(file, repository, tmp);
+            prepareWebapp(jarFile, repository, tmp);
             accessLog.setHandler(webapp);
             prepareAccessLog(log);
             server.setHandler(accessLog);
