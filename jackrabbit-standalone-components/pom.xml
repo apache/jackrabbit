@@ -130,20 +130,7 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-jsp</artifactId>
-      <exclusions>
-        <exclusion>
-          <!-- https://issues.apache.org/jira/browse/JCR-4626 -->
-          <groupId>org.glassfish</groupId>
-          <artifactId>javax.el</artifactId>
-        </exclusion>
-      </exclusions>       
-    </dependency>
-    <dependency>
-      <!-- https://issues.apache.org/jira/browse/JCR-4626 -->
-      <groupId>org.glassfish</groupId>
-      <artifactId>javax.el</artifactId>
-      <version>3.0.0</version>
+      <artifactId>apache-jsp</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
