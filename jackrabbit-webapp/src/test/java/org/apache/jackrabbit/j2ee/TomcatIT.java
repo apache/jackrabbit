@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 
 import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.io.FileUtils;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -75,8 +76,11 @@ public class TomcatIT extends TestCase {
         tomcat.setBaseDir(baseDir.getPath());
         tomcat.setHostname(url.getHost());
         tomcat.setPort(url.getPort());
+        tomcat.getConnector();
 
-        tomcat.addWebapp("", war.getAbsolutePath());
+        StandardJarScanner jarScanner = new StandardJarScanner();
+        jarScanner.setScanManifest(false);
+        tomcat.addWebapp("", war.getAbsolutePath()).setJarScanner(jarScanner);
 
         tomcat.start();
 
