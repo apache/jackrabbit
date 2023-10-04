@@ -28,6 +28,8 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.rmi.remote.RemoteItem;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteItem RemoteItem}
  * interface. This class makes a remote item locally available using
@@ -40,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteItem;
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
  */
-public class ClientItem extends ClientObject implements Item {
+@Deprecated public class ClientItem extends ClientObject implements Item {
 
     /** Current session. */
     private Session session;

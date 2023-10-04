@@ -106,6 +106,8 @@ import org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicyIterat
 import org.apache.jackrabbit.rmi.server.security.ServerPrivilege;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Default implementation of the {@link RemoteAdapterFactory
  * RemoteAdapterFactory} interface. This factory uses the server adapters
  * defined in this package as the default adapter implementations. Subclasses
@@ -115,7 +117,7 @@ import org.apache.jackrabbit.rmi.server.security.ServerPrivilege;
  * The <code>bufferSize</code> property can be used to configure the size of the
  * buffer used by iterators to speed up iterator traversal over the network.
  */
-public class ServerAdapterFactory implements RemoteAdapterFactory {
+@Deprecated public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /** The default iterator buffer size. */
     private static final int DEFAULT_BUFFER_SIZE = 100;

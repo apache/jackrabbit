@@ -24,9 +24,11 @@ import javax.jcr.version.VersionIterator;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A ServerIterator for iterating versions.
  */
-public class ServerVersionIterator extends ServerIterator {
+@Deprecated public class ServerVersionIterator extends ServerIterator {
 
     /**
      * Creates a ServerVersionIterator instance.

@@ -22,9 +22,11 @@ import junit.framework.TestSuite;
 import org.apache.jackrabbit.test.JCRTestSuite;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * JCR API conformance test suite.
  */
-public class ConformanceTest extends TestCase {
+@Deprecated public class ConformanceTest extends TestCase {
 
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();

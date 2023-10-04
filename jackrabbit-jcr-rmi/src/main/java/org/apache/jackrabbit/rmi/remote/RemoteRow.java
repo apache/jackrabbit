@@ -23,6 +23,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.query.Row Row} interface.
  * Used by the  {@link org.apache.jackrabbit.rmi.server.ServerRow ServerRow}
  * and {@link org.apache.jackrabbit.rmi.client.ClientRow ClientRow}
@@ -34,7 +36,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientRow
  * @see org.apache.jackrabbit.rmi.server.ServerRow
  */
-public interface RemoteRow extends Remote {
+@Deprecated public interface RemoteRow extends Remote {
 
     /**
      * @see javax.jcr.query.Row#getValues()

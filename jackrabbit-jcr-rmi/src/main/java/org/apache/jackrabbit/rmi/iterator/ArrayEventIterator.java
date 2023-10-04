@@ -20,12 +20,14 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Array implementation of the JCR
  * {@link javax.jcr.observation.EventIterator EventIterator} interface.
  * This class is used by the JCR-RMI client adapters to convert
  * node arrays to iterators.
  */
-public class ArrayEventIterator extends ArrayIterator implements EventIterator {
+@Deprecated public class ArrayEventIterator extends ArrayIterator implements EventIterator {
 
     /**
      * Creates an iterator for the given array of events.

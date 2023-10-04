@@ -22,6 +22,8 @@ import java.rmi.RemoteException;
 import javax.jcr.RepositoryException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.lock.Lock} interface.
  * Used by the  {@link org.apache.jackrabbit.rmi.server.ServerLock ServerLock}
  * and {@link org.apache.jackrabbit.rmi.client.ClientLock ClientLock}
@@ -37,7 +39,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientLock
  * @see org.apache.jackrabbit.rmi.server.ServerLock
  */
-public interface RemoteLock extends Remote {
+@Deprecated public interface RemoteLock extends Remote {
 
     /**
      * Remote version of the

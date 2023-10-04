@@ -33,6 +33,8 @@ import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>SerialValueFactory</code> class is used in the RMI infrastructure
  * to create serializable <code>Value</code> instances on the client side.
  * <p>
@@ -45,7 +47,7 @@ import javax.jcr.ValueFormatException;
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
  */
-public class SerialValueFactory implements ValueFactory {
+@Deprecated public class SerialValueFactory implements ValueFactory {
 
     /** The singleton value factory instance */
     private static final SerialValueFactory INSTANCE = new SerialValueFactory();

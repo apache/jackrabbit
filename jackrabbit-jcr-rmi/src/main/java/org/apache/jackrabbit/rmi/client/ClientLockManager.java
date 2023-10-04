@@ -25,7 +25,7 @@ import javax.jcr.lock.LockManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteLockManager;
 
-public class ClientLockManager extends ClientObject implements LockManager {
+@Deprecated public class ClientLockManager extends ClientObject implements LockManager {
 
     /** The current session. */
     private Session session;

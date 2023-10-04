@@ -22,6 +22,8 @@ import java.rmi.RemoteException;
 import javax.jcr.RepositoryException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.observation.ObservationManager ObservationManager}
  * interface. Used by the
  * {@link org.apache.jackrabbit.rmi.server.ServerObservationManager ServerObservationManager}
@@ -38,7 +40,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientObservationManager
  * @see org.apache.jackrabbit.rmi.server.ServerObservationManager
  */
-public interface RemoteObservationManager extends Remote {
+@Deprecated public interface RemoteObservationManager extends Remote {
 
     /**
      * Remote version of the

@@ -30,7 +30,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 
-public class ServerVersionManager extends ServerObject
+@Deprecated public class ServerVersionManager extends ServerObject
         implements RemoteVersionManager {
 
     private final Session session;    

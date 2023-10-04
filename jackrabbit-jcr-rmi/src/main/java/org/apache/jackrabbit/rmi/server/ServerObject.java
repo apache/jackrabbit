@@ -56,11 +56,13 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Base class for remote adapters. The purpose of this class is to
  * centralize the handling of the RemoteAdapterFactory instance used
  * to instantiate new server adapters.
  */
-public class ServerObject extends UnicastRemoteObject {
+@Deprecated public class ServerObject extends UnicastRemoteObject {
 
     /** Factory for creating server adapters. */
     private RemoteAdapterFactory factory;

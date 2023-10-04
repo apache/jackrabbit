@@ -26,6 +26,8 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.Session Session} interface.
  * Used by the
  * {@link org.apache.jackrabbit.rmi.server.ServerSession ServerSession}
@@ -45,7 +47,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
  * @see org.apache.jackrabbit.rmi.client.ClientSession
  * @see org.apache.jackrabbit.rmi.server.ServerSession
  */
-public interface RemoteSession extends Remote {
+@Deprecated public interface RemoteSession extends Remote {
 
     /**
      * Remote version of the

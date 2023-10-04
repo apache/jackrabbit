@@ -31,7 +31,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.principal.ServerPrincipal;
 
-public class ServerAccessControlList extends ServerAccessControlPolicy
+@Deprecated public class ServerAccessControlList extends ServerAccessControlPolicy
         implements RemoteAccessControlList {
 
     public ServerAccessControlList(final AccessControlList acl,

@@ -28,6 +28,8 @@ import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemotePrivilege RemotePrivilege}
  * interface. This class makes a remote Privilege locally available using the
  * JCR {@link Privilege Privilege} interface.
@@ -35,7 +37,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * @see javax.jcr.security.Privilege
  * @see org.apache.jackrabbit.rmi.remote.security.RemotePrivilege
  */
-public class ClientPrivilege extends ClientObject implements Privilege {
+@Deprecated public class ClientPrivilege extends ClientObject implements Privilege {
 
     private final RemotePrivilege rp;
 

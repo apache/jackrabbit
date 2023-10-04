@@ -21,7 +21,7 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 
-public interface RemoteVersionManager extends Remote {
+@Deprecated public interface RemoteVersionManager extends Remote {
 
     /**
      * Remote version of the

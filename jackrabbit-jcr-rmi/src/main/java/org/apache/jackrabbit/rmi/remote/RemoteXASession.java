@@ -23,10 +23,12 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the {@link org.apache.jackrabbit.api.XASession}
  * interface.
  */
-public interface RemoteXASession extends RemoteSession, Remote {
+@Deprecated public interface RemoteXASession extends RemoteSession, Remote {
 
     /**
      * Remote version of the

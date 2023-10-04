@@ -34,6 +34,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR {@link javax.jcr.Session Session} interface.
  * This class makes a local session available as an RMI service using the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
@@ -42,7 +44,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
  */
-public class ServerSession extends ServerObject implements RemoteSession {
+@Deprecated public class ServerSession extends ServerObject implements RemoteSession {
 
     /** The adapted local session. */
     private Session session;

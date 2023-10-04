@@ -53,6 +53,8 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteSession RemoteSession}
  * interface. This class makes a remote session locally available using
@@ -61,7 +63,7 @@ import org.xml.sax.SAXException;
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
  */
-public class ClientSession extends ClientObject implements Session {
+@Deprecated public class ClientSession extends ClientObject implements Session {
 
     /**
      * Logger instance.

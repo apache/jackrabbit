@@ -40,6 +40,8 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemoteWorkspace RemoteWorkspace}
  * interface. This class makes a remote workspace locally available using
  * the JCR {@link Workspace Workspace} interface.
@@ -47,7 +49,7 @@ import org.xml.sax.SAXException;
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
  */
-public class ClientWorkspace extends ClientObject implements Workspace {
+@Deprecated public class ClientWorkspace extends ClientObject implements Workspace {
 
     /** The current session. */
     private Session session;

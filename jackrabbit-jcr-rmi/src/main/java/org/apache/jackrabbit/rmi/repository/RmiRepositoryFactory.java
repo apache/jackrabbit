@@ -40,7 +40,7 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.client.SafeClientRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
-public class RmiRepositoryFactory implements RepositoryFactory {
+@Deprecated public class RmiRepositoryFactory implements RepositoryFactory {
 
     private static final String REPOSITORY_URI =
         "org.apache.jackrabbit.repository.uri";

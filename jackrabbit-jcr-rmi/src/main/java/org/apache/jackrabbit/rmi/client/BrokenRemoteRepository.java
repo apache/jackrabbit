@@ -25,11 +25,13 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Dummy remote repository instance that throws a {@link RemoteException}
  * whenever any method is invoked. Used as a sentinel object by the
  * {@link SafeClientRepository} class.
  */
-public class BrokenRemoteRepository implements RemoteRepository {
+@Deprecated public class BrokenRemoteRepository implements RemoteRepository {
 
     /**
      * The remote exception thrown by methods of this instance.

@@ -28,6 +28,8 @@ import javax.jcr.query.QueryResult;
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link RemoteQuery RemoteQuery}
  * interface. This class makes a remote query locally available using
@@ -36,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteQuery;
  * @see javax.jcr.query.Query Query
  * @see org.apache.jackrabbit.rmi.remote.RemoteQuery
  */
-public class ClientQuery extends ClientObject implements Query {
+@Deprecated public class ClientQuery extends ClientObject implements Query {
 
     /** The current session */
     private Session session;

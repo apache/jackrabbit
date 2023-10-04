@@ -29,6 +29,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR
  * {@link javax.jcr.observation.ObservationManager ObservationManager} interface.
  * This class makes a local item available as an RMI service using
@@ -44,7 +46,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * @see javax.jcr.observation.ObservationManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteObservationManager
  */
-public class ServerObservationManager extends ServerObject implements
+@Deprecated public class ServerObservationManager extends ServerObject implements
         RemoteObservationManager {
 
     /** The adapted local observation manager. */

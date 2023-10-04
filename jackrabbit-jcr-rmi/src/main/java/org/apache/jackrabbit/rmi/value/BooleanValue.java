@@ -19,9 +19,11 @@ package org.apache.jackrabbit.rmi.value;
 import javax.jcr.PropertyType;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Boolean value.
  */
-class BooleanValue extends AbstractValue {
+@Deprecated class BooleanValue extends AbstractValue {
 
     /**
      * Serial version UID

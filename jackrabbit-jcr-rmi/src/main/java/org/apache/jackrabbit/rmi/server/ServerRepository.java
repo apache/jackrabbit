@@ -29,6 +29,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR {@link javax.jcr.Repository Repository}
  * interface. This class makes a local repository available as an RMI service
  * using the
@@ -38,7 +40,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */
-public class ServerRepository extends ServerObject implements RemoteRepository {
+@Deprecated public class ServerRepository extends ServerObject implements RemoteRepository {
 
     /** The adapted local repository. */
     private Repository repository;

@@ -23,6 +23,8 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Abstract base class for repository factories that make a remote repository
  * available locally. Subclasses need to implement the
  * {@link #getRemoteRepository()} method to actually retrieve the remote
@@ -30,7 +32,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-public abstract class AbstractRemoteRepositoryFactory
+@Deprecated public abstract class AbstractRemoteRepositoryFactory
         implements RepositoryFactory {
 
     /**

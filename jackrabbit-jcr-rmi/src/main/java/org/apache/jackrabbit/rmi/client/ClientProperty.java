@@ -39,6 +39,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteProperty;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteProperty RemoteProperty}
  * interface. This class makes a remote property locally available using
@@ -47,7 +49,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.remote.RemoteProperty
  */
-public class ClientProperty extends ClientItem implements Property {
+@Deprecated public class ClientProperty extends ClientItem implements Property {
 
     /** The adapted remote property. */
     private RemoteProperty remote;

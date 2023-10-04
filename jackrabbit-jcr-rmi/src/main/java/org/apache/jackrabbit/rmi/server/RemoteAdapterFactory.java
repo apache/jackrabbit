@@ -85,6 +85,8 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
 import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Factory interface for creating remote adapters for local resources.
  * This interface defines how the local JCR interfaces are adapted to
  * remote JCR-RMI references. The adaption mechanism can be
@@ -100,7 +102,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * @see org.apache.jackrabbit.rmi.server.ServerAdapterFactory
  * @see org.apache.jackrabbit.rmi.server.ServerObject
  */
-public interface RemoteAdapterFactory {
+@Deprecated public interface RemoteAdapterFactory {
 
     /**
      * Returns the port number to which the server objects created by

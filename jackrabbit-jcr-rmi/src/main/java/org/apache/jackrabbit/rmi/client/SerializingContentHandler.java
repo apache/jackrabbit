@@ -41,6 +41,8 @@ import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A {@link ContentHandler} that serializes SAX events to a given
  * {@link Result} instance. The JAXP {@link SAXTransformerFactory}
  * facility is used for the serialization.
@@ -55,7 +57,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * org.apache.cocoon.serialization.AbstractTextSerializer class in the
  * cocoon-pipeline-impl component for the original code.
  */
-class SerializingContentHandler extends DefaultContentHandler {
+@Deprecated class SerializingContentHandler extends DefaultContentHandler {
 
     /**
      * The character encoding used for serialization (UTF-8).

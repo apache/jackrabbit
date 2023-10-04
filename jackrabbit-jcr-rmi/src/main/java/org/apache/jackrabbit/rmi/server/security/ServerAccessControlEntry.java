@@ -26,7 +26,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerObject;
 
-public class ServerAccessControlEntry extends ServerObject implements
+@Deprecated public class ServerAccessControlEntry extends ServerObject implements
         RemoteAccessControlEntry {
 
     private final AccessControlEntry ace;

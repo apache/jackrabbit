@@ -23,13 +23,15 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>RemoteEventCollection</code> class serves as a container for
  * notifications sent to registered event listeners. Instances of this class are
  * created by the server-side event listener proxies and sent to the client-side
  * event poller. On the client-side the enclosed list of events is then sent to
  * the listener identified by the contained listener identifier.
  */
-public interface RemoteEventCollection extends Remote {
+@Deprecated public interface RemoteEventCollection extends Remote {
 
     /**
      * Returns unique identifier of the client-side listener to which the

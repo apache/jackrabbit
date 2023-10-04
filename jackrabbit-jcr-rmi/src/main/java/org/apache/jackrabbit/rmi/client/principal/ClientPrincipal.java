@@ -25,6 +25,8 @@ import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemotePrincipal RemotePrincipal}
  * interface. This class makes a remote principal locally available using the
  * Java {@link Principal} interface.
@@ -32,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  * @see Principal
  * @see RemotePrincipal
  */
-public class ClientPrincipal implements Principal {
+@Deprecated public class ClientPrincipal implements Principal {
 
     private final RemotePrincipal p;
 
