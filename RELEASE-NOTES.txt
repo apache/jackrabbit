@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.19
+Release Notes -- Apache Jackrabbit -- Version 2.21.20
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.19, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.20, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.19 is an unstable release cut directly from
+Apache Jackrabbit 2.21.20 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
@@ -16,23 +16,23 @@ NOTE: this release disables RMI access in the standalone and webapp projects.
 See https://issues.apache.org/jira/browse/JCR-4960 for more information.
 
 
-Changes in Jackrabbit 2.21.19
+Changes in Jackrabbit 2.21.20
 -----------------------------
 
 Bug
 
-    [JCR-4957] - jackrabbit-standalone: 2.21.18 breaks binary compatibility
+    [JCR-4940] - jackrabbit-jcr2spi is incompatible with Java 21
 
 Task
 
-    [JCR-4955] - set baseline comparisonVersion to latest stable (2.20.11)
-    [JCR-4959] - update Apache parent pom to version 30
-    [JCR-4960] - Disable RMI by default
-    [JCR-4962] - Update h2db dependency to 2.2.220
-    [JCR-4963] - vfs-ext: update hadoop-hdfs-client dependency to 3.3.6
-    [JCR-4964] - update kotlin-stdlib dependency to 1.9.0
-    [JCR-4965] - webapp: remove Guava test dependency
-    [JCR-4966] - update aws java sdk version to 1.12.523
+    [JCR-4951] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.16
+    [JCR-4969] - set baseline comparisonVersion to latest stable (2.20.12)
+    [JCR-4970] - it-osgi: fix package name
+    [JCR-4971] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.17
+    [JCR-4973] - Deprecate RMI support
+    [JCR-4974] - Update easymock dependency to 5.2.0
+    [JCR-4975] - update aws java sdk version to 1.12.560
+    [JCR-4976] - Update tomcat dependency to 9.0.80
 
 
 For more detailed information about all the changes in this and other
