@@ -45,7 +45,6 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <argLine>${test.opts}</argLine>
-              <fork>true</fork>
               <systemProperties>
                 <property>
                   <name>jackrabbit.test.integration</name>

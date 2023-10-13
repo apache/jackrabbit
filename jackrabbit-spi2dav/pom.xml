@@ -45,7 +45,6 @@
             <!-- <include>**/TestAll.java</include> -->
           </includes>
           <trimStackTrace>false</trimStackTrace>
-          <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>
