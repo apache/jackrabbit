@@ -47,7 +47,6 @@
           <includes>
             <include>**/*TestAll.java</include>
           </includes>
-          <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
         </configuration>
       </plugin>

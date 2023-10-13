@@ -42,7 +42,6 @@
           <includes>
             <include>**/*Test.java</include>
           </includes>
-          <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>

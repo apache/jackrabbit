@@ -69,7 +69,6 @@
                                 <include>**/*Test.java</include>
                             </includes>
                             <workingDirectory>target</workingDirectory> 
-                            <forkMode>once</forkMode>
                             <argLine>${test.opts}</argLine>
                         </configuration>
                     </plugin>
