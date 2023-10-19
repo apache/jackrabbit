@@ -175,8 +175,6 @@
                   <value>
                     <!-- JCR-4570 : WebdavRequestImpl does not check ETags if there is no resource or no exclusive write lock -->
                     org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfEtag
-                    <!-- JCR-4571: WebdavRequestImpl stores If-Header values using either absolute URIs or absolute paths, but both may be used for lookup-->
-                    org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfLockToken
                   </value>
                 </property>
               </systemProperties>
