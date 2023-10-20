@@ -170,13 +170,6 @@
                   <name>derby.stream.error.file</name>
                   <value>target/derby.log</value>
                 </property>
-                <property>
-                  <name>known.issues</name>
-                  <value>
-                    <!-- JCR-4570 : WebdavRequestImpl does not check ETags if there is no resource or no exclusive write lock -->
-                    org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfEtag
-                  </value>
-                </property>
               </systemProperties>
             </configuration>
           </plugin>
