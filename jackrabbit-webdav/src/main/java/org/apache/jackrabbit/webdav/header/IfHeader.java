@@ -662,7 +662,7 @@ public class IfHeader implements Header {
          */
         @Override
         public boolean match(String token, String etag) {
-            return super.match(token);
+            return token == null || super.match(token);
         }
 
         /**
