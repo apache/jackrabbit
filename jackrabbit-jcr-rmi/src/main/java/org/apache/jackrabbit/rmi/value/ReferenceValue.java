@@ -21,13 +21,15 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>ReferenceValue</code> class implements the committed value state
  * for Reference values as a part of the State design pattern (Gof) used by
  * this package.
  *
  * @since 0.16.4.1
  */
-public class ReferenceValue extends AbstractValue {
+@Deprecated public class ReferenceValue extends AbstractValue {
 
     /**
      * Serial version UID.

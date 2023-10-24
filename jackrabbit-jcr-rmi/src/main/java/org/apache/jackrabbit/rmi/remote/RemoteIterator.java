@@ -21,6 +21,8 @@ import java.rmi.RemoteException;
 import java.util.NoSuchElementException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.RangeIterator} interface.
  * Used by the {@link org.apache.jackrabbit.rmi.server.iterator.ServerIterator} and
  * {@link org.apache.jackrabbit.rmi.client.iterator.ClientIterator} classes to
@@ -29,7 +31,7 @@ import java.util.NoSuchElementException;
  * This interface allows both the client and server side to control the
  * amount of buffering used to increase performance.
  */
-public interface RemoteIterator extends Remote {
+@Deprecated public interface RemoteIterator extends Remote {
 
     /**
      * Returns the size of the iteration, or <code>-1</code> if the

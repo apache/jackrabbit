@@ -21,11 +21,13 @@ import java.rmi.RemoteException;
 import java.util.NoSuchElementException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A buffered remote iterator. Used to transfer a remote iterator reference
  * along with a buffer of the first few iterator elements in one network
  * transmission.
  */
-public class BufferIterator implements RemoteIterator, Serializable {
+@Deprecated public class BufferIterator implements RemoteIterator, Serializable {
 
     /** The element buffer. Set to <code>null</code> when the iterator ends. */
     private Object[] buffer;

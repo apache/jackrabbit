@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.principal.RemoteGroup;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 
-public class ServerGroup extends ServerPrincipal implements RemoteGroup {
+@Deprecated public class ServerGroup extends ServerPrincipal implements RemoteGroup {
 
     public ServerGroup(final GroupPrincipal principal, final RemoteAdapterFactory factory)
             throws RemoteException {

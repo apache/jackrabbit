@@ -24,6 +24,8 @@ import javax.jcr.nodetype.PropertyDefinition;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition RemotePropertyDefinition}
  * interface. This class makes a remote property definition locally available
@@ -32,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
  * @see javax.jcr.nodetype.PropertyDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */
-public class ClientPropertyDefinition extends ClientItemDefinition implements PropertyDefinition {
+@Deprecated public class ClientPropertyDefinition extends ClientItemDefinition implements PropertyDefinition {
 
     /** The adapted remote property. */
     private RemotePropertyDefinition remote;

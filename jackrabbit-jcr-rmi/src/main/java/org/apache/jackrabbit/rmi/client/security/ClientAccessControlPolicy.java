@@ -24,6 +24,8 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemoteAccessControlPolicy
  * RemoteAccessControlPolicy} interface. This class makes a remote
  * AccessControlPolicy locally available using the JCR
@@ -32,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
  * @see javax.jcr.security.AccessControlPolicy
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy
  */
-public class ClientAccessControlPolicy extends ClientObject implements
+@Deprecated public class ClientAccessControlPolicy extends ClientObject implements
         AccessControlPolicy {
 
     private final RemoteAccessControlPolicy racp;

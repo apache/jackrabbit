@@ -29,12 +29,14 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Base class for client adapter objects. The only purpose of
  * this class is to centralize the handling of the
  * local adapter factory used by the client adapters to
  * instantiate new adapters.
  */
-public class ClientObject {
+@Deprecated public class ClientObject {
 
     /** Local adapter factory. */
     private LocalAdapterFactory factory;

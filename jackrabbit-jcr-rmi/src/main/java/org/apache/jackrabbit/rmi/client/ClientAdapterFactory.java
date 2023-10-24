@@ -99,6 +99,8 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
 import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Default implementation of the
  * {@link org.apache.jackrabbit.rmi.client.LocalAdapterFactory LocalAdapterFactory}
  * interface. This factory uses the client adapters defined in this
@@ -106,7 +108,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * easily override or extend the default adapters by implementing the
  * corresponding factory methods.
  */
-public class ClientAdapterFactory implements LocalAdapterFactory {
+@Deprecated public class ClientAdapterFactory implements LocalAdapterFactory {
 
     /**
      * Creates and returns a {@link ClientRepository ClientRepository}

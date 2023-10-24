@@ -27,6 +27,8 @@ import javax.jcr.query.Row;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemoteRow RemoteRow}
  * interface. This class makes a remote query row locally available using
  * the JCR {@link Row Row} interface.
@@ -34,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  * @see javax.jcr.query.Row Row
  * @see org.apache.jackrabbit.rmi.remote.RemoteRow
  */
-public class ClientRow extends ClientObject implements Row {
+@Deprecated public class ClientRow extends ClientObject implements Row {
 
     /** Current session. */
     private Session session;

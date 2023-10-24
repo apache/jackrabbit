@@ -22,6 +22,8 @@ import java.rmi.RemoteException;
 import javax.jcr.Value;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.nodetype.NodeType NodeType}
  * interface. Used by the
  * {@link org.apache.jackrabbit.rmi.server.ServerNodeType ServerNodeType} and
@@ -40,7 +42,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientNodeType
  * @see org.apache.jackrabbit.rmi.server.ServerNodeType
  */
-public interface RemoteNodeType extends Remote {
+@Deprecated public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the

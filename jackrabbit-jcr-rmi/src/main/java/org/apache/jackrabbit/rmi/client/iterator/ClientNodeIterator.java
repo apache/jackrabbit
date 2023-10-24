@@ -25,9 +25,11 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A ClientIterator for iterating remote nodes.
  */
-public class ClientNodeIterator extends ClientIterator implements NodeIterator {
+@Deprecated public class ClientNodeIterator extends ClientIterator implements NodeIterator {
 
     /** The current session. */
     private final Session session;

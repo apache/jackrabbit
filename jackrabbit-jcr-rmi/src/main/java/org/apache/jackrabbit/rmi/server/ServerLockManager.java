@@ -24,7 +24,7 @@ import javax.jcr.lock.LockManager;
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteLockManager;
 
-public class ServerLockManager extends ServerObject
+@Deprecated public class ServerLockManager extends ServerObject
         implements RemoteLockManager {
 
     /** The adapted local lock manager. */

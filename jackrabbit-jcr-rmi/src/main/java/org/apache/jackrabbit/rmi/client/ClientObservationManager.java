@@ -31,6 +31,8 @@ import org.apache.jackrabbit.rmi.observation.ClientEventPoll;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>ClientObservationManager</code> class
  * <p>
  * This class uses an instance of the
@@ -47,7 +49,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  *
  * @see org.apache.jackrabbit.rmi.observation.ClientEventPoll
  */
-public class ClientObservationManager extends ClientObject implements
+@Deprecated public class ClientObservationManager extends ClientObject implements
         ObservationManager {
 
     /** The remote observation manager */

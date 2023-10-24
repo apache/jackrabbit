@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>ClientEventPoll</code> class is the registry for client-side
  * event listeners on behalf of the
  * {@link org.apache.jackrabbit.rmi.client.ClientObservationManager} class. In
@@ -53,7 +55,7 @@ import org.slf4j.LoggerFactory;
  *
  * @see #run()
  */
-public class ClientEventPoll extends Thread {
+@Deprecated public class ClientEventPoll extends Thread {
 
     /** logger */
     private static final Logger log =

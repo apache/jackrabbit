@@ -32,6 +32,8 @@ import org.apache.jackrabbit.rmi.client.RemoteRepositoryException;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlList;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemoteAccessControlList
  * RemoteAccessControlList} interface. This class makes a remote
  * AccessControlList locally available using the JCR {@link AccessControlList
@@ -40,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlList;
  * @see javax.jcr.security.AccessControlList
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlList
  */
-public class ClientAccessControlList extends ClientAccessControlPolicy
+@Deprecated public class ClientAccessControlList extends ClientAccessControlPolicy
         implements AccessControlList {
 
     public ClientAccessControlList(final RemoteAccessControlList racl,

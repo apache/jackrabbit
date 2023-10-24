@@ -28,11 +28,13 @@ import org.apache.jackrabbit.rmi.server.ServerObject;
 
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR {@link RangeIterator} interface. This
  * class makes a local iterator available as an RMI service using the
  * {@link RemoteIterator} interface.
  */
-public abstract class ServerIterator extends ServerObject
+@Deprecated public abstract class ServerIterator extends ServerObject
         implements RemoteIterator {
 
     /** The adapted local iterator. */

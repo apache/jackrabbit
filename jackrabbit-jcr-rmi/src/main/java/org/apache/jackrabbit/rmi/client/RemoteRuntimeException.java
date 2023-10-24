@@ -19,6 +19,8 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * JCR-RMI remote runtime exception. Used by the JCR-RMI client to wrap
  * RMI errors into RuntimeExceptions to avoid breaking the JCR interfaces.
  * <p>
@@ -26,7 +28,7 @@ import java.rmi.RemoteException;
  * throw RepositoryExceptions, then the RemoteException is wrapped into
  * a RemoteRepositoryException.
  */
-public class RemoteRuntimeException extends RuntimeException {
+@Deprecated public class RemoteRuntimeException extends RuntimeException {
 
     /**
      * Creates a RemoteRuntimeException based on the given RemoteException.

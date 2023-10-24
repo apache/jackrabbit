@@ -25,6 +25,8 @@ import javax.jcr.observation.Event;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>ServerEventCollection</code> class implements the
  * {@link org.apache.jackrabbit.rmi.remote.RemoteEventCollection}event to
  * actually sent the server-side event to the client.
@@ -34,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
  * provided such that the receiving listener may be identified on the
  * client-side.
  */
-public class ServerEventCollection extends ServerObject implements
+@Deprecated public class ServerEventCollection extends ServerObject implements
         RemoteEventCollection {
 
     /** The unique identifier of the receiving listener */

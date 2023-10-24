@@ -19,11 +19,13 @@ package org.apache.jackrabbit.rmi.observation;
 import java.util.LinkedList;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The <code>Queue</code> class is a very simple queue assuming that there is
  * at least one consumer and potentially multiple producers. This class poses
  * no restrictions on the size of the queue.
  */
-public class Queue {
+@Deprecated public class Queue {
 
     /** The linked list implementing the queue of data */
     private final LinkedList queue;

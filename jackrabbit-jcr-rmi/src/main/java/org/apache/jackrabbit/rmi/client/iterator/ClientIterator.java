@@ -27,6 +27,8 @@ import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A buffering local adapter for the JCR-RMI {@link RemoteIterator}
  * interface. This class makes the remote iterator locally available
  * using the JCR {@link RangeIterator} interface. The element arrays
@@ -34,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
  * <p>
  * See the subclasses for type-specific versions of this abstract class.
  */
-public abstract class ClientIterator extends ClientObject
+@Deprecated public abstract class ClientIterator extends ClientObject
         implements RangeIterator {
 
     /** The adapted remote iterator. */

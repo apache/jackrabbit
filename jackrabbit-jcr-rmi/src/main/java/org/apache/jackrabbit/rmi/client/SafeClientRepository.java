@@ -28,6 +28,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A "safe" local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteRepository RemoteRepository}
  * interface. This class uses an abstract factory method for loading
@@ -39,7 +41,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */
-public abstract class SafeClientRepository extends ClientObject
+@Deprecated public abstract class SafeClientRepository extends ClientObject
         implements Repository {
 
     /** The adapted remote repository. */

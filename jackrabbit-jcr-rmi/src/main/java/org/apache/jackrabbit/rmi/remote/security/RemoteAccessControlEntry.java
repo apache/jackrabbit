@@ -22,6 +22,8 @@ import java.rmi.RemoteException;
 import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.security.AccessControlEntry
  * AccessControlEntry} interface. Used by the
  * {@link org.apache.jackrabbit.rmi.server.security.ServerAccessControlEntry
@@ -42,7 +44,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  * @see org.apache.jackrabbit.rmi.client.security.ClientAccessControlEntry
  * @see org.apache.jackrabbit.rmi.server.security.ServerAccessControlEntry
  */
-public interface RemoteAccessControlEntry extends Remote {
+@Deprecated public interface RemoteAccessControlEntry extends Remote {
 
     /**
      * @see javax.jcr.security.AccessControlEntry#getPrincipal()

@@ -21,13 +21,15 @@ import java.util.NoSuchElementException;
 import javax.jcr.RangeIterator;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Array implementation of the JCR
  * {@link javax.jcr.RangeIterator RangeIterator} interface. This class
  * implements the RangeIterator functionality for an underlying array
  * of objects. Used as the base class for the type-specific iterator
  * classes defined in this package.
  */
-public class ArrayIterator implements RangeIterator {
+@Deprecated public class ArrayIterator implements RangeIterator {
 
     /** The current iterator position. */
     private int position;

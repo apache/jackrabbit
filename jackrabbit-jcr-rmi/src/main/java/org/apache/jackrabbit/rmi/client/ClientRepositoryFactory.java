@@ -32,12 +32,14 @@ import javax.naming.spi.ObjectFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Object factory for JCR-RMI clients. This factory can be used either
  * directly or as a JNDI object factory.
  *
  * @see ClientRepository
  */
-public class ClientRepositoryFactory implements ObjectFactory {
+@Deprecated public class ClientRepositoryFactory implements ObjectFactory {
 
     /**
      * The JNDI parameter name for configuring the RMI URL of

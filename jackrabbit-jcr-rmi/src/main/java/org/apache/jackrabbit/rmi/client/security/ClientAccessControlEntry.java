@@ -30,6 +30,8 @@ import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI {@link RemoteAccessControlEntry
  * RemoteAccessControlEntry} interface. This class makes a remote
  * AccessControlEntry locally available using the JCR {@link AccessControlEntry
@@ -38,7 +40,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry;
  * @see javax.jcr.security.AccessControlEntry
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry
  */
-public class ClientAccessControlEntry extends ClientObject implements
+@Deprecated public class ClientAccessControlEntry extends ClientObject implements
         AccessControlEntry {
 
     private final RemoteAccessControlEntry race;

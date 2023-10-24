@@ -31,6 +31,8 @@ import javax.jcr.nodetype.PropertyDefinitionTemplate;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager RemoteNodeTypeManager}
  * interface. This class makes a remote node type manager locally available
@@ -40,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
  * @see javax.jcr.nodetype.NodeTypeManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager
  */
-public class ClientNodeTypeManager extends ClientObject
+@Deprecated public class ClientNodeTypeManager extends ClientObject
         implements NodeTypeManager {
 
     /** The adapted remote node type manager. */

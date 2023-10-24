@@ -25,6 +25,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteLock;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR {@link javax.jcr.lock.Lock Lock} interface.
  * This class makes a local lock available as an RMI service using
  * the {@link org.apache.jackrabbit.rmi.remote.RemoteLock RemoteLock}
@@ -33,7 +35,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */
-public class ServerLock extends ServerObject implements RemoteLock {
+@Deprecated public class ServerLock extends ServerObject implements RemoteLock {
 
     /** The adapted local lock. */
     private Lock lock;

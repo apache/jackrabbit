@@ -22,6 +22,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote version of the JCR {@link javax.jcr.Node Node} interface.
  * Used by the {@link org.apache.jackrabbit.rmi.server.ServerNode ServerNode}
  * and {@link org.apache.jackrabbit.rmi.client.ClientNode ClientNode}
@@ -49,7 +51,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientNode
  * @see org.apache.jackrabbit.rmi.server.ServerNode
  */
-public interface RemoteNode extends RemoteItem {
+@Deprecated public interface RemoteNode extends RemoteItem {
 
     /**
      * Remote version of the

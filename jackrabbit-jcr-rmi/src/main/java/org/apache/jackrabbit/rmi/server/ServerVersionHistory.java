@@ -27,6 +27,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR {@link javax.jcr.version.VersionHistory VersionHistory}
  * interface. This class makes a local version history available as an RMI
  * service using the
@@ -36,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * @see javax.jcr.version.VersionHistory
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersionHistory
  */
-public class ServerVersionHistory extends ServerNode
+@Deprecated public class ServerVersionHistory extends ServerNode
         implements RemoteVersionHistory {
 
     /** The adapted local version history. */

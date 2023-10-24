@@ -25,6 +25,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteItemDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Local adapter for the JCR-RMI
  * {@link org.apache.jackrabbit.rmi.remote.RemoteItemDefinition RemoteItemDefinition}
  * interface. This class makes a remote item definition locally available using
@@ -37,7 +39,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * @see javax.jcr.nodetype.ItemDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteItemDefinition
  */
-public class ClientItemDefinition extends ClientObject implements ItemDefinition {
+@Deprecated public class ClientItemDefinition extends ClientObject implements ItemDefinition {
 
     /** The adapted remote item definition. */
     private RemoteItemDefinition remote;

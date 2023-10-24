@@ -22,11 +22,13 @@ import java.util.Arrays;
 import javax.transaction.xa.Xid;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Serializable {@link Xid}.
  *
  * @since Jackrabbit JCR-RMI 1.5
  */
-public class SerializableXid implements Serializable, Xid {
+@Deprecated public class SerializableXid implements Serializable, Xid {
 
     private final int formatId;
 

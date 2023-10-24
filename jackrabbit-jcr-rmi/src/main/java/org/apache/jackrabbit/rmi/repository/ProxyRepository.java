@@ -26,13 +26,15 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Repository that proxies all method calls to another repository.
  * The other repository is accessed lazily using a
  * {@link RepositoryFactory repository factory}.
  *
  * @since 1.4
  */
-public class ProxyRepository implements Repository {
+@Deprecated public class ProxyRepository implements Repository {
 
     /**
      * The set of standard descriptor keys defined in the

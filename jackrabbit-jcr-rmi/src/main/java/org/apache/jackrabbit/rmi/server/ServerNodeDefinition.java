@@ -25,6 +25,8 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * Remote adapter for the JCR {@link javax.jcr.nodetype.NodeDefinition NodeDefinition}
  * interface. This class makes a local node definition available as an
  * RMI service using the
@@ -34,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * @see javax.jcr.nodetype.NodeDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition
  */
-public class ServerNodeDefinition extends ServerItemDefinition implements RemoteNodeDefinition {
+@Deprecated public class ServerNodeDefinition extends ServerItemDefinition implements RemoteNodeDefinition {
 
     /** The adapted node definition. */
     private NodeDefinition def;

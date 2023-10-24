@@ -20,11 +20,13 @@ import java.io.Serializable;
 import java.util.NoSuchElementException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * A simple array-based remote iterator. Used when the iteration is
  * short enough for all the elements to be sent over the network in
  * one go.
  */
-public class ArrayIterator implements RemoteIterator, Serializable {
+@Deprecated public class ArrayIterator implements RemoteIterator, Serializable {
 
     /**
      * The elements in this iterator. Set to <code>null</code> when
