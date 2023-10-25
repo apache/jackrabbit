@@ -195,6 +195,8 @@ public class RepositoryAccessServlet extends HttpServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * Checks if the repository is available via JNDI and returns it.
      * @return the repository or <code>null</code>
      * @throws ServletException if this servlet is not properly configured.
@@ -221,11 +223,13 @@ public class RepositoryAccessServlet extends HttpServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * Checks if the repository is available via RMI and returns it.
      * @return the repository or <code>null</code>
      * @throws ServletException if this servlet is not properly configured.
      */
-    private Repository getRepositoryByRMI() throws ServletException {
+    @Deprecated private Repository getRepositoryByRMI() throws ServletException {
         BootstrapConfig config = getConfig();
         if (!config.getRmiConfig().isValid() || !config.getRmiConfig().enabled()) {
             return null;
@@ -337,18 +341,22 @@ public class RepositoryAccessServlet extends HttpServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * optional class for RMI, will only be used, if RMI client is present
      */
-    protected static abstract class ClientFactoryDelegater {
+    @Deprecated protected static abstract class ClientFactoryDelegater {
 
         public abstract Repository getRepository(String uri)
                 throws RemoteException, MalformedURLException, NotBoundException;
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * optional class for RMI, will only be used, if RMI server is present
      */
-    protected static class RMIClientFactoryDelegater extends ClientFactoryDelegater {
+    @Deprecated protected static class RMIClientFactoryDelegater extends ClientFactoryDelegater {
 
         // only used to enforce linking upon Class.forName()
         static String FactoryClassName = ClientRepositoryFactory.class.getName();

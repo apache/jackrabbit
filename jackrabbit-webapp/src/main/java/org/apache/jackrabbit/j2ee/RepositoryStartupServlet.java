@@ -177,9 +177,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      */
     private InitialContext jndiContext;
 
-    private Registry rmiRegistry = null;
+    @Deprecated private Registry rmiRegistry = null;
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * Keeps a strong reference to the server side RMI repository instance to
      * prevent the RMI distributed Garbage Collector from collecting the
      * instance making the repository unaccessible though it should still be.
@@ -190,7 +192,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * @see #registerRMI()
      * @see #unregisterRMI()
      */
-    private Remote rmiRepository;
+    @Deprecated private Remote rmiRepository;
 
     /**
      * the file to the bootstrap config
@@ -488,13 +490,15 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * Registers the repository to an RMI registry configured in the web
      * application. See <a href="#registerAlgo">Registration with RMI</a> in the
      * class documentation for a description of the algorithms used to register
      * the repository with an RMI registry.
      * @throws ServletException if an error occurs.
      */
-    private void registerRMI() {
+    @Deprecated private void registerRMI() {
         RMIConfig rc = config.getRmiConfig();
         if (!rc.isValid() || !rc.enabled()) {
             return;
@@ -588,10 +592,12 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * Unregisters the repository from the RMI registry, if it has previously
      * been registered.
      */
-    private void unregisterRMI() {
+    @Deprecated private void unregisterRMI() {
         if (rmiRepository != null) {
             // Forcibly unexport the repository;
             try {
@@ -643,6 +649,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * Returns an <code>RMIServerSocketFactory</code> used to create the server
      * socket for a locally created RMI registry.
      * <p>
@@ -660,7 +668,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      *         creating <code>java.net.ServerSocket</code> instances bound to
      *         the <code>rmiHost</code>.
      */
-    protected RMIServerSocketFactory getRMIServerSocketFactory(
+    @Deprecated protected RMIServerSocketFactory getRMIServerSocketFactory(
             final InetAddress hostAddress) {
         return new RMIServerSocketFactory() {
             public ServerSocket createServerSocket(int port) throws IOException {
@@ -670,18 +678,22 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * optional class for RMI, will only be used, if RMI server is present
      */
-    protected static abstract class RemoteFactoryDelegater {
+    @Deprecated protected static abstract class RemoteFactoryDelegater {
 
         public abstract Remote createRemoteRepository(Repository repository)
                 throws RemoteException;
     }
 
     /**
+     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+     * <p>
      * optional class for RMI, will only be used, if RMI server is present
      */
-    protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
+    @Deprecated protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
 
         private static final RemoteAdapterFactory FACTORY =
             new ServerAdapterFactory();
@@ -764,4 +776,3 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         resp.sendRedirect(cp + loc);
     }
 }
-
