@@ -28,6 +28,8 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
 /**
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
+ * <p>
  * The RMI config hold information about RMI connection details.
  *
  * It supports the following properties and init parameters:
@@ -43,7 +45,7 @@ import javax.servlet.ServletException;
  * +-------------------+--------------------+
  * </pre>
  */
-public class RMIConfig extends AbstractConfig {
+@Deprecated public class RMIConfig extends AbstractConfig {
 
     /**
      * default logger
