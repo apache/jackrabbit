@@ -52,13 +52,18 @@ public class NameParser {
      */
     public static Name parse(String jcrName, NamespaceResolver resolver, NameFactory factory)
             throws IllegalNameException, NamespaceException {
-        // trivial check
-        int len = jcrName == null ? 0 : jcrName.length();
-        if (len == 0) {
-            throw new IllegalNameException("empty name");
+
+        if (jcrName == null) {
+            complainAndThrow("name is null", "");
         }
+
+        int len = jcrName.length();
+        if (len == 0) {
+            complainAndThrow("empty name", jcrName);
+        }
+
         if (".".equals(jcrName) || "..".equals(jcrName)) {
-            throw new IllegalNameException(jcrName);
+            complainAndThrow("illegal name", jcrName);
         }
 
         // parse the name
@@ -73,36 +78,36 @@ public class NameParser {
             char c = jcrName.charAt(i);
             if (c == ':') {
                 if (state == STATE_PREFIX_START) {
-                    throw new IllegalNameException("Prefix must not be empty");
+                    complainAndThrow("Prefix must not be empty", jcrName, i);
                 } else if (state == STATE_PREFIX) {
                     if (trailingSpaces) {
-                        throw new IllegalNameException("Trailing spaces not allowed");
+                        complainAndThrow("Trailing spaces not allowed", jcrName, i);
                     }
                     prefix = jcrName.substring(0, i);
                     if (!XMLChar.isValidNCName(prefix)) {
-                        throw new IllegalNameException("Invalid name prefix: " + prefix);
+                        complainAndThrow("Invalid name prefix: " + prefix, jcrName, i);
                     }
                     state = STATE_NAME_START;
                 } else if (state == STATE_URI) {
                     // ignore -> validation of uri later on.
                 } else {
-                    throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
+                    complainAndThrow("'" + asDisplayableString(c) + "' not allowed in name", jcrName, i);
                 }
                 trailingSpaces = false;
             } else if (c == ' ') {
                 if (state == STATE_PREFIX_START || state == STATE_NAME_START) {
-                    throw new IllegalNameException(asDisplayableString(c) + " not valid name start");
+                    complainAndThrow("'" + asDisplayableString(c) + "' not valid name start", jcrName, i);
                 }
                 trailingSpaces = true;
             } else if (c == '[' || c == ']' || c == '*' || c == '|') {
-                throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
+                complainAndThrow("'" + asDisplayableString(c) + "' not allowed in name", jcrName, i);
             } else if (Character.isWhitespace(c) && c < 128) {
-                throw new IllegalNameException("Whitespace character " + asDisplayableString(c) + " not allowed in name");
+                complainAndThrow("Whitespace character '" + asDisplayableString(c) + "' not allowed in name", jcrName, i);
             } else if (c == '/') {
                 if (state == STATE_URI_START) {
                     state = STATE_URI;
                 } else if (state != STATE_URI) {
-                    throw new IllegalNameException(asDisplayableString(c) + " not allowed in name");
+                    complainAndThrow("'" + asDisplayableString(c) + "' not allowed in name", jcrName, i);
                 }
                 trailingSpaces = false;
             } else if (c == '{') {
@@ -140,10 +145,7 @@ public class NameParser {
                         state = STATE_NAME;
                         nameStart = 0;
                     } else {
-                        throw new IllegalNameException(
-                                "The URI prefix of the name " + jcrName
-                                + " is neither a valid URI nor a valid part"
-                                + " of a local name.");
+                        complainAndThrow("The URI prefix is neither a valid URI nor a valid part of a local name", jcrName);
                     }
                 } else if (state == STATE_PREFIX_START) {
                     state = STATE_PREFIX; // prefix start -> validation later on will fail.
@@ -168,14 +170,14 @@ public class NameParser {
         // take care of qualified jcrNames starting with '{' that are not having
         // a terminating '}' -> make sure there are no illegal characters present.
         if (state == STATE_URI && (jcrName.indexOf(':') > -1 || jcrName.indexOf('/') > -1)) {
-            throw new IllegalNameException("Local name may not contain ':' nor '/'");
+            complainAndThrow("Local name may not contain ':' nor '/'", jcrName);
         }
 
         if (nameStart == len || state == STATE_NAME_START) {
-            throw new IllegalNameException("Local name must not be empty");
+            complainAndThrow("Local name must not be empty", jcrName);
         }
         if (trailingSpaces) {
-            throw new IllegalNameException("Trailing spaces not allowed");
+            complainAndThrow("Trailing spaces not allowed", jcrName);
         }
 
         // if namespace is null, this is just a check for format. this can only
@@ -206,9 +208,35 @@ public class NameParser {
             return "\\r";
         } else if (c == '\t') {
             return "\\t";
+        } else if (c == '\'') {
+            return "\\'";
+        } else if (c == '"') {
+            return "\\\"";
         } else {
             return String.format("\\u%04x", (int) c);
         }
+    }
+
+    private static String formatNameForDisplay(String name) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            b.append(asDisplayableString(name.charAt(i)));
+        }
+        return b.toString();
+    }
+
+    private static void complainAndThrow(String reason, String name) throws IllegalNameException {
+        complainAndThrow(reason, name, -1);
+    }
+
+    private static void complainAndThrow(String reason, String name, int index) throws IllegalNameException{
+        String msg;
+        if (index == -1) {
+            msg = String.format("%s (name: \"%s\")", reason, formatNameForDisplay(name));
+        } else {
+            msg = String.format("%s (name: \"%s\", at position: %d)", reason, formatNameForDisplay(name), index);
+        }
+        throw new IllegalNameException(msg);
     }
 
     /**

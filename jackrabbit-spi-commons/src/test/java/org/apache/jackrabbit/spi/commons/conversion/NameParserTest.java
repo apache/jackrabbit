@@ -241,12 +241,24 @@ public class NameParserTest extends TestCase {
         }
     }
 
-    public void testMessage() {
+    public void testMessageTab() {
         try {
             NameParser.checkFormat("horizontal\ttab");
             fail("should fail with IllegalNameException");
         } catch (IllegalNameException ex) {
-            assertTrue("message should contain '\\t'", ex.getMessage().indexOf("\\t") >= 0);
+            assertTrue("message should contain '\\t', was: >>>" + ex.getMessage() + "<<<", ex.getMessage().indexOf("\\t") >= 0);
+            assertTrue("message should contain 'horizontal', was: >>>" + ex.getMessage() + "<<<",
+                    ex.getMessage().indexOf("horizontal") >= 0);
+        }
+    }
+
+    public void testMessageWithNonAscii() {
+        try {
+            NameParser.checkFormat("\uD83D\uDCA9[]");
+            fail("should fail with IllegalNameException");
+        } catch (IllegalNameException ex) {
+            assertTrue("message should contain '\\ud83d\\udca9', was: >>>" + ex.getMessage() + "<<<",
+                    ex.getMessage().indexOf("\\ud83d\\udca9") >= 0);
         }
     }
 
