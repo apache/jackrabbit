@@ -18,8 +18,8 @@ package org.apache.jackrabbit.j2ee;
 
 import java.util.Properties;
 
-import javax.servlet.ServletException;
-import javax.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletConfig;
 
 /**
  * The bootstrap configuration hold information about initial startup

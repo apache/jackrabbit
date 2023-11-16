@@ -40,13 +40,13 @@
         </AccessManager>
 
         <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
-           <!-- anonymous user name ('anonymous' is the default value) -->
-           <param name="anonymousId" value="anonymous"/>
-           <!--
-              default user name to be used instead of the anonymous user
-              when no login credentials are provided (unset by default)
-           -->
-           <!-- <param name="defaultUserId" value="superuser"/> -->
+            <!-- anonymous user name ('anonymous' is the default value) -->
+            <param name="anonymousId" value="anonymous"/>
+            <!--
+               default user name to be used instead of the anonymous user
+               when no login credentials are provided (unset by default)
+            -->
+            <!-- <param name="defaultUserId" value="superuser"/> -->
         </LoginModule>
     </Security>
 
@@ -71,8 +71,8 @@
             class: FQN of class implementing the PersistenceManager interface
         -->
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
-          <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
-          <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+            <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
+            <param name="schemaObjectPrefix" value="${wsp.name}_"/>
         </PersistenceManager>
         <!--
             Search index and the file system it uses.
@@ -105,8 +105,8 @@
             implementations.
         -->
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
-          <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
-          <param name="schemaObjectPrefix" value="version_"/>
+            <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
+            <param name="schemaObjectPrefix" value="version_"/>
         </PersistenceManager>
     </Versioning>
 

@@ -18,11 +18,11 @@ request.setAttribute("title", "Content Repository Exists");
 %><jsp:include page="../header.jsp"/>
 <p>The repository home directory or configuration already exists.</p>
 <p>
-You have chosen to create a <b>new</b> repository but the specified home
-directory or the configuration file already exist.
+    You have chosen to create a <b>new</b> repository but the specified home
+    directory or the configuration file already exist.
 </p>
 <p>
-Please specify a correct location or choose to reuse an existing repository.
+    Please specify a correct location or choose to reuse an existing repository.
 </p>
 <p><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/admin">back</a></p>
 <jsp:include page="../footer.jsp"/>

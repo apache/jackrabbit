@@ -24,7 +24,7 @@ import java.io.OutputStream;
 import java.net.URI;
 
 import javax.jcr.Repository;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
@@ -145,18 +145,71 @@ public class WebDAVTestBase extends AbstractJCRTest {
         }
 
         if (httpsConnector == null) {
-            SslContextFactory sslContextFactory = new SslContextFactory();
-            sslContextFactory.setKeyStorePath(keystore.getPath());
-            sslContextFactory.setKeyStorePassword(KEYSTOREPW);
-            sslContextFactory.setKeyManagerPassword(KEYSTOREPW);
-            sslContextFactory.setTrustStorePath(keystore.getPath());
-            sslContextFactory.setTrustStorePassword(KEYSTOREPW);
-            SslConnectionFactory cfac = new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString());
+//            SslContextFactory sslContextFactory = new SslContextFactory();
+            
+
+
+    }
+
+
+             SslContextFactory sslContextFactory = new SslContextFactory() {
+                @Override
+                public void setKeyStorePath(String keyStorePath) {
+                    super.setKeyStorePath(keystore.getPath()); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+                }
+
+                 @Override
+                 public void setKeyManagerPassword(String password) {
+                     super.setKeyManagerPassword(KEYSTOREPW); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+                 }
+
+                 @Override
+                 public void setKeyStorePassword(String password) {
+                     super.setKeyStorePassword(KEYSTOREPW); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+                 }
+
+                 @Override
+                 public void setTrustStorePassword(String password) {
+                     super.setTrustStorePassword(KEYSTOREPW); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+                 }
+
+                 @Override
+                 public void setTrustStorePath(String trustStorePath) {
+                     super.setTrustStorePath(keystore.getPath()); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+                 }
+                
+                
+                 
+             };
+            
+            
+        SslContextFactory.Server sslContextFactoryServer = new SslContextFactory.Server();
+        sslContextFactoryServer.setSslContext(sslContextFactory.getSslContext());
+        sslContextFactoryServer.setIncludeProtocols(HttpVersion.HTTP_1_1.asString());
+//        sslContextFactoryServer.setIncludeCipherSuites(ciphers);
+//        sslContextFactoryServer.setNeedClientAuth(true);
+   
+//            sslContextFactory.setKeyStorePath(keystore.getPath());
+//            sslContextFactory.setKeyStorePassword(KEYSTOREPW);
+            
+//            sslContextFactory.setKeyManagerPassword(KEYSTOREPW);
+//            sslContextFactory.setTrustStorePath(keystore.getPath());
+            
+            
+//            sslContextFactory.setTrustStorePassword(KEYSTOREPW);
+//            SslConnectionFactory cfac = new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString());
+
+            SslConnectionFactory cfac = new SslConnectionFactory(sslContextFactoryServer, HttpVersion.HTTP_1_1.asString());
+            
             httpsConnector = new ServerConnector(server, cfac, new HttpConnectionFactory(new HttpConfiguration()));
             httpsConnector.setHost("localhost");
             httpsConnector.setPort(0);
             server.addConnector(httpsConnector);
-        }
+        
+    
+    
+    
+    
 
         if (!server.isStarted()) {
             try {

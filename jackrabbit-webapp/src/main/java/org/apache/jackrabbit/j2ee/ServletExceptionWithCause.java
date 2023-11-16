@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Utility class that links {@link ServletException} with support for

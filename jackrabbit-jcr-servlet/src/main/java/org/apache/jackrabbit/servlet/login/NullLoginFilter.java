@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.servlet.login;
 
 import javax.jcr.Credentials;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Login filter that always uses <code>null</code> credentials for logging in

@@ -31,7 +31,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Simple implementation of the {@link org.apache.jackrabbit.webdav.DavSessionProvider}

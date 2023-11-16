@@ -61,7 +61,7 @@ public class OSGiIT {
                 mavenBundle("org.osgi", "org.osgi.service.log", "1.3.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.12"),
                 mavenBundle("org.apache.felix", "org.apache.felix.jaas", "1.0.2"),
-                mavenBundle("org.osgi", "org.osgi.dto", "1.0.0"),
+                mavenBundle("org.osgi", "org.osgi.dto", "2.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.16"),
                 mavenBundle("org.apache.felix", "org.apache.felix.fileinstall", "3.2.6"),
                 mavenBundle("org.slf4j", "slf4j-api", "1.7.36"),

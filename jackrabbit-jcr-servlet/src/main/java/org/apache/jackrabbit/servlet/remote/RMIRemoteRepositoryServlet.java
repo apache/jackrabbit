@@ -18,7 +18,7 @@ package org.apache.jackrabbit.servlet.remote;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.jackrabbit.rmi.repository.RMIRemoteRepositoryFactory;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;

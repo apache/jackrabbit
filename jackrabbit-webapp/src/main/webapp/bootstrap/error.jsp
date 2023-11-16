@@ -17,7 +17,7 @@
 request.setAttribute("title", "Content Repository Error");
 %><jsp:include page="../header.jsp"/>
 <p>
-  Some error occurred during setup. See the log files for details.
+    Some error occurred during setup. See the log files for details.
 </p>
 <p><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/admin">back</a></p>
 <jsp:include page="../footer.jsp"/>

@@ -18,8 +18,8 @@ request.setAttribute("title", "Content Repository Already Running");
 %><jsp:include page="../header.jsp"/>
 <p>Your repository is already properly configured an running.</p>
 <p>
-Your changes were discarded. To reconfigure or reinstall the repository modify
-the respective configuration files or remove them.
+    Your changes were discarded. To reconfigure or reinstall the repository modify
+    the respective configuration files or remove them.
 </p>
 <p><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/">home</a></p>
 <jsp:include page="../footer.jsp"/>

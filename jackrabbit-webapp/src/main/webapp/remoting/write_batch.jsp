@@ -40,7 +40,7 @@ href += "/default/jcr:root";
 
         var headers = new Object();
         headers["Content-type"] = "application/x-www-form-urlencoded";
-        headers["Authorization"] =  "Basic YWRtaW46YWRtaW4=";
+        headers["Authorization"] = "Basic YWRtaW46YWRtaW4=";
 
         var params = encodeURIComponent(":diff") + "=" + encodeURIComponent(diff);
 
@@ -51,7 +51,7 @@ href += "/default/jcr:root";
         if (req && (req.status == 200 || req.status == 201)) {
             result.innerHTML = "Success<br><a href=\"" + url + "\" target=\"_blank\">View Result</a>";
         } else {
-            var error = "ERROR: " + ((req) ? (req.status + " : "+ req.responseText) : "Failed to create XMLHttpRequest.");
+            var error = "ERROR: " + ((req) ? (req.status + " : " + req.responseText) : "Failed to create XMLHttpRequest.");
             result.innerHTML = error;
         }
         return true;
@@ -61,8 +61,8 @@ href += "/default/jcr:root";
 <div id="content">
     <h2>Examples: Batch Write</h2>
     <p>
-    Enter the path of an existing node or property (depending on the desired
-    actions) and enter the <i>:diff</i> value.
+        Enter the path of an existing node or property (depending on the desired
+        actions) and enter the <i>:diff</i> value.
     </p>
     <p>See the introduction to batched <a href="write.jsp#batch_write">writing</a>
         for examples.

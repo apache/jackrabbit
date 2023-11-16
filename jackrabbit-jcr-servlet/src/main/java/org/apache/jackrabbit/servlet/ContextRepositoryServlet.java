@@ -18,7 +18,7 @@ package org.apache.jackrabbit.servlet;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * Servlet that makes a repository from one servlet context attribute

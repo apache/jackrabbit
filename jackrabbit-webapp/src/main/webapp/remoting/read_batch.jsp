@@ -66,7 +66,7 @@ href += "/default/jcr:root";
                 result.innerHTML = req.responseText;
             }
         } else {
-            var error = "ERROR: " + ((req) ? (req.status + " : "+ req.responseText) : "Failed to create XMLHttpRequest.");
+            var error = "ERROR: " + ((req) ? (req.status + " : " + req.responseText) : "Failed to create XMLHttpRequest.");
             result.innerHTML = error;
         }
         return true;
@@ -75,7 +75,7 @@ href += "/default/jcr:root";
 <div id="content">
     <h2>Examples: Batch Read</h2>
     <p>
-    Enter the path of an existing node and the desired depth.
+        Enter the path of an existing node and the desired depth.
     </p>
     <table>
         <tr>
@@ -89,12 +89,12 @@ href += "/default/jcr:root";
         <tr>
             <td>Result type</td>
             <td><select name="resultType" id="resultType">
-                <option value="">--- select ---</option>
-                <option value="raw">raw</option>
-                <option value="indented">indented</option>
-                <option value="indented_clean">indented (cleaned)</option>
-                <option value="tree">tree</option>
-            </select></td>
+                    <option value="">--- select ---</option>
+                    <option value="raw">raw</option>
+                    <option value="indented">indented</option>
+                    <option value="indented_clean">indented (cleaned)</option>
+                    <option value="tree">tree</option>
+                </select></td>
         </tr>
         <tr><td><input type="button" value="Submit" onclick="batchRead()"></td></tr>
     </table>

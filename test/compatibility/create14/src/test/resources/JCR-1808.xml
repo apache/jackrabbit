@@ -25,8 +25,8 @@
     </FileSystem> 
     <Security appName="Jackrabbit"> 
         <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager"/> 
-         <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule"> 
-             <param name="anonymousId" value="anonymous"/> 
+        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule"> 
+            <param name="anonymousId" value="anonymous"/> 
         </LoginModule> 
     </Security> 
     <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" /> 
@@ -43,7 +43,7 @@
             <param name="autoRepair" value="true"/> 
             <param name="analyzer" value="org.apache.lucene.analysis.standard.StandardAnalyzer"/> 
             <param name="textFilterClasses"
-                value="org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/> 
+                   value="org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/> 
  
         </SearchIndex> 
     </Workspace> 

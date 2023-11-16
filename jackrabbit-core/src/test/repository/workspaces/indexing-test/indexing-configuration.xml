@@ -40,7 +40,7 @@
 
     <index-rule nodeType="nt:unstructured"
                 condition="ancestor::*/@rule = 'ancestor-axis'">
-      <property>Text</property>
+        <property>Text</property>
     </index-rule>
 
     <index-rule nodeType="nt:hierarchyNode">

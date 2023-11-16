@@ -15,24 +15,24 @@
   limitations under the License.
 --%><%@ page isErrorPage="true"
              import="org.apache.jackrabbit.util.Text,
-                     java.io.StringWriter,
-                     java.io.PrintWriter"%><%
+             java.io.StringWriter,
+java.io.PrintWriter"%><%
 request.setAttribute("title", "Repository Error");
 %><jsp:include page="../header.jsp"/>
 <p>
-  The content repository operation failed with the following
-  <%= exception.getClass().getSimpleName() %> error:
+    The content repository operation failed with the following
+    <%= exception.getClass().getSimpleName() %> error:
 </p>
 <blockquote><%= Text.encodeIllegalXMLCharacters(exception.getMessage()) %></blockquote>
 <p>
-  See the
-  <a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/troubleshooting.jsp">troubleshooting page</a>
-  for ideas on how to resolve this issue.
+    See the
+    <a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/troubleshooting.jsp">troubleshooting page</a>
+    for ideas on how to resolve this issue.
 </p>
 
 <h2>Exception stack trace</h2>
 <p>
-  Below is the full exception stack trace associated with this error:
+    Below is the full exception stack trace associated with this error:
 </p>
 <%
 StringWriter buffer = new StringWriter();

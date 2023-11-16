@@ -23,8 +23,8 @@ import javax.jcr.Repository;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 
 /**
  * Servlet that binds a repository from a servlet context attribute in JNDI.

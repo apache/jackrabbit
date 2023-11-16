@@ -36,7 +36,7 @@ href += "/default/jcr:root";
 
         var headers = new Object();
         headers["Content-type"] = "application/x-www-form-urlencoded";
-        headers["Authorization"] =  "Basic YWRtaW46YWRtaW4=";
+        headers["Authorization"] = "Basic YWRtaW46YWRtaW4=";
 
         var params = "";
         if (title) {
@@ -55,7 +55,7 @@ href += "/default/jcr:root";
 
         if (req && (req.status == 200 || req.status == 201)) {
             var res = "Success<br><ul>" +
-                    "<li><a href=\"" + url + "\" target=\"_blank\">Node</a> at "+ path +"</li>";
+                    "<li><a href=\"" + url + "\" target=\"_blank\">Node</a> at " + path + "</li>";
             if (title) {
                 res += "<li><a href=\"" + url + "/title\">Title</a></li>";
             }
@@ -65,7 +65,7 @@ href += "/default/jcr:root";
             res += "</ul>";
             result.innerHTML = res;
         } else {
-            var error = "ERROR: " + ((req) ? (req.status + " : "+ req.responseText) : "Failed to create XMLHttpRequest.");
+            var error = "ERROR: " + ((req) ? (req.status + " : " + req.responseText) : "Failed to create XMLHttpRequest.");
             result.innerHTML = error;
         }
         return true;
@@ -75,11 +75,11 @@ href += "/default/jcr:root";
 <div id="content">
     <h2>Examples: Simplified Writing</h2>
     <p>If the JCR node at the specified absolute path allows to set a properties
-    with name <i>title</i> or <i>text</i>, submitting the form below will
-    will set those properties to the given values.</p>
+        with name <i>title</i> or <i>text</i>, submitting the form below will
+        will set those properties to the given values.</p>
     <p>If no JCR node exists at the specified absolute path, the missing
-    intermediate nodes will be created if an applicable node type for the
-    specified node name(s) can be determined.</p>
+        intermediate nodes will be created if an applicable node type for the
+        specified node name(s) can be determined.</p>
     <table>
         <tr>
             <td>Node Path</td>

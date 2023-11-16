@@ -18,8 +18,8 @@ request.setAttribute("title", "Content Repository Ready");
 %><jsp:include page="../header.jsp"/>
 <p>Your repository is now properly configured an running.</p>
 <p>
-To reconfigure or reinstall the repository modify the respective configuration
-files or remove them.
+    To reconfigure or reinstall the repository modify the respective configuration
+    files or remove them.
 <p>
 <p><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/">home</a></p>
 <jsp:include page="../footer.jsp"/>

@@ -33,9 +33,9 @@ import java.util.Properties;
 import javax.jcr.Repository;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 
 /**
  * This Class implements a servlet that is used as unified mechanism to retrieve

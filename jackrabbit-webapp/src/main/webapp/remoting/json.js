@@ -1,19 +1,19 @@
 /*
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 
 function getXMLHttpRequest(url, method, headers, params) {
     var xmlhttp = null;
@@ -47,12 +47,12 @@ function getXMLHttpRequest(url, method, headers, params) {
 }
 
 var JsonFormatter = null;
-(function() {
+(function () {
 
     JsonFormatter = new Object();
     JsonFormatter.clear = false;
 
-    JsonFormatter.tree = function(jsonObj, baseHref) {
+    JsonFormatter.tree = function (jsonObj, baseHref) {
         if (!jsonObj) {
             return "";
         }
@@ -60,7 +60,7 @@ var JsonFormatter = null;
         return JsonFormatter.objectTree("", jsonObj, indentionLevel, baseHref);
     }
 
-    JsonFormatter.format = function(jsonObj, clearSpecial) {
+    JsonFormatter.format = function (jsonObj, clearSpecial) {
         if (!jsonObj) {
             return "";
         }
@@ -69,22 +69,22 @@ var JsonFormatter = null;
         return JsonFormatter.object(jsonObj, indentionLevel);
     }
 
-    JsonFormatter.addLineBreak = function(str) {
+    JsonFormatter.addLineBreak = function (str) {
         return str += "<br>";
     }
 
-    JsonFormatter.addIndention = function(str, indention, indStr) {
+    JsonFormatter.addIndention = function (str, indention, indStr) {
         for (var i = 0; i < indention; i++) {
             str += indStr;
         }
         return str;
     }
 
-    JsonFormatter.object = function(value, indentionLevel) {
+    JsonFormatter.object = function (value, indentionLevel) {
         if (value instanceof Array) {
             return JsonFormatter.array(value, indentionLevel);
         }
-        
+
         var str = "{";
         str = JsonFormatter.addLineBreak(str);
         indentionLevel++;
@@ -118,7 +118,7 @@ var JsonFormatter = null;
         return str;
     }
 
-    JsonFormatter.array = function(value, indentionLevel) {
+    JsonFormatter.array = function (value, indentionLevel) {
         var str = "[";
         var delim = false;
         for (var i in value) {
@@ -137,20 +137,20 @@ var JsonFormatter = null;
         return str;
     }
 
-    JsonFormatter.boolean = function(value, indentionLevel) {
+    JsonFormatter.boolean = function (value, indentionLevel) {
         return String(value);
     }
 
-    JsonFormatter.string = function(value, indentionLevel) {
+    JsonFormatter.string = function (value, indentionLevel) {
         return '"' + value + '"';
 
     }
-    
-    JsonFormatter.number = function(value, indentionLevel) {
+
+    JsonFormatter.number = function (value, indentionLevel) {
         return String(value);
     }
 
-    JsonFormatter.extractPropertyType = function(key, value) {
+    JsonFormatter.extractPropertyType = function (key, value) {
         if (key == "::NodeIteratorSize") {
             return null;
         } else if (key.charAt(0) == ':' && typeof value == 'string') {
@@ -160,21 +160,21 @@ var JsonFormatter = null;
         }
     }
 
-    JsonFormatter.buildKey = function(key, propType, href) {
+    JsonFormatter.buildKey = function (key, propType, href) {
         var keyStr = key;
         if (propType) {
             var href = "javascript:alert('PropertyType = " + propType + "');";
-            keyStr = "<a href=\"" +href+ "\" alt=\""+ propType +"\" >" + key + "</a>";
+            keyStr = "<a href=\"" + href + "\" alt=\"" + propType + "\" >" + key + "</a>";
         } else if (key.charAt(0) == ':') {
             // binary
             var propname = key.substring(1, key.length);
             var binHref = href + "/" + propname;
-            keyStr = "<a href=\"" +binHref+ "\" alt=\"Binary\" >" + propname + "</a>";
+            keyStr = "<a href=\"" + binHref + "\" alt=\"Binary\" >" + propname + "</a>";
         }
         return keyStr;
     }
-    
-    JsonFormatter.objectTree = function(key, value, indentionLevel, href) {
+
+    JsonFormatter.objectTree = function (key, value, indentionLevel, href) {
         var str = "+ " + key;   // + node-name
         if (href && href.charAt(href.length - 1) == '/') {
             href += key;
@@ -196,8 +196,8 @@ var JsonFormatter = null;
             } else if (i == "::NodeIteratorSize") {
                 continue;
             }
-            str = JsonFormatter.addLineBreak(str);                        
-            str = JsonFormatter.addIndention(str, indentionLevel, "&nbsp;&nbsp;");            
+            str = JsonFormatter.addLineBreak(str);
+            str = JsonFormatter.addIndention(str, indentionLevel, "&nbsp;&nbsp;");
             if (v instanceof Array) {
                 // value array - propname
                 var key = JsonFormatter.buildKey(i, propType, href);
@@ -211,7 +211,7 @@ var JsonFormatter = null;
                 if (fnctn) {
                     v = fnctn(v, indentionLevel);
                     var key = JsonFormatter.buildKey(i, propType, href);
-                    propType = null;                    
+                    propType = null;
                     str += "- " + key + ' = ' + v;
                 }
             }

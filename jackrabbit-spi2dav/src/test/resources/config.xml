@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-   Licensed to the Apache Software Foundation (ASF) under one or more
-   contributor license agreements.  See the NOTICE file distributed with
-   this work for additional information regarding copyright ownership.
-   The ASF licenses this file to You under the Apache License, Version 2.0
-   (the "License"); you may not use this file except in compliance with
-   the License.  You may obtain a copy of the License at
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+     http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-  -->
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
 <!--
 <!DOCTYPE config [
         <!ELEMENT config (iomanager , propertymanager, (collection | noncollection)? , filter?, mimetypeproperties?) >
@@ -141,17 +141,17 @@
     </collection>
     -->
     <!--
-     Filter that allows to prevent certain items from being displayed.
-     Please note, that this has an effect on PROPFIND calls only and does not
-     provide limited access to those items matching any of the filters.
+    Filter that allows to prevent certain items from being displayed.
+    Please note, that this has an effect on PROPFIND calls only and does not
+    provide limited access to those items matching any of the filters.
 
-     However specifying a filter may cause problems with PUT or MKCOL if the
-     resource to be created is being filtered out, thus resulting in inconsistent
-     responses (e.g. PUT followed by PROPFIND on parent).
-     -->
+    However specifying a filter may cause problems with PUT or MKCOL if the
+    resource to be created is being filtered out, thus resulting in inconsistent
+    responses (e.g. PUT followed by PROPFIND on parent).
+    -->
     <filter>
         <!-- class element defines the resource filter to be used. The specified class
-             must implement the ItemFilter interface -->
+        must implement the ItemFilter interface -->
         <class name="org.apache.jackrabbit.webdav.simple.DefaultItemFilter" />
         <!--
          Nodetype names to be used to filter child nodes.

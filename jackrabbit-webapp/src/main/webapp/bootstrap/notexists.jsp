@@ -18,11 +18,11 @@ request.setAttribute("title", "Content Repository Not Found");
 %><jsp:include page="../header.jsp"/>
 <p>The repository home directory or configuration do not exists.</p>
 <p>
-You have chosen to <b>reuse</b> an existing repository but the specified home
-directory or the configuration file do not exist.
+    You have chosen to <b>reuse</b> an existing repository but the specified home
+    directory or the configuration file do not exist.
 </p>
 <p>
-Please specify a correct location or choose to create a new repository.
+    Please specify a correct location or choose to create a new repository.
 </p>
 <p><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/admin">back</a></p>
 <jsp:include page="../footer.jsp"/>

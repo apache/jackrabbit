@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.servlet;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.GenericServlet;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.GenericServlet;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 

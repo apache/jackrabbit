@@ -18,8 +18,8 @@ package org.apache.jackrabbit.server;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * This Interface defines a provider for the credentials.
