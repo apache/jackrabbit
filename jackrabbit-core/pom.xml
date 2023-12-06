@@ -114,6 +114,8 @@ org.apache.jackrabbit.core.security.user.MembershipCachePerfTest <!-- don't run 
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testStringLiteralInvalidName        <!-- OAK-3265 -->
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral                     <!-- OAK-3265 -->
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265 -->
+org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testNonVersionableCheckedOut <!-- JCR-5007 -->
+org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testModifyNonVersionableNodeWithCheckedOutProperty <!-- JCR-5007 -->
               </value>
             </property>
             <property>

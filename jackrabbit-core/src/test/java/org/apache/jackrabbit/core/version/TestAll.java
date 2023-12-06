@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RestoreTest.class);
         suite.addTestSuite(RestoreNodeWithSNSTest.class);
         suite.addTestSuite(VersionIteratorImplTest.class);
+        suite.addTestSuite(ModifyNonVersionableCheckedOutTest.class);
         return suite;
     }
 }
