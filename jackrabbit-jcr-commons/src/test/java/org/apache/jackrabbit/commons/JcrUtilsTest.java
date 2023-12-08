@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.commons;
 
+import junit.framework.TestCase;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -26,10 +28,12 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 
-public class JcrUtilsTest extends MockCase {
+import org.mockito.Mockito;
+
+public class JcrUtilsTest extends TestCase {
 
     public void testGetRepository() throws Exception {
-        Object repository = record(AbstractRepository.class);
+        Object repository = Mockito.spy(AbstractRepository.class);
 
         Hashtable<String, String> environment = new Hashtable<String, String>();
         environment.put(
