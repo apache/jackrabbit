@@ -725,9 +725,4 @@
         https://svn.apache.org/repos/asf/jackrabbit/site/trunk/src/site/markdown/jackrabbit-team.md
   -->
 
-  <scm>
-    <connection>scm:git:https://gitbox.apache.org/repos/asf/maven-apache-parent.git/jackrabbit-parent/tags/jackrabbit-2.21.21/jackrabbit-parent</connection>
-    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/maven-apache-parent.git/jackrabbit-parent/tags/jackrabbit-2.21.21/jackrabbit-parent</developerConnection>
-    <url>https://github.com/apache/maven-apache-parent/tree/apache-31/jackrabbit-parent/tags/jackrabbit-2.21.21/jackrabbit-parent</url>
-  </scm>
 </project>

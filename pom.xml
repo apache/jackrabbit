@@ -62,9 +62,10 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-2.21.21</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-2.21.21</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/tags/jackrabbit-2.21.21</url>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</developerConnection>
+    <url>https://github.com/apache/jackrabbit/tree/${project.scm.tag}</url>
+    <tag>trunk</tag>
   </scm>
 
   <build>
