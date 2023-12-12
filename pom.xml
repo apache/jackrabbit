@@ -62,9 +62,10 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/2.20</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/2.20</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/branches/2.20</url>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</developerConnection>
+    <url>https://github.com/apache/jackrabbit/tree/${project.scm.tag}</url>
+    <tag>2.20</tag>
   </scm>
 
   <build>
@@ -181,7 +182,7 @@ A staged Maven repository is available for review at:
 The command for running automated checks against this release candidate is:
 
     # run in SVN checkout of https://dist.apache.org/repos/dist/dev/jackrabbit/
-    $ sh check-release.sh ${project.version} ${checksum}
+    $ sh check-release.sh jackrabbit ${project.version} ${checksum}
 
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
 The vote is open for the next 72 hours and passes if a majority of at
