@@ -56,7 +56,7 @@ Jackrabbit mailing lists as well as links to list archives, please see:
 Latest development
 ==================
 
-The latest Jackrabbit source code is from
+The latest Jackrabbit source code is available at
 
    https://github.com/apache/jackrabbit
 
