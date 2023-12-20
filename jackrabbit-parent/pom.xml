@@ -17,7 +17,7 @@
    limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" child.project.url.inherit.append.path="false">
   <modelVersion>4.0.0</modelVersion>
 
   <!-- =================================================================== -->
@@ -42,6 +42,14 @@
     <url>http://issues.apache.org/jira/browse/JCR</url>
   </issueManagement>
 
+  <!-- using adjusted inheritance rules: https://issues.apache.org/jira/browse/MNG-6059 -->
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false">
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</developerConnection>
+    <url>https://github.com/apache/jackrabbit/tree/${project.scm.tag}</url>
+    <tag>trunk</tag>
+  </scm>
+
   <properties>
     <test.opts.memory>-Xmx256m</test.opts.memory>
     <test.opts.modules />
@@ -64,6 +72,7 @@
     <!-- build time stamp: should be updated prior to a release -->
     <!-- see https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
     <project.build.outputTimestamp>1702529444</project.build.outputTimestamp>
+    <minimalMavenBuildVersion>3.6.1</minimalMavenBuildVersion><!-- due to https://issues.apache.org/jira/browse/MNG-6059 -->
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
