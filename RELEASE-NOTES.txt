@@ -30,6 +30,7 @@ Improvement
 
     [JCR-4979] - Migrate from Subversion to Git
     [JCR-4980] - make webapp build reproducible
+    [JCR-5011] - Restore SCM information in parent POM
 
 Test
 

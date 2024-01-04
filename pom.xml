@@ -61,13 +61,6 @@
     <module>jackrabbit-it-osgi</module>
   </modules>
 
-  <scm>
-    <connection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</connection>
-    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</developerConnection>
-    <url>https://github.com/apache/jackrabbit/tree/${project.scm.tag}</url>
-    <tag>2.20</tag>
-  </scm>
-
   <build>
     <plugins>
       <plugin>
