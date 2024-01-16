@@ -64,10 +64,13 @@
     <slf4j.api.version>1.7.36</slf4j.api.version>
     <slf4j.version>1.7.36</slf4j.version> <!-- sync with logback version -->
     <logback.version>1.2.11</logback.version>
-    <java.version>11</java.version>
-    <maven.compiler.release>${java.version}</maven.compiler.release>
-    <maven.compiler.target>${java.version}</maven.compiler.target>
-    <minimalJavaBuildVersion>${java.version}</minimalJavaBuildVersion>
+
+    <!-- determines the bytecode version (i.e. the minimum JRE required to run the build artifact) -->
+    <javaTargetVersion>11</javaTargetVersion>
+    <maven.compiler.release>${javaTargetVersion}</maven.compiler.release>
+    <maven.compiler.target>${javaTargetVersion}</maven.compiler.target>
+    <minimalJavaBuildVersion>${javaTargetVersion}</minimalJavaBuildVersion>
+
     <skip.coverage>true</skip.coverage>
     <minimum.line.coverage>0.0</minimum.line.coverage>
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
