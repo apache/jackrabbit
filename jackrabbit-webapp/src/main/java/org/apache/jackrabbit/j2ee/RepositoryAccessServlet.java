@@ -229,7 +229,7 @@ public class RepositoryAccessServlet extends HttpServlet {
      * @return the repository or <code>null</code>
      * @throws ServletException if this servlet is not properly configured.
      */
-    @Deprecated private Repository getRepositoryByRMI() throws ServletException {
+    @Deprecated(forRemoval = true) private Repository getRepositoryByRMI() throws ServletException {
         BootstrapConfig config = getConfig();
         if (!config.getRmiConfig().isValid() || !config.getRmiConfig().enabled()) {
             return null;
@@ -345,7 +345,7 @@ public class RepositoryAccessServlet extends HttpServlet {
      * <p>
      * optional class for RMI, will only be used, if RMI client is present
      */
-    @Deprecated protected static abstract class ClientFactoryDelegater {
+    @Deprecated(forRemoval = true) protected static abstract class ClientFactoryDelegater {
 
         public abstract Repository getRepository(String uri)
                 throws RemoteException, MalformedURLException, NotBoundException;
@@ -356,7 +356,7 @@ public class RepositoryAccessServlet extends HttpServlet {
      * <p>
      * optional class for RMI, will only be used, if RMI server is present
      */
-    @Deprecated protected static class RMIClientFactoryDelegater extends ClientFactoryDelegater {
+    @Deprecated(forRemoval = true) protected static class RMIClientFactoryDelegater extends ClientFactoryDelegater {
 
         // only used to enforce linking upon Class.forName()
         static String FactoryClassName = ClientRepositoryFactory.class.getName();
