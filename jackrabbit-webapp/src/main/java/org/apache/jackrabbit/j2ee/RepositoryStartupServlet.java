@@ -177,7 +177,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      */
     private InitialContext jndiContext;
 
-    @Deprecated private Registry rmiRegistry = null;
+    @Deprecated(forRemoval = true) private Registry rmiRegistry = null;
 
     /**
      * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
@@ -192,7 +192,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * @see #registerRMI()
      * @see #unregisterRMI()
      */
-    @Deprecated private Remote rmiRepository;
+    @Deprecated(forRemoval = true) private Remote rmiRepository;
 
     /**
      * the file to the bootstrap config
@@ -498,7 +498,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * the repository with an RMI registry.
      * @throws ServletException if an error occurs.
      */
-    @Deprecated private void registerRMI() {
+    @Deprecated(forRemoval = true) private void registerRMI() {
         RMIConfig rc = config.getRmiConfig();
         if (!rc.isValid() || !rc.enabled()) {
             return;
@@ -597,7 +597,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * Unregisters the repository from the RMI registry, if it has previously
      * been registered.
      */
-    @Deprecated private void unregisterRMI() {
+    @Deprecated(forRemoval = true) private void unregisterRMI() {
         if (rmiRepository != null) {
             // Forcibly unexport the repository;
             try {
@@ -668,7 +668,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      *         creating <code>java.net.ServerSocket</code> instances bound to
      *         the <code>rmiHost</code>.
      */
-    @Deprecated protected RMIServerSocketFactory getRMIServerSocketFactory(
+    @Deprecated(forRemoval = true) protected RMIServerSocketFactory getRMIServerSocketFactory(
             final InetAddress hostAddress) {
         return new RMIServerSocketFactory() {
             public ServerSocket createServerSocket(int port) throws IOException {
@@ -682,7 +682,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * <p>
      * optional class for RMI, will only be used, if RMI server is present
      */
-    @Deprecated protected static abstract class RemoteFactoryDelegater {
+    @Deprecated(forRemoval = true) protected static abstract class RemoteFactoryDelegater {
 
         public abstract Remote createRemoteRepository(Repository repository)
                 throws RemoteException;
@@ -693,7 +693,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * <p>
      * optional class for RMI, will only be used, if RMI server is present
      */
-    @Deprecated protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
+    @Deprecated(forRemoval = true) protected static class RMIRemoteFactoryDelegater extends RemoteFactoryDelegater {
 
         private static final RemoteAdapterFactory FACTORY =
             new ServerAdapterFactory();

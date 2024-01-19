@@ -45,7 +45,7 @@ import javax.servlet.ServletException;
  * +-------------------+--------------------+
  * </pre>
  */
-@Deprecated public class RMIConfig extends AbstractConfig {
+@Deprecated(forRemoval = true) public class RMIConfig extends AbstractConfig {
 
     /**
      * default logger
