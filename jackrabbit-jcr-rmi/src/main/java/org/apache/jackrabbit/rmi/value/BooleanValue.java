@@ -23,7 +23,7 @@ import javax.jcr.PropertyType;
  * <p>
  * Boolean value.
  */
-@Deprecated class BooleanValue extends AbstractValue {
+@Deprecated(forRemoval = true) class BooleanValue extends AbstractValue {
 
     /**
      * Serial version UID

@@ -46,7 +46,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientNodeTypeManager
  * @see org.apache.jackrabbit.rmi.server.ServerNodeTypeManager
  */
-@Deprecated public interface RemoteNodeTypeManager extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteNodeTypeManager extends Remote {
 
     /**
      * Remote version of the

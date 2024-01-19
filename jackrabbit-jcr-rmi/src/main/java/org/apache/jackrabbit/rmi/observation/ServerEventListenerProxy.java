@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * See the package overview for an explanation of the mechanisms implemented for
  * event dispatching.
  */
-@Deprecated public class ServerEventListenerProxy implements EventListener {
+@Deprecated(forRemoval = true) public class ServerEventListenerProxy implements EventListener {
 
     /** logger */
     private static final Logger log =

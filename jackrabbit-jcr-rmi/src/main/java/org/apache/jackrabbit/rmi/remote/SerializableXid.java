@@ -28,7 +28,7 @@ import javax.transaction.xa.Xid;
  *
  * @since Jackrabbit JCR-RMI 1.5
  */
-@Deprecated public class SerializableXid implements Serializable, Xid {
+@Deprecated(forRemoval = true) public class SerializableXid implements Serializable, Xid {
 
     private final int formatId;
 

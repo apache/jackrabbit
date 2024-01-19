@@ -26,7 +26,7 @@ import javax.jcr.PropertyType;
  * <p>
  * Long value.
  */
-@Deprecated class LongValue extends AbstractValue {
+@Deprecated(forRemoval = true) class LongValue extends AbstractValue {
 
     /**
      * Serial version UID.

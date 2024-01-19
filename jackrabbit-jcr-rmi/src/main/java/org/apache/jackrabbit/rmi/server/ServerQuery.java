@@ -37,7 +37,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * @see javax.jcr.query.Query
  * @see org.apache.jackrabbit.rmi.remote.RemoteQuery
  */
-@Deprecated public class ServerQuery extends ServerObject implements RemoteQuery {
+@Deprecated(forRemoval = true) public class ServerQuery extends ServerObject implements RemoteQuery {
 
     /** The adapted local query manager. */
     private Query query;

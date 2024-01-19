@@ -36,7 +36,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientQuery
  * @see org.apache.jackrabbit.rmi.server.ServerQuery
  */
-@Deprecated public interface RemoteQuery extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteQuery extends Remote {
 
     /**
      * @see javax.jcr.query.Query#execute()

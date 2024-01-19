@@ -27,7 +27,7 @@ import javax.jcr.ValueFormatException;
  * <p>
  * Double value.
  */
-@Deprecated class DoubleValue extends AbstractValue {
+@Deprecated(forRemoval = true) class DoubleValue extends AbstractValue {
 
     /**
      * Serial version UID.

@@ -42,7 +42,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientNamespaceRegistry
  * @see org.apache.jackrabbit.rmi.server.ServerNamespaceRegistry
  */
-@Deprecated public interface RemoteNamespaceRegistry extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteNamespaceRegistry extends Remote {
 
     /**
      * Remote version of the

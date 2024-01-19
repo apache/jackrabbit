@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * local adapter factory used by the client adapters to
  * instantiate new adapters.
  */
-@Deprecated public class ClientObject {
+@Deprecated(forRemoval = true) public class ClientObject {
 
     /** Local adapter factory. */
     private LocalAdapterFactory factory;

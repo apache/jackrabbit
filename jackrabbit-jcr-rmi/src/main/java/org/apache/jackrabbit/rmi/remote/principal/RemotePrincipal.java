@@ -43,7 +43,7 @@ import java.rmi.RemoteException;
  * @see org.apache.jackrabbit.rmi.client.principal.ClientPrincipal
  * @see org.apache.jackrabbit.rmi.server.principal.ServerPrincipal
  */
-@Deprecated public interface RemotePrincipal extends Remote {
+@Deprecated(forRemoval = true) public interface RemotePrincipal extends Remote {
 
     /**
      * @see java.security.Principal#getName()

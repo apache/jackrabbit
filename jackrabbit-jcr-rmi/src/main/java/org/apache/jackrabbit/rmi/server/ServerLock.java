@@ -35,7 +35,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */
-@Deprecated public class ServerLock extends ServerObject implements RemoteLock {
+@Deprecated(forRemoval = true) public class ServerLock extends ServerObject implements RemoteLock {
 
     /** The adapted local lock. */
     private Lock lock;

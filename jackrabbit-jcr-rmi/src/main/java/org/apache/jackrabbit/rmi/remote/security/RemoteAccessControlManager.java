@@ -45,7 +45,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
  * @see org.apache.jackrabbit.rmi.client.security.ClientAccessControlManager
  * @see org.apache.jackrabbit.rmi.server.security.ServerAccessControlManager
  */
-@Deprecated public interface RemoteAccessControlManager extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteAccessControlManager extends Remote {
 
     /**
      * @see javax.jcr.security.AccessControlManager#getApplicablePolicies(String)

@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteLock;
  * @see javax.jcr.lock.Lock
  * @see org.apache.jackrabbit.rmi.remote.RemoteLock
  */
-@Deprecated public class ClientLock extends ClientObject implements Lock {
+@Deprecated(forRemoval = true) public class ClientLock extends ClientObject implements Lock {
 
     /** Current session. */
     private Session session;

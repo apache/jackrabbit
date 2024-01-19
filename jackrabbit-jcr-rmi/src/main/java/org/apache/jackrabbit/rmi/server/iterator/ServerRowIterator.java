@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  * <p>
  * A ServerIterator for iterating rows.
  */
-@Deprecated public class ServerRowIterator extends ServerIterator {
+@Deprecated(forRemoval = true) public class ServerRowIterator extends ServerIterator {
 
     /**
      * Creates a ServerRowIterator instance.

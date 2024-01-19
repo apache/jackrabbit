@@ -41,7 +41,7 @@ import java.rmi.RemoteException;
  * @see org.apache.jackrabbit.rmi.client.security.ClientPrivilege
  * @see org.apache.jackrabbit.rmi.server.security.ServerPrivilege
  */
-@Deprecated public interface RemotePrivilege extends Remote {
+@Deprecated(forRemoval = true) public interface RemotePrivilege extends Remote {
 
     /**
      * @see javax.jcr.security.Privilege#getAggregatePrivileges()

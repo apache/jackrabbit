@@ -25,7 +25,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerObject;
 
-@Deprecated public class ServerPrincipal extends ServerObject implements RemotePrincipal {
+@Deprecated(forRemoval = true) public class ServerPrincipal extends ServerObject implements RemotePrincipal {
 
     private final Principal principal;
 

@@ -40,7 +40,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */
-@Deprecated public class ServerRepository extends ServerObject implements RemoteRepository {
+@Deprecated(forRemoval = true) public class ServerRepository extends ServerObject implements RemoteRepository {
 
     /** The adapted local repository. */
     private Repository repository;

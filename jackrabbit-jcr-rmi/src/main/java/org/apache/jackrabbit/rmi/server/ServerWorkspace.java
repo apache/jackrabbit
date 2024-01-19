@@ -47,7 +47,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
  * @see Workspace
  * @see RemoteWorkspace
  */
-@Deprecated public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
+@Deprecated(forRemoval = true) public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
 
     /** The adapted local workspace. */
     private Workspace workspace;

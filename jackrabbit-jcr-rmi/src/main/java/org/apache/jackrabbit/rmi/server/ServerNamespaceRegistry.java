@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
  * @see javax.jcr.NamespaceRegistry
  * @see org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry
  */
-@Deprecated public class ServerNamespaceRegistry extends ServerObject implements
+@Deprecated(forRemoval = true) public class ServerNamespaceRegistry extends ServerObject implements
         RemoteNamespaceRegistry {
 
     /** The adapted local namespace registry. */

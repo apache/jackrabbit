@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
  * @see javax.jcr.nodetype.NodeTypeManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager
  */
-@Deprecated public class ServerNodeTypeManager extends ServerObject
+@Deprecated(forRemoval = true) public class ServerNodeTypeManager extends ServerObject
         implements RemoteNodeTypeManager {
 
     /** The adapted local node type manager. */

@@ -41,7 +41,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.nodetype.NodeType
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeType
  */
-@Deprecated public class ClientNodeType extends ClientObject implements NodeType {
+@Deprecated(forRemoval = true) public class ClientNodeType extends ClientObject implements NodeType {
 
     /** The adapted remote node type. */
     private RemoteNodeType remote;

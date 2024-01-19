@@ -34,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  * @see Principal
  * @see RemotePrincipal
  */
-@Deprecated public class ClientPrincipal implements Principal {
+@Deprecated(forRemoval = true) public class ClientPrincipal implements Principal {
 
     private final RemotePrincipal p;
 

@@ -35,7 +35,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientQueryResult
  * @see org.apache.jackrabbit.rmi.server.ServerQueryResult
  */
-@Deprecated public interface RemoteQueryResult extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteQueryResult extends Remote {
     /**
      * @see javax.jcr.query.QueryResult#getColumnNames()
      *

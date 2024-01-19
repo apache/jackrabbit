@@ -18,7 +18,7 @@ package org.apache.jackrabbit.rmi.server.jmx;
 
 import javax.jcr.RepositoryException;
 
-@Deprecated public interface JCRServerMBean {
+@Deprecated(forRemoval = true) public interface JCRServerMBean {
 
     void start() throws Exception;
 

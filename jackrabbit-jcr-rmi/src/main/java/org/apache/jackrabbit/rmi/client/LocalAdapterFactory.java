@@ -101,7 +101,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * @see org.apache.jackrabbit.rmi.client.ClientAdapterFactory
  * @see org.apache.jackrabbit.rmi.client.ClientObject
  */
-@Deprecated public interface LocalAdapterFactory {
+@Deprecated(forRemoval = true) public interface LocalAdapterFactory {
 
     /**
      * Factory method for creating a local adapter for a remote repository.

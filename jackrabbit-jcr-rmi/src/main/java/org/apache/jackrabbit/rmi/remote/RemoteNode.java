@@ -51,7 +51,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientNode
  * @see org.apache.jackrabbit.rmi.server.ServerNode
  */
-@Deprecated public interface RemoteNode extends RemoteItem {
+@Deprecated(forRemoval = true) public interface RemoteNode extends RemoteItem {
 
     /**
      * Remote version of the

@@ -44,7 +44,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
  */
-@Deprecated public class ServerSession extends ServerObject implements RemoteSession {
+@Deprecated(forRemoval = true) public class ServerSession extends ServerObject implements RemoteSession {
 
     /** The adapted local session. */
     private Session session;

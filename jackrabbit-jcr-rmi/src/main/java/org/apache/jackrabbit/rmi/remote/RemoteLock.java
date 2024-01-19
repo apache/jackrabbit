@@ -39,7 +39,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientLock
  * @see org.apache.jackrabbit.rmi.server.ServerLock
  */
-@Deprecated public interface RemoteLock extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteLock extends Remote {
 
     /**
      * Remote version of the

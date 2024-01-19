@@ -37,7 +37,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * @see javax.jcr.security.Privilege
  * @see org.apache.jackrabbit.rmi.remote.security.RemotePrivilege
  */
-@Deprecated public class ClientPrivilege extends ClientObject implements Privilege {
+@Deprecated(forRemoval = true) public class ClientPrivilege extends ClientObject implements Privilege {
 
     private final RemotePrivilege rp;
 

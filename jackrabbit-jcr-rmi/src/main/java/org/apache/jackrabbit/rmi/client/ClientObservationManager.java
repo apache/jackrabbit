@@ -49,7 +49,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  *
  * @see org.apache.jackrabbit.rmi.observation.ClientEventPoll
  */
-@Deprecated public class ClientObservationManager extends ClientObject implements
+@Deprecated(forRemoval = true) public class ClientObservationManager extends ClientObject implements
         ObservationManager {
 
     /** The remote observation manager */

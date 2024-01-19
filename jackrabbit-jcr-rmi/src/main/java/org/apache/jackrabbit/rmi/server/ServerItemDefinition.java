@@ -40,7 +40,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * @see javax.jcr.nodetype.ItemDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteItemDefinition
  */
-@Deprecated public class ServerItemDefinition extends ServerObject implements RemoteItemDefinition {
+@Deprecated(forRemoval = true) public class ServerItemDefinition extends ServerObject implements RemoteItemDefinition {
 
     /** The adapted local item definition. */
     private ItemDefinition def;

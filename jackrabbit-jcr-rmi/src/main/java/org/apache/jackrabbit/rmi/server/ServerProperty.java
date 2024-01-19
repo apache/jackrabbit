@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.Property
  * @see org.apache.jackrabbit.rmi.remote.RemoteProperty
  */
-@Deprecated public class ServerProperty extends ServerItem implements RemoteProperty {
+@Deprecated(forRemoval = true) public class ServerProperty extends ServerItem implements RemoteProperty {
 
     /** The adapted local property. */
     private Property property;

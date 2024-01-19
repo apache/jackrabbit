@@ -42,7 +42,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientNodeType
  * @see org.apache.jackrabbit.rmi.server.ServerNodeType
  */
-@Deprecated public interface RemoteNodeType extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the

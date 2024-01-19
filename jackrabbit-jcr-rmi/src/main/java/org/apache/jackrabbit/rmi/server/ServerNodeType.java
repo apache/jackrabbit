@@ -40,7 +40,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
  * @see javax.jcr.nodetype.NodeType
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeType
  */
-@Deprecated public class ServerNodeType extends ServerObject implements RemoteNodeType {
+@Deprecated(forRemoval = true) public class ServerNodeType extends ServerObject implements RemoteNodeType {
 
     /** The adapted local node type. */
     private NodeType type;

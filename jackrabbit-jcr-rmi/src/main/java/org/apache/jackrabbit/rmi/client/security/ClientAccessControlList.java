@@ -42,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlList;
  * @see javax.jcr.security.AccessControlList
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlList
  */
-@Deprecated public class ClientAccessControlList extends ClientAccessControlPolicy
+@Deprecated(forRemoval = true) public class ClientAccessControlList extends ClientAccessControlPolicy
         implements AccessControlList {
 
     public ClientAccessControlList(final RemoteAccessControlList racl,

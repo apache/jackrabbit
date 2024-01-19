@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  * <p>
  * A ClientIterator for iterating remote principals
  */
-@Deprecated public class ClientPrincipalIterator extends ClientIterator {
+@Deprecated(forRemoval = true) public class ClientPrincipalIterator extends ClientIterator {
 
     public ClientPrincipalIterator(final RemoteIterator iterator,
             final LocalAdapterFactory factory) {

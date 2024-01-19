@@ -30,7 +30,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 
-@Deprecated public class ClientVersionManager extends ClientObject
+@Deprecated(forRemoval = true) public class ClientVersionManager extends ClientObject
         implements VersionManager {
 
     /** The current session. */

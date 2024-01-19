@@ -33,7 +33,7 @@ import org.apache.jackrabbit.rmi.remote.SerializableXid;
  *
  * @since 1.4
  */
-@Deprecated public class ServerXASession extends ServerSession implements RemoteXASession {
+@Deprecated(forRemoval = true) public class ServerXASession extends ServerSession implements RemoteXASession {
 
     /**
      * The adapted local XA resource

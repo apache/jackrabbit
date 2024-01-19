@@ -30,7 +30,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-@Deprecated public class JNDIRemoteRepositoryFactory
+@Deprecated(forRemoval = true) public class JNDIRemoteRepositoryFactory
         extends AbstractRemoteRepositoryFactory {
 
     /**

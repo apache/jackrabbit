@@ -29,7 +29,7 @@ import javax.jcr.ValueFormatException;
  * <p>
  * String value.
  */
-@Deprecated class StringValue extends AbstractValue {
+@Deprecated(forRemoval = true) class StringValue extends AbstractValue {
 
     /**
      * Serial version UID.

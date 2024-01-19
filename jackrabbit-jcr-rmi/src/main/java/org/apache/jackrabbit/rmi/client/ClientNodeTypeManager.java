@@ -42,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
  * @see javax.jcr.nodetype.NodeTypeManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager
  */
-@Deprecated public class ClientNodeTypeManager extends ClientObject
+@Deprecated(forRemoval = true) public class ClientNodeTypeManager extends ClientObject
         implements NodeTypeManager {
 
     /** The adapted remote node type manager. */

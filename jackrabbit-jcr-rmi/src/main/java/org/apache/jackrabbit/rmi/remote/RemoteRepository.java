@@ -45,7 +45,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientRepository
  * @see org.apache.jackrabbit.rmi.server.ServerRepository
  */
-@Deprecated public interface RemoteRepository extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteRepository extends Remote {
 
     /**
      * Remote version of the

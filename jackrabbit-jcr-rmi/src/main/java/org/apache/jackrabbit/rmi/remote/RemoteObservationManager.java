@@ -40,7 +40,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientObservationManager
  * @see org.apache.jackrabbit.rmi.server.ServerObservationManager
  */
-@Deprecated public interface RemoteObservationManager extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteObservationManager extends Remote {
 
     /**
      * Remote version of the

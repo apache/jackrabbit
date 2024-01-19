@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
  * exceptions, then the RemoteException is wrapped into a
  * RemoteRuntimeException.
  */
-@Deprecated public class RemoteRepositoryException extends RepositoryException {
+@Deprecated(forRemoval = true) public class RemoteRepositoryException extends RepositoryException {
 
     /**
      * Creates a RemoteRepositoryException based on the given RemoteException.

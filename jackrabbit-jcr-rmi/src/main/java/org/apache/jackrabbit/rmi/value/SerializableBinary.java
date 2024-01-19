@@ -37,7 +37,7 @@ import javax.jcr.RepositoryException;
  * <p>
  * Serializable binary.
  */
-@Deprecated class SerializableBinary implements Binary, Serializable {
+@Deprecated(forRemoval = true) class SerializableBinary implements Binary, Serializable {
 
     /**
      * Serial version UID.

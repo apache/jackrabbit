@@ -24,7 +24,7 @@ import javax.jcr.RepositoryException;
  * <p>
  * Factory interface for JCR content repositories.
  */
-@Deprecated interface RepositoryFactory {
+@Deprecated(forRemoval = true) interface RepositoryFactory {
 
     /**
      * Returns a content repository.

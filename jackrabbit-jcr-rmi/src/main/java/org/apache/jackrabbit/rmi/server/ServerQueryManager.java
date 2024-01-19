@@ -41,7 +41,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
  * @see javax.jcr.query.QueryManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryManager
  */
-@Deprecated public class ServerQueryManager extends ServerObject
+@Deprecated(forRemoval = true) public class ServerQueryManager extends ServerObject
         implements RemoteQueryManager {
 
     /** The current session. */

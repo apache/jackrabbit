@@ -44,7 +44,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientWorkspace
  * @see org.apache.jackrabbit.rmi.server.ServerWorkspace
  */
-@Deprecated public interface RemoteWorkspace extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteWorkspace extends Remote {
 
     /**
      * Remote version of the

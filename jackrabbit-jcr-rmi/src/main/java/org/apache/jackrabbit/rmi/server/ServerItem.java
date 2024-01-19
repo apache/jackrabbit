@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
  */
-@Deprecated public class ServerItem extends ServerObject implements RemoteItem {
+@Deprecated(forRemoval = true) public class ServerItem extends ServerObject implements RemoteItem {
 
     /** The adapted local item. */
     private Item item;

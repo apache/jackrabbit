@@ -27,7 +27,7 @@ import javax.jcr.ValueFormatException;
  * <p>
  * Decimal value.
  */
-@Deprecated class DecimalValue extends AbstractValue {
+@Deprecated(forRemoval = true) class DecimalValue extends AbstractValue {
 
     /**
      * Serial version UID.

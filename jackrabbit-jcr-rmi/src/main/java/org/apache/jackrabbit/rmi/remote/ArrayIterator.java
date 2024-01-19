@@ -26,7 +26,7 @@ import java.util.NoSuchElementException;
  * short enough for all the elements to be sent over the network in
  * one go.
  */
-@Deprecated public class ArrayIterator implements RemoteIterator, Serializable {
+@Deprecated(forRemoval = true) public class ArrayIterator implements RemoteIterator, Serializable {
 
     /**
      * The elements in this iterator. Set to <code>null</code> when

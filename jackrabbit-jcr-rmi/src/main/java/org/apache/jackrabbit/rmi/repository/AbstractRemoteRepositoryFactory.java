@@ -32,7 +32,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @since 1.4
  */
-@Deprecated public abstract class AbstractRemoteRepositoryFactory
+@Deprecated(forRemoval = true) public abstract class AbstractRemoteRepositoryFactory
         implements RepositoryFactory {
 
     /**

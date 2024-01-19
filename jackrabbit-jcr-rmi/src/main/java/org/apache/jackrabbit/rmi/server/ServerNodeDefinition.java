@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * @see javax.jcr.nodetype.NodeDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition
  */
-@Deprecated public class ServerNodeDefinition extends ServerItemDefinition implements RemoteNodeDefinition {
+@Deprecated(forRemoval = true) public class ServerNodeDefinition extends ServerItemDefinition implements RemoteNodeDefinition {
 
     /** The adapted node definition. */
     private NodeDefinition def;

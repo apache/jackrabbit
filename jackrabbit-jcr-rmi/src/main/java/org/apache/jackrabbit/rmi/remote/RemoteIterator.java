@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * This interface allows both the client and server side to control the
  * amount of buffering used to increase performance.
  */
-@Deprecated public interface RemoteIterator extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteIterator extends Remote {
 
     /**
      * Returns the size of the iteration, or <code>-1</code> if the
