@@ -29,7 +29,7 @@ import javax.jcr.RangeIterator;
  * of objects. Used as the base class for the type-specific iterator
  * classes defined in this package.
  */
-@Deprecated public class ArrayIterator implements RangeIterator {
+@Deprecated(forRemoval = true) public class ArrayIterator implements RangeIterator {
 
     /** The current iterator position. */
     private int position;

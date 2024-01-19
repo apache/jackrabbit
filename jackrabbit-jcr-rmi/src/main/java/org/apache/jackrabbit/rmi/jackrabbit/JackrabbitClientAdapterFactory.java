@@ -23,5 +23,5 @@ import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
  * <p>
  * @deprecated Use the normal {@link ClientAdapterFactory} instead
  */
-@Deprecated public class JackrabbitClientAdapterFactory extends ClientAdapterFactory {
+@Deprecated(forRemoval = true) public class JackrabbitClientAdapterFactory extends ClientAdapterFactory {
 }

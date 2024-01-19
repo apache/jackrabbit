@@ -33,7 +33,7 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
  *
  * @since 1.4
  */
-@Deprecated public class URLRemoteRepository extends ProxyRepository {
+@Deprecated(forRemoval = true) public class URLRemoteRepository extends ProxyRepository {
 
     /**
      * Creates a proxy for the remote repository at the given URL.

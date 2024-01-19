@@ -25,7 +25,7 @@ import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.iterator.ServerIterator;
 
-@Deprecated public class ServerPrincipalIterator extends ServerIterator {
+@Deprecated(forRemoval = true) public class ServerPrincipalIterator extends ServerIterator {
 
     public ServerPrincipalIterator(Iterator<Principal> iterator,
             RemoteAdapterFactory factory, int maxBufferSize)

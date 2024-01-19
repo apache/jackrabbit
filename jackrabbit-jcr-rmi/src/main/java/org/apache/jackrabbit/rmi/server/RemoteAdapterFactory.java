@@ -102,7 +102,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * @see org.apache.jackrabbit.rmi.server.ServerAdapterFactory
  * @see org.apache.jackrabbit.rmi.server.ServerObject
  */
-@Deprecated public interface RemoteAdapterFactory {
+@Deprecated(forRemoval = true) public interface RemoteAdapterFactory {
 
     /**
      * Returns the port number to which the server objects created by

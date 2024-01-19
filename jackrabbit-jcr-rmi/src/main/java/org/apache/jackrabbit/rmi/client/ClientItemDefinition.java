@@ -39,7 +39,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * @see javax.jcr.nodetype.ItemDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemoteItemDefinition
  */
-@Deprecated public class ClientItemDefinition extends ClientObject implements ItemDefinition {
+@Deprecated(forRemoval = true) public class ClientItemDefinition extends ClientObject implements ItemDefinition {
 
     /** The adapted remote item definition. */
     private RemoteItemDefinition remote;

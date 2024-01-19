@@ -34,7 +34,7 @@ import javax.jcr.Value;
  *
  * @since 1.4
  */
-@Deprecated public class ProxyRepository implements Repository {
+@Deprecated(forRemoval = true) public class ProxyRepository implements Repository {
 
     /**
      * The set of standard descriptor keys defined in the

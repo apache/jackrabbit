@@ -30,7 +30,7 @@ import javax.jcr.ValueFormatException;
  * <p>
  * Date value.
  */
-@Deprecated class DateValue extends AbstractValue {
+@Deprecated(forRemoval = true) class DateValue extends AbstractValue {
 
     /**
      * Serial version UID

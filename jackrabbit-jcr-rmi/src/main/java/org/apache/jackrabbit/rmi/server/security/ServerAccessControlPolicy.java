@@ -24,7 +24,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerObject;
 
-@Deprecated public class ServerAccessControlPolicy extends ServerObject implements
+@Deprecated(forRemoval = true) public class ServerAccessControlPolicy extends ServerObject implements
         RemoteAccessControlPolicy {
 
     private final AccessControlPolicy acp;

@@ -34,7 +34,7 @@ import org.apache.jackrabbit.rmi.server.ServerObject;
  * class makes a local iterator available as an RMI service using the
  * {@link RemoteIterator} interface.
  */
-@Deprecated public abstract class ServerIterator extends ServerObject
+@Deprecated(forRemoval = true) public abstract class ServerIterator extends ServerObject
         implements RemoteIterator {
 
     /** The adapted local iterator. */

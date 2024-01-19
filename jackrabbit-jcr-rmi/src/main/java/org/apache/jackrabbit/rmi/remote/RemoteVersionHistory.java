@@ -44,7 +44,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientVersionHistory
  * @see org.apache.jackrabbit.rmi.server.ServerVersionHistory
  */
-@Deprecated public interface RemoteVersionHistory extends RemoteNode {
+@Deprecated(forRemoval = true) public interface RemoteVersionHistory extends RemoteNode {
 
     /**
      * Remote version of the

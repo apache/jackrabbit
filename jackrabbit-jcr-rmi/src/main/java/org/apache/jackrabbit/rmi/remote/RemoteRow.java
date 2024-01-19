@@ -36,7 +36,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientRow
  * @see org.apache.jackrabbit.rmi.server.ServerRow
  */
-@Deprecated public interface RemoteRow extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteRow extends Remote {
 
     /**
      * @see javax.jcr.query.Row#getValues()

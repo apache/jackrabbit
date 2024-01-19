@@ -29,7 +29,7 @@ import javax.jcr.ValueFormatException;
  *
  * @since 0.16.4.1
  */
-@Deprecated public class ReferenceValue extends AbstractValue {
+@Deprecated(forRemoval = true) public class ReferenceValue extends AbstractValue {
 
     /**
      * Serial version UID.

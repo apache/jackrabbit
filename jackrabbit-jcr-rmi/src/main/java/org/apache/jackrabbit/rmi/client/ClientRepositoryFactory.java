@@ -39,7 +39,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRepository;
  *
  * @see ClientRepository
  */
-@Deprecated public class ClientRepositoryFactory implements ObjectFactory {
+@Deprecated(forRemoval = true) public class ClientRepositoryFactory implements ObjectFactory {
 
     /**
      * The JNDI parameter name for configuring the RMI URL of

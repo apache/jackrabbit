@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
  * <p>
  * A ClientIterator for iterating remote node types.
  */
-@Deprecated public class ClientNodeTypeIterator extends ClientIterator
+@Deprecated(forRemoval = true) public class ClientNodeTypeIterator extends ClientIterator
         implements NodeTypeIterator {
 
     /**

@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
  * @see javax.jcr.version.Version
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersion
  */
-@Deprecated public class ClientVersion extends ClientNode implements Version {
+@Deprecated(forRemoval = true) public class ClientVersion extends ClientNode implements Version {
 
     /** The adapted remote version. */
     private RemoteVersion remote;

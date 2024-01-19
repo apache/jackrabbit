@@ -57,7 +57,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * org.apache.cocoon.serialization.AbstractTextSerializer class in the
  * cocoon-pipeline-impl component for the original code.
  */
-@Deprecated class SerializingContentHandler extends DefaultContentHandler {
+@Deprecated(forRemoval = true) class SerializingContentHandler extends DefaultContentHandler {
 
     /**
      * The character encoding used for serialization (UTF-8).

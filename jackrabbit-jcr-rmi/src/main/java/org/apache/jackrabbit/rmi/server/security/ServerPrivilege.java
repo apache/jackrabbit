@@ -25,7 +25,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerObject;
 
-@Deprecated public class ServerPrivilege extends ServerObject implements RemotePrivilege {
+@Deprecated(forRemoval = true) public class ServerPrivilege extends ServerObject implements RemotePrivilege {
 
     private final Privilege privilege;
 

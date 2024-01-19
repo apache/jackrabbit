@@ -49,7 +49,7 @@ import org.xml.sax.SAXException;
  * @see javax.jcr.Workspace
  * @see org.apache.jackrabbit.rmi.remote.RemoteWorkspace
  */
-@Deprecated public class ClientWorkspace extends ClientObject implements Workspace {
+@Deprecated(forRemoval = true) public class ClientWorkspace extends ClientObject implements Workspace {
 
     /** The current session. */
     private Session session;

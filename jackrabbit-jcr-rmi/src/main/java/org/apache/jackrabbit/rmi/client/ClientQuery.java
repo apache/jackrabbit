@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteQuery;
  * @see javax.jcr.query.Query Query
  * @see org.apache.jackrabbit.rmi.remote.RemoteQuery
  */
-@Deprecated public class ClientQuery extends ClientObject implements Query {
+@Deprecated(forRemoval = true) public class ClientQuery extends ClientObject implements Query {
 
     /** The current session */
     private Session session;

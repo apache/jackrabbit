@@ -48,7 +48,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * @see javax.jcr.Node
  * @see org.apache.jackrabbit.rmi.remote.RemoteNode
  */
-@Deprecated public class ServerNode extends ServerItem implements RemoteNode {
+@Deprecated(forRemoval = true) public class ServerNode extends ServerItem implements RemoteNode {
 
     /** The adapted local node. */
     private Node node;

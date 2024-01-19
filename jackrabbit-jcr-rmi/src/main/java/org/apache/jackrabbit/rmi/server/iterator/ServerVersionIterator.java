@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  * <p>
  * A ServerIterator for iterating versions.
  */
-@Deprecated public class ServerVersionIterator extends ServerIterator {
+@Deprecated(forRemoval = true) public class ServerVersionIterator extends ServerIterator {
 
     /**
      * Creates a ServerVersionIterator instance.

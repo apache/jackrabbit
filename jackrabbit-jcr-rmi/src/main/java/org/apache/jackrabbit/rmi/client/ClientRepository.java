@@ -41,7 +41,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */
-@Deprecated public class ClientRepository implements Repository {
+@Deprecated(forRemoval = true) public class ClientRepository implements Repository {
 
     /**
      * The set of standard descriptor keys defined in the

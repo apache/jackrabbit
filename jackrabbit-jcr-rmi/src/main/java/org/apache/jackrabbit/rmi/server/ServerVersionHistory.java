@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * @see javax.jcr.version.VersionHistory
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersionHistory
  */
-@Deprecated public class ServerVersionHistory extends ServerNode
+@Deprecated(forRemoval = true) public class ServerVersionHistory extends ServerNode
         implements RemoteVersionHistory {
 
     /** The adapted local version history. */

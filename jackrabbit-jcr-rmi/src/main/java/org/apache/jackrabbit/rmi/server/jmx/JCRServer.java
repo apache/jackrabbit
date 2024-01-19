@@ -35,7 +35,7 @@ import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
  * <p>
  * MBean that registers a JCR RMI server through JNDI.
  */
-@Deprecated public class JCRServer implements JCRServerMBean {
+@Deprecated(forRemoval = true) public class JCRServer implements JCRServerMBean {
 
     /**
      * local repository address

@@ -28,7 +28,7 @@ import javax.transaction.xa.Xid;
  * Remote version of the {@link org.apache.jackrabbit.api.XASession}
  * interface.
  */
-@Deprecated public interface RemoteXASession extends RemoteSession, Remote {
+@Deprecated(forRemoval = true) public interface RemoteXASession extends RemoteSession, Remote {
 
     /**
      * Remote version of the

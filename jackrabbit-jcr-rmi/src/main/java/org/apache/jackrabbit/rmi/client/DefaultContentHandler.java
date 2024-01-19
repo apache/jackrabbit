@@ -28,7 +28,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * Adapter class for exposing a {@link ContentHandler} instance as
  * {@link DefaultHandler} object.
  */
-@Deprecated class DefaultContentHandler extends DefaultHandler {
+@Deprecated(forRemoval = true) class DefaultContentHandler extends DefaultHandler {
 
     /**
      * The adapted content handler instance.

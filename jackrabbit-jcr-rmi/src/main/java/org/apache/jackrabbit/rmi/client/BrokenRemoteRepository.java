@@ -31,7 +31,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
  * whenever any method is invoked. Used as a sentinel object by the
  * {@link SafeClientRepository} class.
  */
-@Deprecated public class BrokenRemoteRepository implements RemoteRepository {
+@Deprecated(forRemoval = true) public class BrokenRemoteRepository implements RemoteRepository {
 
     /**
      * The remote exception thrown by methods of this instance.

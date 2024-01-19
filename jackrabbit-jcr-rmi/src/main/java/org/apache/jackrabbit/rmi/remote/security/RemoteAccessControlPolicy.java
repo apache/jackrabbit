@@ -43,6 +43,6 @@ import java.rmi.Remote;
  * @see org.apache.jackrabbit.rmi.client.security.ClientAccessControlPolicy
  * @see org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicy
  */
-@Deprecated public interface RemoteAccessControlPolicy extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteAccessControlPolicy extends Remote {
 
 }

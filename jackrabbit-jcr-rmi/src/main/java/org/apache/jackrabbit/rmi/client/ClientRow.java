@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  * @see javax.jcr.query.Row Row
  * @see org.apache.jackrabbit.rmi.remote.RemoteRow
  */
-@Deprecated public class ClientRow extends ClientObject implements Row {
+@Deprecated(forRemoval = true) public class ClientRow extends ClientObject implements Row {
 
     /** Current session. */
     private Session session;

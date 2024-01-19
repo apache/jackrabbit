@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.server.iterator.ServerIterator;
  * <p>
  * A ServerIterator for iterating rows.
  */
-@Deprecated public class ServerAccessControlPolicyIterator extends ServerIterator {
+@Deprecated(forRemoval = true) public class ServerAccessControlPolicyIterator extends ServerIterator {
 
     /**
      * Creates a ServerRowIterator instance.

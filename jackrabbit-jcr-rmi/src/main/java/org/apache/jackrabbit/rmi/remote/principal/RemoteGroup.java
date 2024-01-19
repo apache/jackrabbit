@@ -42,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
  * @see org.apache.jackrabbit.rmi.client.principal.ClientGroup
  * @see org.apache.jackrabbit.rmi.server.principal.ServerGroup
  */
-@Deprecated public interface RemoteGroup extends RemotePrincipal {
+@Deprecated(forRemoval = true) public interface RemoteGroup extends RemotePrincipal {
 
     /**
      * @see org.apache.jackrabbit.api.security.principal.GroupPrincipal#isMember(java.security.Principal)

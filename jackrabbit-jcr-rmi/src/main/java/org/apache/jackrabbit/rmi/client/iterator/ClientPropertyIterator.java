@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteProperty;
  * <p>
  * A ClientIterator for iterating remote properties.
  */
-@Deprecated public class ClientPropertyIterator extends ClientIterator
+@Deprecated(forRemoval = true) public class ClientPropertyIterator extends ClientIterator
         implements PropertyIterator {
 
     /** The current session. */

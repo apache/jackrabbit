@@ -37,7 +37,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * @see javax.jcr.query.Row
  * @see org.apache.jackrabbit.rmi.remote.RemoteRow
  */
-@Deprecated public class ServerRow extends ServerObject implements RemoteRow {
+@Deprecated(forRemoval = true) public class ServerRow extends ServerObject implements RemoteRow {
 
     /** The adapted local row. */
     private Row row;

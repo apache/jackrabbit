@@ -35,7 +35,7 @@ import javax.jcr.Value;
  * <p>
  * Binary value.
  */
-@Deprecated class BinaryValue implements Value, Serializable {
+@Deprecated(forRemoval = true) class BinaryValue implements Value, Serializable {
 
     /**
      * Serial version UID.

@@ -45,7 +45,7 @@ import javax.jcr.Value;
  * @see org.apache.jackrabbit.rmi.client.ClientPropertyDefinition
  * @see org.apache.jackrabbit.rmi.server.ServerPropertyDefinition
  */
-@Deprecated public interface RemotePropertyDefinition extends RemoteItemDefinition {
+@Deprecated(forRemoval = true) public interface RemotePropertyDefinition extends RemoteItemDefinition {
 
     /**
      * Remote version of the

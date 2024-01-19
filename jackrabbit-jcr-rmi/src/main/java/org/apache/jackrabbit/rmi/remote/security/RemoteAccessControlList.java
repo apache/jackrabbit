@@ -42,7 +42,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.security.ClientAccessControlList
  * @see org.apache.jackrabbit.rmi.server.security.ServerAccessControlList
  */
-@Deprecated public interface RemoteAccessControlList extends RemoteAccessControlPolicy {
+@Deprecated(forRemoval = true) public interface RemoteAccessControlList extends RemoteAccessControlPolicy {
 
     /**
      * @see javax.jcr.security.AccessControlList#getAccessControlEntries()

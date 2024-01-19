@@ -35,7 +35,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteQueryResult;
  * @see javax.jcr.query.QueryResult
  * @see org.apache.jackrabbit.rmi.remote.RemoteQueryResult
  */
-@Deprecated public class ServerQueryResult extends ServerObject
+@Deprecated(forRemoval = true) public class ServerQueryResult extends ServerObject
         implements RemoteQueryResult {
 
     /** The adapted local query result. */

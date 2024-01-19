@@ -31,7 +31,7 @@ import javax.jcr.RepositoryException;
  * event poller. On the client-side the enclosed list of events is then sent to
  * the listener identified by the contained listener identifier.
  */
-@Deprecated public interface RemoteEventCollection extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteEventCollection extends Remote {
 
     /**
      * Returns unique identifier of the client-side listener to which the

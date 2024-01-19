@@ -41,7 +41,7 @@ import javax.jcr.RepositoryException;
  * @see org.apache.jackrabbit.rmi.client.ClientItem
  * @see org.apache.jackrabbit.rmi.server.ServerItem
  */
-@Deprecated public interface RemoteItem extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteItem extends Remote {
 
     /**
      * Remote version of the

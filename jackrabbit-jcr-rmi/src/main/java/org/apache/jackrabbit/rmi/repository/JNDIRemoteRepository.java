@@ -34,7 +34,7 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
  *
  * @since 1.4
  */
-@Deprecated public class JNDIRemoteRepository extends ProxyRepository {
+@Deprecated(forRemoval = true) public class JNDIRemoteRepository extends ProxyRepository {
 
     /**
      * Creates a proxy for a remote repository in JNDI.

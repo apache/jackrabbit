@@ -44,7 +44,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  * @see org.apache.jackrabbit.rmi.client.security.ClientAccessControlEntry
  * @see org.apache.jackrabbit.rmi.server.security.ServerAccessControlEntry
  */
-@Deprecated public interface RemoteAccessControlEntry extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteAccessControlEntry extends Remote {
 
     /**
      * @see javax.jcr.security.AccessControlEntry#getPrincipal()

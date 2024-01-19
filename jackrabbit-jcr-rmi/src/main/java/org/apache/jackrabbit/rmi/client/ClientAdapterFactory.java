@@ -108,7 +108,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemotePrivilege;
  * easily override or extend the default adapters by implementing the
  * corresponding factory methods.
  */
-@Deprecated public class ClientAdapterFactory implements LocalAdapterFactory {
+@Deprecated(forRemoval = true) public class ClientAdapterFactory implements LocalAdapterFactory {
 
     /**
      * Creates and returns a {@link ClientRepository ClientRepository}

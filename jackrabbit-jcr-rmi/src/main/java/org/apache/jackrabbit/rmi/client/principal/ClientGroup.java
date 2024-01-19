@@ -37,7 +37,7 @@ import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
  *
  * @see RemoteGroup
  */
-@Deprecated public class ClientGroup extends ClientPrincipal implements GroupPrincipal {
+@Deprecated(forRemoval = true) public class ClientGroup extends ClientPrincipal implements GroupPrincipal {
 
     private final LocalAdapterFactory factory;
 

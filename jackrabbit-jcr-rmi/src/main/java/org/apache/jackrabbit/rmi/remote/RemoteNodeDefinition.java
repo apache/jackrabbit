@@ -40,7 +40,7 @@ import java.rmi.RemoteException;
  * @see org.apache.jackrabbit.rmi.client.ClientNodeDefinition
  * @see org.apache.jackrabbit.rmi.server.ServerNodeDefinition
  */
-@Deprecated public interface RemoteNodeDefinition extends RemoteItemDefinition {
+@Deprecated(forRemoval = true) public interface RemoteNodeDefinition extends RemoteItemDefinition {
 
     /**
      * Remote version of the

@@ -25,7 +25,7 @@ import java.util.LinkedList;
  * at least one consumer and potentially multiple producers. This class poses
  * no restrictions on the size of the queue.
  */
-@Deprecated public class Queue {
+@Deprecated(forRemoval = true) public class Queue {
 
     /** The linked list implementing the queue of data */
     private final LinkedList queue;

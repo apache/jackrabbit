@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  * <p>
  * A ClientIterator for iterating remote rows.
  */
-@Deprecated public class ClientRowIterator extends ClientIterator implements RowIterator {
+@Deprecated(forRemoval = true) public class ClientRowIterator extends ClientIterator implements RowIterator {
 
     /** Current session. */
     private Session session;

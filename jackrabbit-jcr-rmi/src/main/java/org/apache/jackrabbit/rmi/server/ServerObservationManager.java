@@ -46,7 +46,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * @see javax.jcr.observation.ObservationManager
  * @see org.apache.jackrabbit.rmi.remote.RemoteObservationManager
  */
-@Deprecated public class ServerObservationManager extends ServerObject implements
+@Deprecated(forRemoval = true) public class ServerObservationManager extends ServerObject implements
         RemoteObservationManager {
 
     /** The adapted local observation manager. */

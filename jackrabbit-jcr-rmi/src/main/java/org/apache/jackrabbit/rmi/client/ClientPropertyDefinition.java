@@ -34,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
  * @see javax.jcr.nodetype.PropertyDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */
-@Deprecated public class ClientPropertyDefinition extends ClientItemDefinition implements PropertyDefinition {
+@Deprecated(forRemoval = true) public class ClientPropertyDefinition extends ClientItemDefinition implements PropertyDefinition {
 
     /** The adapted remote property. */
     private RemotePropertyDefinition remote;

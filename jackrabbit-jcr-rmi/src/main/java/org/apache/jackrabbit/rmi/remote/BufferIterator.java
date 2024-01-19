@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
  * along with a buffer of the first few iterator elements in one network
  * transmission.
  */
-@Deprecated public class BufferIterator implements RemoteIterator, Serializable {
+@Deprecated(forRemoval = true) public class BufferIterator implements RemoteIterator, Serializable {
 
     /** The element buffer. Set to <code>null</code> when the iterator ends. */
     private Object[] buffer;

@@ -47,7 +47,7 @@ import javax.jcr.ValueFormatException;
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
  */
-@Deprecated public class SerialValueFactory implements ValueFactory {
+@Deprecated(forRemoval = true) public class SerialValueFactory implements ValueFactory {
 
     /** The singleton value factory instance */
     private static final SerialValueFactory INSTANCE = new SerialValueFactory();

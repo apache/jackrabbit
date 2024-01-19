@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  *
  * @see #run()
  */
-@Deprecated public class ClientEventPoll extends Thread {
+@Deprecated(forRemoval = true) public class ClientEventPoll extends Thread {
 
     /** logger */
     private static final Logger log =

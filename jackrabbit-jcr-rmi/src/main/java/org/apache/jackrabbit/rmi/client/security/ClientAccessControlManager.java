@@ -45,7 +45,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
  * @see javax.jcr.security.AccessControlManager
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager
  */
-@Deprecated public class ClientAccessControlManager extends ClientObject implements
+@Deprecated(forRemoval = true) public class ClientAccessControlManager extends ClientObject implements
         AccessControlManager {
 
     private final RemoteAccessControlManager racm;

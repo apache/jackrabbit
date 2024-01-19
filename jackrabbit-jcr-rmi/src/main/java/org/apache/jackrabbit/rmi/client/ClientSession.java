@@ -63,7 +63,7 @@ import org.xml.sax.SAXException;
  * @see javax.jcr.Session
  * @see org.apache.jackrabbit.rmi.remote.RemoteSession
  */
-@Deprecated public class ClientSession extends ClientObject implements Session {
+@Deprecated(forRemoval = true) public class ClientSession extends ClientObject implements Session {
 
     /**
      * Logger instance.

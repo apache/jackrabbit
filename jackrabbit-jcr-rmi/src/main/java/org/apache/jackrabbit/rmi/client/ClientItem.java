@@ -42,7 +42,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteItem;
  * @see javax.jcr.Item
  * @see org.apache.jackrabbit.rmi.remote.RemoteItem
  */
-@Deprecated public class ClientItem extends ClientObject implements Item {
+@Deprecated(forRemoval = true) public class ClientItem extends ClientObject implements Item {
 
     /** Current session. */
     private Session session;

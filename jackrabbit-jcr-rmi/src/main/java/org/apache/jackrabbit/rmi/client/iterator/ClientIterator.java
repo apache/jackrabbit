@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
  * <p>
  * See the subclasses for type-specific versions of this abstract class.
  */
-@Deprecated public abstract class ClientIterator extends ClientObject
+@Deprecated(forRemoval = true) public abstract class ClientIterator extends ClientObject
         implements RangeIterator {
 
     /** The adapted remote iterator. */

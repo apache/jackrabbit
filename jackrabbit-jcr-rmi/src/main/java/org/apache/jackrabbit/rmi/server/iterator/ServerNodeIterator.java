@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  * <p>
  * A ServerIterator for iterating nodes.
  */
-@Deprecated public class ServerNodeIterator extends ServerIterator {
+@Deprecated(forRemoval = true) public class ServerNodeIterator extends ServerIterator {
 
     /**
      * Creates a ServerNodeIterator instance.

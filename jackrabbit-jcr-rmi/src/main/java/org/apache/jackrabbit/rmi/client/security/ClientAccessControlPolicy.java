@@ -34,7 +34,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy;
  * @see javax.jcr.security.AccessControlPolicy
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlPolicy
  */
-@Deprecated public class ClientAccessControlPolicy extends ClientObject implements
+@Deprecated(forRemoval = true) public class ClientAccessControlPolicy extends ClientObject implements
         AccessControlPolicy {
 
     private final RemoteAccessControlPolicy racp;

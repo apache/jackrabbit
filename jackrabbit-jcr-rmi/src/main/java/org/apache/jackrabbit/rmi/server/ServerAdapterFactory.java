@@ -117,7 +117,7 @@ import org.apache.jackrabbit.rmi.server.security.ServerPrivilege;
  * The <code>bufferSize</code> property can be used to configure the size of the
  * buffer used by iterators to speed up iterator traversal over the network.
  */
-@Deprecated public class ServerAdapterFactory implements RemoteAdapterFactory {
+@Deprecated(forRemoval = true) public class ServerAdapterFactory implements RemoteAdapterFactory {
 
     /** The default iterator buffer size. */
     private static final int DEFAULT_BUFFER_SIZE = 100;

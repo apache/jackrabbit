@@ -50,7 +50,7 @@ import javax.jcr.ValueFormatException;
  * The {@link #getStream()} method uses {@link #getBinary()} to implement
  * the deprecated JCR 1.0 behaviour. This method must not be overridden.
  */
-@Deprecated abstract class AbstractValue implements Value, Serializable {
+@Deprecated(forRemoval = true) abstract class AbstractValue implements Value, Serializable {
 
     /**
      * Serial version UID

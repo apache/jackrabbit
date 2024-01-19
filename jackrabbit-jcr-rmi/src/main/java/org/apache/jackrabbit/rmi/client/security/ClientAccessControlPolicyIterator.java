@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlList;
  * <p>
  * A ClientIterator for iterating remote access control policies.
  */
-@Deprecated public class ClientAccessControlPolicyIterator extends ClientIterator implements
+@Deprecated(forRemoval = true) public class ClientAccessControlPolicyIterator extends ClientIterator implements
         AccessControlPolicyIterator {
 
     public ClientAccessControlPolicyIterator(RemoteIterator iterator,

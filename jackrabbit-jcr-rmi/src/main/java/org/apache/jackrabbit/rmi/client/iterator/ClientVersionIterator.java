@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
  * <p>
  * A ClientIterator for iterating remote versions.
  */
-@Deprecated public class ClientVersionIterator extends ClientIterator
+@Deprecated(forRemoval = true) public class ClientVersionIterator extends ClientIterator
         implements VersionIterator {
 
     /** The current session. */

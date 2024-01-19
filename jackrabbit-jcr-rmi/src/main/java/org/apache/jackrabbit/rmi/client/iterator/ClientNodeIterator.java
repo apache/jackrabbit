@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteNode;
  * <p>
  * A ClientIterator for iterating remote nodes.
  */
-@Deprecated public class ClientNodeIterator extends ClientIterator implements NodeIterator {
+@Deprecated(forRemoval = true) public class ClientNodeIterator extends ClientIterator implements NodeIterator {
 
     /** The current session. */
     private final Session session;

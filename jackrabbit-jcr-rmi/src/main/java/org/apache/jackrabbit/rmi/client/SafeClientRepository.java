@@ -41,7 +41,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteSession;
  * @see javax.jcr.Repository
  * @see org.apache.jackrabbit.rmi.remote.RemoteRepository
  */
-@Deprecated public abstract class SafeClientRepository extends ClientObject
+@Deprecated(forRemoval = true) public abstract class SafeClientRepository extends ClientObject
         implements Repository {
 
     /** The adapted remote repository. */

@@ -28,7 +28,7 @@ import java.rmi.RemoteException;
  * throw RepositoryExceptions, then the RemoteException is wrapped into
  * a RemoteRepositoryException.
  */
-@Deprecated public class RemoteRuntimeException extends RuntimeException {
+@Deprecated(forRemoval = true) public class RemoteRuntimeException extends RuntimeException {
 
     /**
      * Creates a RemoteRuntimeException based on the given RemoteException.

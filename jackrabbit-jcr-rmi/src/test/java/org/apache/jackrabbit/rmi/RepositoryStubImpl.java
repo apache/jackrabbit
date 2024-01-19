@@ -39,7 +39,7 @@ import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.apache.jackrabbit.rmi.server.principal.ServerGroup;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
-@Deprecated public class RepositoryStubImpl extends JackrabbitRepositoryStub {
+@Deprecated(forRemoval = true) public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     /**
      * A known principal used for access control tests.

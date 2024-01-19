@@ -37,7 +37,7 @@ import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
  * @see javax.jcr.nodetype.PropertyDefinition
  * @see org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition
  */
-@Deprecated public class ServerPropertyDefinition extends ServerItemDefinition
+@Deprecated(forRemoval = true) public class ServerPropertyDefinition extends ServerItemDefinition
         implements RemotePropertyDefinition {
 
     /** The adapted local property definition. */

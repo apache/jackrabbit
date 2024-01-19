@@ -28,7 +28,7 @@ import javax.jcr.ValueFormatException;
  *
  * @since 0.16.4.1
  */
-@Deprecated public class PathValue extends AbstractValue {
+@Deprecated(forRemoval = true) public class PathValue extends AbstractValue {
 
     /**
      * Serial version UID.

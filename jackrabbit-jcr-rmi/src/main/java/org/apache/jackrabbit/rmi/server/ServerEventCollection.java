@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
  * provided such that the receiving listener may be identified on the
  * client-side.
  */
-@Deprecated public class ServerEventCollection extends ServerObject implements
+@Deprecated(forRemoval = true) public class ServerEventCollection extends ServerObject implements
         RemoteEventCollection {
 
     /** The unique identifier of the receiving listener */

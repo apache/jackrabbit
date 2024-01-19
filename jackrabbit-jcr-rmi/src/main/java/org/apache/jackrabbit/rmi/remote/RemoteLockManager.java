@@ -21,7 +21,7 @@ import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
 
-@Deprecated public interface RemoteLockManager extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteLockManager extends Remote {
 
     String[] getLockTokens() throws RepositoryException, RemoteException;
 

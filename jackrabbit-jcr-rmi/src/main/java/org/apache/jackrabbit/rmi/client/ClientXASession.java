@@ -36,7 +36,7 @@ import org.apache.jackrabbit.rmi.remote.SerializableXid;
  *
  * @since 1.4
  */
-@Deprecated public class ClientXASession extends ClientSession implements XAResource {
+@Deprecated(forRemoval = true) public class ClientXASession extends ClientSession implements XAResource {
 
     /**
      * The adapted remote transaction enabled session.

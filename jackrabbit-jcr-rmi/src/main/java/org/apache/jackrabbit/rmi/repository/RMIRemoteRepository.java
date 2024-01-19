@@ -30,7 +30,7 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
  *
  * @since 1.4
  */
-@Deprecated public class RMIRemoteRepository extends ProxyRepository {
+@Deprecated(forRemoval = true) public class RMIRemoteRepository extends ProxyRepository {
 
     /**
      * Creates a proxy for the remote repository in the given RMI URL.

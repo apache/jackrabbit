@@ -40,7 +40,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry;
  * @see javax.jcr.security.AccessControlEntry
  * @see org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry
  */
-@Deprecated public class ClientAccessControlEntry extends ClientObject implements
+@Deprecated(forRemoval = true) public class ClientAccessControlEntry extends ClientObject implements
         AccessControlEntry {
 
     private final RemoteAccessControlEntry race;

@@ -40,7 +40,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
  * @see javax.jcr.version.VersionHistory
  * @see org.apache.jackrabbit.rmi.remote.RemoteVersionHistory
  */
-@Deprecated public class ClientVersionHistory extends ClientNode implements VersionHistory {
+@Deprecated(forRemoval = true) public class ClientVersionHistory extends ClientNode implements VersionHistory {
 
     /** The adapted remote version history. */
     private RemoteVersionHistory remote;

@@ -62,7 +62,7 @@ import org.apache.jackrabbit.rmi.value.SerialValueFactory;
  * centralize the handling of the RemoteAdapterFactory instance used
  * to instantiate new server adapters.
  */
-@Deprecated public class ServerObject extends UnicastRemoteObject {
+@Deprecated(forRemoval = true) public class ServerObject extends UnicastRemoteObject {
 
     /** Factory for creating server adapters. */
     private RemoteAdapterFactory factory;

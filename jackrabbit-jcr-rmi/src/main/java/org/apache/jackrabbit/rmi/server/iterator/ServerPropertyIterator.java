@@ -28,7 +28,7 @@ import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
  * <p>
  * A ServerIterator for iterating properties.
  */
-@Deprecated public class ServerPropertyIterator extends ServerIterator {
+@Deprecated(forRemoval = true) public class ServerPropertyIterator extends ServerIterator {
 
     /**
      * Creates a ServerPropertyIterator instance.

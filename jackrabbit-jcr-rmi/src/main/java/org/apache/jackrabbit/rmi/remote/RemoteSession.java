@@ -47,7 +47,7 @@ import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
  * @see org.apache.jackrabbit.rmi.client.ClientSession
  * @see org.apache.jackrabbit.rmi.server.ServerSession
  */
-@Deprecated public interface RemoteSession extends Remote {
+@Deprecated(forRemoval = true) public interface RemoteSession extends Remote {
 
     /**
      * Remote version of the

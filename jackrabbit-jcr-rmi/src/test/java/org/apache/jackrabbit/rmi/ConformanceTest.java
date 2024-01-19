@@ -26,7 +26,7 @@ import org.apache.jackrabbit.test.JCRTestSuite;
  * <p>
  * JCR API conformance test suite.
  */
-@Deprecated public class ConformanceTest extends TestCase {
+@Deprecated(forRemoval = true) public class ConformanceTest extends TestCase {
 
     public static TestSuite suite() {
         TestSuite suite = new TestSuite();
