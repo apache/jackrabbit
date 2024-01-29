@@ -252,6 +252,11 @@
       <artifactId>derby</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- for testing connection via a proxy -->
      <dependency>
         <groupId>org.littleshoot</groupId>

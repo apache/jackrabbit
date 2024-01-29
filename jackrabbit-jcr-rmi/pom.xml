@@ -573,6 +573,11 @@ org.apache.jackrabbit.test.api.observation.EventJournalTest
       <artifactId>derby</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>
