@@ -1,32 +1,38 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.22
+Release Notes -- Apache Jackrabbit -- Version 2.21.23
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.22, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.23, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.22 is an unstable release cut directly from
+Apache Jackrabbit 2.21.23 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.22
+Changes in Jackrabbit 2.21.23
 -----------------------------
 
 Improvement
 
-    [JCR-4979] - Migrate from Subversion to Git
-
-Test
-
-    [JCR-4967] - test coverage for modification of non-versioned node with jcr:isCheckedOut==false property
+    [JCR-5011] - Restore SCM information in parent POM
 
 Task
 
-    [JCR-4987] - Update to jacoco version 0.8.11
-    [JCR-5004] - jcr-commons: get rid of cglib test dependency (unmaintained)
+    [JCR-4914] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.60.0
+    [JCR-5012] - set baseline comparisonVersion to latest stable (2.20.14)
+    [JCR-5013] - Update commons-io dependency to 2.15.1
+    [JCR-5014] - Update tomcat dependency to 9.0.85
+    [JCR-5015] - update aws java sdk version to 1.12.635
+    [JCR-5016] - standalone-components: remove unused jcr-rmi dependency
+    [JCR-5017] - Update spotbugs-maven-plugin to 4.8.2.0
+    [JCR-5018] - Bump up minimal Java version to 11
+    [JCR-5019] - Update build-helper-maven-plugin to version 3.5.0
+    [JCR-5020] - jackrabbit-webapp: deprecate RMI support "for removal"
+    [JCR-5021] - jackrabbit-jcr-rmi: deprecate RMI support "for removal"
+    [JCR-5022] - Update derby dependency to 10.15.2.0
 
 
 For more detailed information about all the changes in this and other
