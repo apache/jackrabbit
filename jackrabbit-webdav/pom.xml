@@ -23,26 +23,26 @@
 <!-- ====================================================================== -->
 <!-- P R O J E C T  D E S C R I P T I O N                                   -->
 <!-- ====================================================================== -->
-  <parent>
-    <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-parent</artifactId>
-    <version>2.21.24-SNAPSHOT</version>
-    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
-  </parent>
+  
+  
+  <groupId>net.oneandone</groupId>
   <artifactId>jackrabbit-webdav</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
+  <version>3.0.0-SNAPSHOT</version>
   <name>Jackrabbit WebDAV Library</name>
   <description>Generic WebDAV Library</description>
+  
+  <properties>
+	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>	
+	  <maven.compiler.target>17</maven.compiler.target>
+	  <maven.compiler.source>17</maven.compiler.source>
+  </properties>
 
   <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-      </plugin>
+    <plugins>      
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.1.0</version>
         <configuration>
           <includes>
             <include>**/*TestAll.java</include>
@@ -57,15 +57,18 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.annotation</artifactId>
+      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <version>2.0.7</version>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -77,21 +80,30 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.14</version>
+      <exclusions>
+          <exclusion>
+              <groupId>commons-logging</groupId>
+              <artifactId>commons-logging</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
+      <version>2.0.7</version>
     </dependency>
 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
+      <version>4.13.2</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
+      <version>1.4.8</version>
     </dependency>
   </dependencies>
 </project>

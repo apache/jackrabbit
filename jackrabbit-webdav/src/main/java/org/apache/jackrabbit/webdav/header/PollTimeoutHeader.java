@@ -18,7 +18,7 @@ package org.apache.jackrabbit.webdav.header;
 
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * <code>PollTimeoutHeader</code> implements a timeout header for subscription

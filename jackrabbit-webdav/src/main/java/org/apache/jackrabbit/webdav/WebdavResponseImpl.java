@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayOutputStream;
@@ -218,16 +218,6 @@ public class WebdavResponseImpl implements WebdavResponse {
     }
 
     @Override
-    public String encodeUrl(String s) {
-        return httpResponse.encodeUrl(s);
-    }
-
-    @Override
-    public String encodeRedirectUrl(String s) {
-        return httpResponse.encodeRedirectURL(s);
-    }
-
-    @Override
     public void sendError(int i, String s) throws IOException {
         httpResponse.sendError(i, s);
     }
@@ -275,11 +265,6 @@ public class WebdavResponseImpl implements WebdavResponse {
     @Override
     public void setStatus(int i) {
         httpResponse.setStatus(i);
-    }
-
-    @Override
-    public void setStatus(int i, String s) {
-        httpResponse.setStatus(i, s);
     }
 
     @Override

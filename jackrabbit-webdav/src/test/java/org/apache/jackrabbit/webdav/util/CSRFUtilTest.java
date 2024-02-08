@@ -31,20 +31,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpUpgradeHandler;
-import javax.servlet.http.Part;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpUpgradeHandler;
+import jakarta.servlet.http.Part;
 
 import junit.framework.TestCase;
 
@@ -223,7 +224,7 @@ public class CSRFUtilTest extends TestCase {
         public long getDateHeader(String name) {
             return 0;
         }
-        public Enumeration getHeaderNames() {
+        public Enumeration<String> getHeaderNames() {
             return null;
         }
         public int getIntHeader(String name) {
@@ -280,13 +281,10 @@ public class CSRFUtilTest extends TestCase {
         public boolean isRequestedSessionIdFromURL() {
             return false;
         }
-        public boolean isRequestedSessionIdFromUrl() {
-            return false;
-        }
         public Object getAttribute(String name) {
             return null;
         }
-        public Enumeration getAttributeNames() {
+        public Enumeration<String> getAttributeNames() {
             return null;
         }
         public String getCharacterEncoding() {
@@ -304,13 +302,13 @@ public class CSRFUtilTest extends TestCase {
         public String getParameter(String name) {
             return null;
         }
-        public Enumeration getParameterNames() {
+        public Enumeration<String> getParameterNames() {
             return null;
         }
         public String[] getParameterValues(String name) {
             return new String[0];
         }
-        public Map getParameterMap() {
+        public Map<String, String[]> getParameterMap() {
             return null;
         }
         public String getProtocol() {
@@ -340,16 +338,13 @@ public class CSRFUtilTest extends TestCase {
         public Locale getLocale() {
             return null;
         }
-        public Enumeration getLocales() {
+        public Enumeration<Locale> getLocales() {
             return null;
         }
         public boolean isSecure() {
             return false;
         }
         public RequestDispatcher getRequestDispatcher(String path) {
-            return null;
-        }
-        public String getRealPath(String path) {
             return null;
         }
         public int getRemotePort() {
@@ -369,7 +364,17 @@ public class CSRFUtilTest extends TestCase {
         }
         public ServletContext getServletContext() {
             return null;
+        }        
+        public String getProtocolRequestId() {         
+            return null;
+        }        
+        public String getRequestId() {
+            return null;
+        }        
+        public ServletConnection getServletConnection() {
+            return null;
         }
+        
         public AsyncContext startAsync() throws IllegalStateException {
             return null;
         }
