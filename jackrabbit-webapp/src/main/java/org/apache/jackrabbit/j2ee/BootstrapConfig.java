@@ -107,10 +107,7 @@ public class BootstrapConfig extends AbstractConfig {
         this.repositoryName = repositoryName;
     }
 
-    /**
-     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
-     */
-    @Deprecated public JNDIConfig getJndiConfig() {
+    public JNDIConfig getJndiConfig() {
         return jndiConfig;
     }
 
