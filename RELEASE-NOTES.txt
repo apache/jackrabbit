@@ -1,18 +1,18 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.24
+Release Notes -- Apache Jackrabbit -- Version 2.21.25
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.24, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.25, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.24 is an unstable release cut directly from
+Apache Jackrabbit 2.21.25 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.24
+Changes in Jackrabbit 2.21.25
 -----------------------------
 
 Bug
