@@ -31,7 +31,7 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
 * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
 * Connect to a JCR-RMI server
 */
-@Deprecated(forRemoval = true)
+@Deprecated
 public class ConnectToJNDIServer implements Command {
 	/** logger */
 	private static Log log = LogFactory.getLog(ConnectToJNDIServer.class);
