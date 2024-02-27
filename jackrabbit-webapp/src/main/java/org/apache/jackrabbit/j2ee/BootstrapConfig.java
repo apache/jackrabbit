@@ -46,8 +46,6 @@ public class BootstrapConfig extends AbstractConfig {
 
     private JNDIConfig jndiConfig = new JNDIConfig(this);
 
-    @Deprecated(forRemoval = true) private RMIConfig rmiConfig = new RMIConfig(this);
-
     public void init(Properties props) throws ServletException {
         String property = props.getProperty("repository.home");;
         if (property != null) {
@@ -62,7 +60,6 @@ public class BootstrapConfig extends AbstractConfig {
             setRepositoryName(property);
         }
         jndiConfig.init(props);
-        rmiConfig.init(props);
     }
 
     public void init(ServletConfig ctx) throws ServletException {
@@ -79,7 +76,6 @@ public class BootstrapConfig extends AbstractConfig {
             setRepositoryName(property);
         }
         jndiConfig.init(ctx);
-        rmiConfig.init(ctx);
     }
 
     public String getRepositoryHome() {
@@ -111,17 +107,9 @@ public class BootstrapConfig extends AbstractConfig {
         return jndiConfig;
     }
 
-    /**
-     * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
-     */
-    @Deprecated(forRemoval = true) public RMIConfig getRmiConfig() {
-        return rmiConfig;
-    }
-
     public void validate() {
         valid = repositoryName != null;
         jndiConfig.validate();
-        rmiConfig.validate();
     }
 
 
@@ -129,9 +117,6 @@ public class BootstrapConfig extends AbstractConfig {
         super.logInfos();
         if (jndiConfig.isValid()) {
             jndiConfig.logInfos();
-        }
-        if (rmiConfig.isValid()) {
-            rmiConfig.logInfos();
         }
     }
 }
