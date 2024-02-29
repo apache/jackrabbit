@@ -1,0 +1,71 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<body>
+<p>
+Helper class used by the observation manager classes.
+The JCR observation framework defines a notification mechanism where an
+<code>EventListener</code> is registered with the observation manager
+to receive certain events during the lifetime of the registration. For
+the remote case, where the repository and the application run in different
+Java VMs on possibly different hosts, there are issues related to the
+observation framework.
+<p>
+The listener mechanism is a call-back mechanism where the server calls
+code in the client application. The client application code most probably
+hooks into other parts of that application. Therefore it is not practically
+feasible to just require the client listener to be serializable to be sent
+to the server for several reasons:
+<ul>
+<li>The RMI server cannot call any method on the RMI client. To support such
+call-back situations, the client side application would have to register
+another server, which the server side would have to call.
+<li>When trying to "transfer" the listener to the server side, the listener
+class would have to be available to the server side - either locally in the
+class path or through RMI class loading mechanisms.
+</ul>
+<p>
+To circumvent these issues and still be able to register event listeners,
+support for observation events is implemented in a manner similar to the Java
+Management Extensions Remote API 1.0 (JSR 160) as laid out in Chapter 2.4,
+Adding Remote Listeners:
+<p>
+The ObservationManager interface is not implemented in the RMI layer like
+other interfaces, which just forward calls to the API to the corresponding
+remote object by means of the RMI framework. Instead the client-side
+ObservationManager manages its own list of registered event listeners. Each
+listener registered with an ObservationManager is assigned a unique
+identifier.
+<p>
+The unique identifier along with the filter configuration (event type, 
+path, depth flag, uuid list, node type list, local flag) is sent to the
+server-side remote observation manager. This latter instantiates a proxy
+event listener representing the client side event listener contains the
+unique identifier as a ilnk to the client side event listener. The proxy
+event listener is the registered to the repository's ObservationManager
+with the configuration received from the client side.
+<p>
+When an event arrives at the event listener proxy, the proxy creates a
+new RemoteEvent instance, which contains the client-side event listener
+identifier along with the Event objects from the EventIterator. This
+RemoteEvent instance is added to a server-side queue, which may be
+retrieved from the client-side.
+<p>
+The client-side ObservationManager has a helper class ClientEventPoll,
+which works in the background asking the server for the RemoteEvents from
+the event queue. Each such event is then dispatched to the client-side
+event listener by calling the EventListener.onEvent() method.
+</body>
