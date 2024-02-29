@@ -52,7 +52,9 @@ import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
  * {@link AbstractRepositoryServlet} for the details.
  *
  * @since 1.4
+ * @deprecated RMI support is deprecated and will be removed in a future version of Jackrabbit; see <a href=https://issues.apache.org/jira/browse/JCR-4972 target=_blank>Jira ticket JCR-4972</a> for more information.
  */
+@Deprecated(forRemoval=true)
 public class URLRemoteRepositoryServlet extends RemoteRepositoryServlet {
 
     /**
