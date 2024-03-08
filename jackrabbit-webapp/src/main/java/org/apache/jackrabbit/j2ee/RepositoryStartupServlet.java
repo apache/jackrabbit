@@ -392,21 +392,6 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         return config;
     }
 
-    /**
-     * Return the fully qualified name of the class providing the remote
-     * repository. The class whose name is returned must implement the
-     * {@link RemoteFactoryDelegater} interface.
-     * <p>
-     * Subclasses may override this method for providing a name of a own
-     * implementation.
-     *
-     * @return getClass().getName() + "$RMIRemoteFactoryDelegater"
-     */
-    protected String getRemoteFactoryDelegaterClass() {
-        return getClass().getName() + "$RMIRemoteFactoryDelegater";
-    }
-
-
     //-------------------------------------------------< Installer Routines >---
 
     /**

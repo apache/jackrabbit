@@ -236,17 +236,6 @@ public class RepositoryAccessServlet extends HttpServlet {
     }
 
     /**
-     * Return the fully qualified name of the class providing the client
-     * repository. The class whose name is returned must implement the
-     * {@link ClientFactoryDelegater} interface.
-     *
-     * @return the qfn of the factory class.
-     */
-    protected String getServerFactoryDelegaterClass() {
-        return getClass().getName() + "$RMIClientFactoryDelegater";
-    }
-
-    /**
      * Returns the JCR repository
      *
      * @return a JCR repository
