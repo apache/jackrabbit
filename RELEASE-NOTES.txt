@@ -1,29 +1,37 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.25
+Release Notes -- Apache Jackrabbit -- Version 2.21.26
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.25, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.26, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.25 is an unstable release cut directly from
+Apache Jackrabbit 2.21.26 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.25
+Changes in Jackrabbit 2.21.26
 -----------------------------
 
 Bug
 
-    [JCR-5024] - webapp: un-deprecate BootstrapConfig.getJndiConfig and RepositoryAccessServlet.getRepositoryByJNDI
+    [JCR-5041] - Javadoc build is broken due to JCR 2.0 API docs being unavailable
 
 Task
 
-    [JCR-5025] - standalone: deprecate remote repository support (RMI and JNDI)
-    [JCR-5029] - update aws java sdk version to 1.12.659
-
+    [JCR-4902] - Update mockito dependency to 5.11.0
+    [JCR-4977] - use 'beta' identifier for releases in unstable branch
+    [JCR-5026] - standalone: remove remote repository support (RMI and JNDI)
+    [JCR-5027] - jackrabbit-webapp: remove RMI support
+    [JCR-5032] - jackrabbit-jcr-servlet: deprecate RMI support
+    [JCR-5034] - set baseline comparisonVersion to latest stable (2.20.15)
+    [JCR-5035] - Update tomcat dependency to 9.0.86
+    [JCR-5037] - update aws java sdk version to 1.12.678
+    [JCR-5038] - Update spotbugs-maven-plugin to 4.8.3.1
+    [JCR-5039] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.19
+    [JCR-5040] - Update javacc-maven-plugin to version 3.1.0
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
