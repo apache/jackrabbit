@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.persistence;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Arrays;
 
 import javax.jcr.PropertyType;
@@ -62,9 +63,7 @@ public class PersistenceManagerTest extends TestCase {
     private File database;
 
     protected void setUp() throws Exception {
-        directory = File.createTempFile("jackrabbit-persistence-", "-test");
-        directory.delete();
-        directory.mkdirs();
+        directory = Files.createTempDirectory("jackrabbit-persistence-" + "-test").toFile();
 
         database = File.createTempFile("jackrabbit-persistence-", "-derby");
         database.delete();

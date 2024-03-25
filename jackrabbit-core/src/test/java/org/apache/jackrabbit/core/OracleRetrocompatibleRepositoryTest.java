@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Properties;
 
 import javax.jcr.Session;
@@ -45,9 +46,7 @@ public class OracleRetrocompatibleRepositoryTest extends TestCase {
             || !sysProps.containsKey("tests.oracle.tablespace")) {
             throw new IllegalStateException("Missing system property for test");
         }
-        dir = File.createTempFile("jackrabbit_", null, new File("target"));
-        dir.delete();
-        dir.mkdir();
+        dir = Files.createTempDirectory(new File("target").toPath(), "jackrabbit_").toFile();
         final InputStream in = getClass().getResourceAsStream(
                 "/org/apache/jackrabbit/core/repository-oracle-compat.xml");
         config = RepositoryConfig.create(in, dir.getPath());

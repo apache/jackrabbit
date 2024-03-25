@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import javax.jcr.RepositoryException;
 
@@ -37,9 +38,7 @@ public class RepositoryLockTest extends TestCase {
      * Sets up the temporary directory used for testing.
      */
     protected void setUp() throws IOException {
-        directory = File.createTempFile("RepositoryLock", "Test");
-        directory.delete();
-        directory.mkdir();
+        directory = Files.createTempDirectory("RepositoryLock" + "Test").toFile();
     }
 
     /**
