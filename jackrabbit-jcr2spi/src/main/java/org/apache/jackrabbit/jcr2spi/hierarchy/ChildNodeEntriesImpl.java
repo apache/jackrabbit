@@ -471,7 +471,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
     }
 
-    //-------------------------------------------------< CopyOfAbstractLinkedList >---
+    //-------------------------------------------------< AbstractLinkedListForJava21 >---
 
     //--------------------------------------------------------------------------
     /**
