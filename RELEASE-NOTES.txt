@@ -1,37 +1,45 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.26
+Release Notes -- Apache Jackrabbit -- Version 2.21.27-beta
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.26, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.21.27-beta, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.26 is an unstable release cut directly from
+Apache Jackrabbit 2.21.27-beta is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.26
------------------------------
-
-Bug
-
-    [JCR-5041] - Javadoc build is broken due to JCR 2.0 API docs being unavailable
+Changes in Jackrabbit 2.21.27-beta
+----------------------------------
 
 Task
 
-    [JCR-4902] - Update mockito dependency to 5.11.0
-    [JCR-4977] - use 'beta' identifier for releases in unstable branch
-    [JCR-5026] - standalone: remove remote repository support (RMI and JNDI)
-    [JCR-5027] - jackrabbit-webapp: remove RMI support
-    [JCR-5032] - jackrabbit-jcr-servlet: deprecate RMI support
-    [JCR-5034] - set baseline comparisonVersion to latest stable (2.20.15)
-    [JCR-5035] - Update tomcat dependency to 9.0.86
-    [JCR-5037] - update aws java sdk version to 1.12.678
-    [JCR-5038] - Update spotbugs-maven-plugin to 4.8.3.1
-    [JCR-5039] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.19
-    [JCR-5040] - Update javacc-maven-plugin to version 3.1.0
+    [JCR-4972] - Remove RMI support
+    [JCR-5028] - jackrabbit-jcr-rmi: remove
+    [JCR-5042] - jackrabbit-jcr-servlet: remove RMI support
+    [JCR-5044] - Update tomcat dependency to 9.0.87
+    [JCR-5045] - Update commons-io dependency to 2.16.0
+    [JCR-5046] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.62.0
+    [JCR-5047] - Update to jacoco version 0.8.12
+    [JCR-5052] - Update commons-io dependency to 2.16.1
+    [JCR-5053] - Update commons-cli dependency to 1.7.0
+    [JCR-5054] - vfs-ext: update hadoop-hdfs-client dependency to 3.4.0
+    [JCR-5055] - update Apache parent pom to version 32
+    [JCR-5056] - Update maven-jar-plugin to 3.4.1
+    [JCR-5057] - Update pmd-plugin dependency to 3.22.0
+    [JCR-5058] - Update spotbugs-maven-plugin to 4.8.5.0
+    [JCR-5059] - set baseline comparisonVersion to latest stable (2.20.16)
+    [JCR-5060] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.20
+    [JCR-5063] - Update build-helper-maven-plugin to version 3.6.0
+    [JCR-5064] - Update mockito dependency to 5.12.0
+    [JCR-5068] - update aws java sdk version to 1.12.730
+    [JCR-5069] - Update commons-cli dependency to 1.8.0
+    [JCR-5070] - Update tomcat dependency to 9.0.89
+    [JCR-5071] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.64.0
+
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
