@@ -47,7 +47,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</developerConnection>
     <url>https://github.com/apache/jackrabbit/tree/${project.scm.tag}</url>
-    <tag>jackrabbit-2.21.26-beta</tag>
+    <tag>2.22</tag>
   </scm>
 
   <properties>
