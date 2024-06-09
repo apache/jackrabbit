@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-webdav-project</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.0-beta-SNAPSHOT</version>
     <relativePath>../jackrabbit-webdav-project</relativePath>
   </parent>
   <artifactId>jackrabbit-webdav-jakarta</artifactId>

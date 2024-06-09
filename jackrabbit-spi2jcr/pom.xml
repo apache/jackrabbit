@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.0-beta-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-spi2jcr</artifactId>
@@ -40,7 +40,6 @@
           <includes>
             <include>**/TestAll.java</include>
           </includes>
-          <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>
@@ -180,6 +179,11 @@ org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

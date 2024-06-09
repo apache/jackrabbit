@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.0-beta-SNAPSHOT</version>
     <relativePath>jackrabbit-parent/pom.xml</relativePath>
   </parent>
 
@@ -45,7 +45,6 @@
     <module>jackrabbit-core</module>
     <module>jackrabbit-webdav-project</module>
     <module>jackrabbit-jcr-server-project</module>
-    <module>jackrabbit-jcr-rmi</module>
     <module>jackrabbit-jcr-servlet-project</module>
     <module>jackrabbit-webapp-project</module>
     <module>jackrabbit-jca</module>
@@ -60,12 +59,6 @@
     <module>jackrabbit-standalone</module>
     <module>jackrabbit-it-osgi</module>
   </modules>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk</url>
-  </scm>
 
   <build>
     <plugins>
@@ -170,7 +163,7 @@ A candidate for the Jackrabbit ${project.version} release is available at:
 
 The release candidate is a zip archive of the sources in:
 
-    https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-${project.version}/
+    https://github.com/apache/jackrabbit/tree/${project.artifactId}-${project.version}/
 
 The SHA1 checksum of the archive is ${checksum}.
 
@@ -181,7 +174,7 @@ A staged Maven repository is available for review at:
 The command for running automated checks against this release candidate is:
 
     # run in SVN checkout of https://dist.apache.org/repos/dist/dev/jackrabbit/
-    $ sh check-release.sh ${project.version} ${checksum}
+    $ sh check-release.sh jackrabbit ${project.version} ${checksum}
 
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
 The vote is open for the next 72 hours and passes if a majority of at

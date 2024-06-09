@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.0-beta-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-core</artifactId>
@@ -114,6 +114,8 @@ org.apache.jackrabbit.core.security.user.MembershipCachePerfTest <!-- don't run 
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testStringLiteralInvalidName        <!-- OAK-3265 -->
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral                     <!-- OAK-3265 -->
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265 -->
+org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testNonVersionableCheckedOut <!-- JCR-5007 -->
+org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testModifyNonVersionableNodeWithCheckedOutProperty <!-- JCR-5007 -->
               </value>
             </property>
             <property>
@@ -292,6 +294,11 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-tests</artifactId>
       <version>${project.version}</version>
@@ -300,11 +307,6 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -330,7 +332,7 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral       
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>2.1.214</version>
+      <version>2.2.224</version>
       <scope>test</scope>
     </dependency>
     <dependency>

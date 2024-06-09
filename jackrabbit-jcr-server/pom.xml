@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-jcr-server-project</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.0-beta-SNAPSHOT</version>
     <relativePath>../jackrabbit-jcr-server-project</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-server</artifactId>
@@ -42,7 +42,6 @@
           <includes>
             <include>**/*Test.java</include>
           </includes>
-          <forkMode>once</forkMode>
           <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>
@@ -171,15 +170,6 @@
                   <name>derby.stream.error.file</name>
                   <value>target/derby.log</value>
                 </property>
-                <property>
-                  <name>known.issues</name>
-                  <value>
-                    <!-- JCR-4570 : WebdavRequestImpl does not check ETags if there is no resource or no exclusive write lock -->
-                    org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfEtag
-                    <!-- JCR-4571: WebdavRequestImpl stores If-Header values using either absolute URIs or absolute paths, but both may be used for lookup-->
-                    org.apache.jackrabbit.webdav.server.RFC4918IfHeaderTest#testPutIfLockToken
-                  </value>
-                </property>
               </systemProperties>
             </configuration>
           </plugin>
@@ -198,6 +188,83 @@
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+    </dependency>
+
+    <!-- OSGi support -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>5.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
+      <version>1.12.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.annotation</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-tests</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
