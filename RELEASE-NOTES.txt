@@ -1,24 +1,73 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.27-beta
+Release Notes -- Apache Jackrabbit -- Version 2.22.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.27-beta, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.22.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.27-beta is an unstable release cut directly from
-Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.20.x
-release.
+Apache Jackrabbit 2.22.0 is an incremental feature release based on
+and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
+2.22.x releases are considered stable and targeted for production use.
 
-Changes in Jackrabbit 2.21.27-beta
-----------------------------------
+The minimum Java version for this release is Java 11. See
+
+  http://jackrabbit.apache.org/jcr/downloads.html
+  
+for maintenance versions that support earlier Java versions.
+
+
+Changes in Jackrabbit 2.22.0
+----------------------------
+
+(as compared to 2.20.16)
+
+Bug
+
+    [JCR-4808] - 'pedantic' profile should run integration tests
+    [JCR-4907] - Javadocs have incorrect copyright date
+
+Improvement
+
+    [JCR-4578] - IndexMerger should log more debug informations about the internal IndexBuckets
+    [JCR-4785] - ChildNodeEntriesImpl requires access to removed AbstractLinkedList feature
 
 Task
 
+    [JCR-4352] - Update lucene-core dependency to 3.6.2
+    [JCR-4516] - switch bundle comparisonVersion for 2.20.0
+    [JCR-4580] - switch bundle comparisonVersion for 2.20.1
+    [JCR-4602] - jackrabbit-core: remove unused commons-collections dependency
+    [JCR-4634] - Jackrabbit should build and test with Java 16
+    [JCR-4650] - set baseline comparisonVersion to latest stable (2.20.2)
+    [JCR-4695] - set baseline comparisonVersion to latest stable (2.20.3)
+    [JCR-4737] - set baseline comparisonVersion to latest stable (2.20.4)
+    [JCR-4771] - set baseline comparisonVersion to latest stable (2.20.5)
+    [JCR-4809] - set baseline comparisonVersion to latest stable (2.20.6)
+    [JCR-4867] - set baseline comparisonVersion to latest stable (2.20.7)
+    [JCR-4891] - set baseline comparisonVersion to latest stable (2.20.8)
+    [JCR-4902] - Update mockito dependency to 5.11.0
+    [JCR-4912] - set baseline comparisonVersion to latest stable (2.20.9)
+    [JCR-4914] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.60.0
+    [JCR-4931] - set baseline comparisonVersion to latest stable (2.20.10)
+    [JCR-4938] - update remaining copies of XMLChar.java with latest version from Xerces
+    [JCR-4955] - set baseline comparisonVersion to latest stable (2.20.11)
+    [JCR-4969] - set baseline comparisonVersion to latest stable (2.20.12)
     [JCR-4972] - Remove RMI support
+    [JCR-4977] - use 'beta' identifier for releases in unstable branch
+    [JCR-4989] - set baseline comparisonVersion to latest stable (2.20.13)
+    [JCR-5000] - update Apache parent pom to version 31
+    [JCR-5012] - set baseline comparisonVersion to latest stable (2.20.14)
+    [JCR-5018] - Bump up minimal Java version to 11
+    [JCR-5020] - jackrabbit-webapp: deprecate RMI support "for removal"
+    [JCR-5021] - jackrabbit-jcr-rmi: deprecate RMI support "for removal"
+    [JCR-5022] - Update derby dependency to 10.15.2.0
+    [JCR-5026] - standalone: remove remote repository support (RMI and JNDI)
+    [JCR-5027] - jackrabbit-webapp: remove RMI support
     [JCR-5028] - jackrabbit-jcr-rmi: remove
+    [JCR-5034] - set baseline comparisonVersion to latest stable (2.20.15)
+    [JCR-5039] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.19
     [JCR-5042] - jackrabbit-jcr-servlet: remove RMI support
     [JCR-5044] - Update tomcat dependency to 9.0.87
     [JCR-5045] - Update commons-io dependency to 2.16.0
@@ -86,4 +135,3 @@ Trademarks
 
 Apache Jackrabbit, Jackrabbit, Apache, the Apache feather logo, and the Apache
 Jackrabbit project logo are trademarks of The Apache Software Foundation.
-
