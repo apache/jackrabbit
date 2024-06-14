@@ -23,6 +23,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -31,10 +33,14 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 
+import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
+
 /**
  * Session operation for adding a new node.
  */
 public class AddNodeOperation implements SessionWriteOperation<Node> {
+
+    private static Log log = LogFactory.getLog(AddNodeOperation.class);
 
     private final NodeImpl node;
 
@@ -103,6 +109,7 @@ public class AddNodeOperation implements SessionWriteOperation<Node> {
         if (uuid != null) {
             id = new NodeId(uuid);
             if (itemMgr.itemExists(id)) {
+                log.warn("A node with this UUID {} already exists." + uuid);
                 throw new ItemExistsException(
                         "A node with this UUID already exists: " + uuid);
             }
