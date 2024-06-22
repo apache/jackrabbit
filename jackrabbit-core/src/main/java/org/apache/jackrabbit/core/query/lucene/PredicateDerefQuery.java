@@ -74,6 +74,11 @@ public class PredicateDerefQuery extends Query {
      * The scorer of the name test query
      */
     private Scorer nameTestScorer;
+
+    /**
+     *  Flag indicating if the children have already been calculated
+     */
+    private boolean childrenCalculated = false;
     /**
      * Creates a new <code>DerefQuery</code> based on a <code>context</code>
      * query.
@@ -203,6 +208,7 @@ public class PredicateDerefQuery extends Query {
         public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
                 boolean topScorer) throws IOException {
             subQueryScorer = subQuery.weight(searcher).scorer(reader, scoreDocsInOrder, false);
+            childrenCalculated = false;
             if (nameTest != null) {
                 nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader, scoreDocsInOrder, false);
             }
@@ -311,58 +317,62 @@ public class PredicateDerefQuery extends Query {
          * @throws IOException
          */
         private void calculateChildren() throws IOException {
+
+            if (!childrenCalculated) {
 //                subQueryHits.clear();
 //                hits.clear();
-            subQueryScorer.score(new AbstractHitCollector() {
-                @Override
-                protected void collect(int doc, float score) {
-                    subQueryHits.set(doc);
-                }
-            });
+                subQueryScorer.score(new AbstractHitCollector() {
+                    @Override
+                    protected void collect(int doc, float score) {
+                        subQueryHits.set(doc);
+                    }
+                });
 
-            TermDocs termDocs = reader.termDocs(new Term(FieldNames.PROPERTIES_SET, refProperty));
-            String prefix = FieldNames.createNamedValue(refProperty, "");
-            while (termDocs.next()) {
-                int doc = termDocs.doc();
+                TermDocs termDocs = reader.termDocs(new Term(FieldNames.PROPERTIES_SET, refProperty));
+                String prefix = FieldNames.createNamedValue(refProperty, "");
+                while (termDocs.next()) {
+                    int doc = termDocs.doc();
 
-                String[] values = reader.document(doc).getValues(FieldNames.PROPERTIES);
-                if (values == null) {
-                    // no reference properties at all on this node
-                    continue;
-                }
-                for (int v = 0; v < values.length; v++) {
-                    if (values[v].startsWith(prefix)) {
-                        String uuid = values[v].substring(prefix.length());
+                    String[] values = reader.document(doc).getValues(FieldNames.PROPERTIES);
+                    if (values == null) {
+                        // no reference properties at all on this node
+                        continue;
+                    }
+                    for (int v = 0; v < values.length; v++) {
+                        if (values[v].startsWith(prefix)) {
+                            String uuid = values[v].substring(prefix.length());
 
-                        TermDocs node = reader.termDocs(TermFactory.createUUIDTerm(uuid));
-                        try {
-                            while (node.next()) {
-                                if (subQueryHits.get(node.doc())) {
-                                    hits.set(doc);
+                            TermDocs node = reader.termDocs(TermFactory.createUUIDTerm(uuid));
+                            try {
+                                while (node.next()) {
+                                    if (subQueryHits.get(node.doc())) {
+                                        hits.set(doc);
+                                    }
                                 }
+                            } finally {
+                                node.close();
                             }
-                        } finally {
-                            node.close();
                         }
                     }
                 }
-            }
 
-            // collect nameTest hits
-            final BitSet nameTestHits = new BitSet();
-            if (nameTestScorer != null) {
-                nameTestScorer.score(new AbstractHitCollector() {
-                    @Override
-                    protected void collect(int doc, float score) {
-                        nameTestHits.set(doc);
-                    }
-                });
-            }
+                // collect nameTest hits
+                final BitSet nameTestHits = new BitSet();
+                if (nameTestScorer != null) {
+                    nameTestScorer.score(new AbstractHitCollector() {
+                        @Override
+                        protected void collect(int doc, float score) {
+                            nameTestHits.set(doc);
+                        }
+                    });
+                }
 
-            // filter out the target nodes that do not match the name test
-            // if there is any name test at all.
-            if (nameTestScorer != null) {
-                hits.and(nameTestHits);
+                // filter out the target nodes that do not match the name test
+                // if there is any name test at all.
+                if (nameTestScorer != null) {
+                    hits.and(nameTestHits);
+                }
+                childrenCalculated = true;
             }
         }
     }

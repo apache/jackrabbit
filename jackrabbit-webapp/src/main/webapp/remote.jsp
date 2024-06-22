@@ -23,15 +23,21 @@ String base =
 base = Text.encodeIllegalXMLCharacters(base);
 %><jsp:include page="header.jsp"/>
 <p>
-  The content repository within this web application is made available
+  The content repository within this web application may be made available
   to remote clients through
   <a href="http://java.sun.com/javase/technologies/core/basic/rmi/">RMI</a>
   and the <em>jackrabbit-jcr-rmi</em> component.
 <p>
 <p>
-  The remote repository stub is available both in the RMI registry
-  (one is started automatically by this web application if not already running)
-  and as a direct HTTP download. The default URLs for accessing the remote
+  To access a remote repository stub, it needs to be registered in the RMI registry.
+  By default, this is not started automatically by this web application. To change that,
+  use the related properties in the bootstrap.properties file which are commented out
+  in the template file.
+  You can also make the stub available as a direct HTTP download by enabling the 
+  RemoteBindingServlet and the corresponding servlet mapping, which are commented out
+  in the web.xml template.
+  
+  The default URLs for accessing the remote
   repository are:
 </p>
 <ul>
