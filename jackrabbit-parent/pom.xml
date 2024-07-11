@@ -55,7 +55,7 @@
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <!-- OAK version used in componenents that *implement* oak-jackrabbit-api -->
-    <oak-jackrabbit-api.version.implemented>1.64.0</oak-jackrabbit-api.version.implemented>
+    <oak-jackrabbit-api.version.implemented>1.66.0</oak-jackrabbit-api.version.implemented>
     <!-- OAK version used in componenents that *use* oak-jackrabbit-api -->
     <oak-jackrabbit-api.version.used>1.22.20</oak-jackrabbit-api.version.used>
     <jetty.version>9.4.53.v20231009</jetty.version>
