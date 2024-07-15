@@ -44,7 +44,7 @@ public class NameParser {
      * @param jcrName the name to be parsed. The jcrName may either be in the
      * qualified or in the expanded form.
      * @param resolver <code>NamespaceResolver</code> use to retrieve the
-     * namespace URI from the prefix contained in the given JCR name.
+     * namespace URI from the prefix contained in the given JCR name. Must resolve the empty prefix "" as well.
      * @return qName the new <code>Name</code>
      * @throws IllegalNameException If <code>jcrName</code> is not a valid
      * JCR-style name.
