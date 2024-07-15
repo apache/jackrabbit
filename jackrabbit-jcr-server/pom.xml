@@ -25,9 +25,9 @@
   <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-parent</artifactId>
+    <artifactId>jackrabbit-jcr-server-project</artifactId>
     <version>2.23.0-beta-SNAPSHOT</version>
-    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
+    <relativePath>../jackrabbit-jcr-server-project</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-server</artifactId>
   <name>Jackrabbit JCR Server</name>
@@ -180,37 +180,16 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.jcr</groupId>
-      <artifactId>jcr</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-spi-commons</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webdav</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tika</groupId>
-      <artifactId>tika-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>

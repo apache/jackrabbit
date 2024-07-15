@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -16,18 +15,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <!-- ====================================================================== -->
   <!-- P R O J E C T  D E S C R I P T I O N                                   -->
   <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit-parent</artifactId>
+    <artifactId>jackrabbit-webapp-project</artifactId>
     <version>2.23.0-beta-SNAPSHOT</version>
-    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
+    <relativePath>../jackrabbit-webapp-project</relativePath>
   </parent>
   <artifactId>jackrabbit-webapp</artifactId>
   <packaging>war</packaging>
@@ -40,24 +37,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>javax.jcr</groupId>
-      <artifactId>jcr</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tika</groupId>
-      <artifactId>tika-parsers-standard-package</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
       <version>${project.version}</version>
@@ -67,10 +46,12 @@
       <artifactId>jackrabbit-jcr-servlet</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.tomcat</groupId>
       <artifactId>tomcat-servlet-api</artifactId>
@@ -102,6 +83,20 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+     <groupId>org.apache.tika</groupId>
+     <artifactId>tika-parsers-standard-package</artifactId>
+     <exclusions>
+      <exclusion>
+       <groupId>org.bouncycastle</groupId>
+       <artifactId>bcmail-jdk15on</artifactId>
+      </exclusion>
+      <exclusion>
+       <groupId>org.bouncycastle</groupId>
+       <artifactId>bcprov-jdk15on</artifactId>
+      </exclusion>
+     </exclusions>
+    </dependency>
+    <dependency>
       <groupId>net.sourceforge.htmlunit</groupId>
       <artifactId>htmlunit</artifactId>
       <version>2.70.0</version>
@@ -130,7 +125,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
   <build>
     <plugins>
       <plugin>
@@ -179,21 +173,5 @@
         </configuration>
       </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <configuration>
-            <systemProperties>
-              <property>
-                <name>derby.stream.error.file</name>
-                <value>target/derby.log</value>
-              </property>
-            </systemProperties>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
-
 </project>
