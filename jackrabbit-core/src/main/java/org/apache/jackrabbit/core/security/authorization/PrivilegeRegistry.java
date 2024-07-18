@@ -183,6 +183,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @deprecated Use {@link org.apache.jackrabbit.api.security.authorization.PrivilegeManager} instead.
      * @see org.apache.jackrabbit.api.JackrabbitWorkspace#getPrivilegeManager()
      */
+    @Deprecated
     public PrivilegeRegistry(NameResolver resolver) {
         cacheDefinitions(createBuiltInPrivilegeDefinitions());
 
@@ -225,6 +226,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @return all registered privileges.
      * @deprecated Use {@link org.apache.jackrabbit.api.security.authorization.PrivilegeManager#getRegisteredPrivileges()} instead.
      */
+    @Deprecated
     public Privilege[] getRegisteredPrivileges() {
         try {
             return new PrivilegeManagerImpl(this, resolver).getRegisteredPrivileges();
@@ -243,6 +245,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @throws RepositoryException If another error occurs.
      * @deprecated Use {@link org.apache.jackrabbit.api.security.authorization.PrivilegeManager#getPrivilege(String)} instead.
      */
+    @Deprecated
     public Privilege getPrivilege(String privilegeName) throws AccessControlException, RepositoryException {
         return new PrivilegeManagerImpl(this, resolver).getPrivilege(privilegeName);
     }
@@ -258,6 +261,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @see #getBits(Privilege[])
      * @deprecated Use {@link PrivilegeManagerImpl#getPrivileges(PrivilegeBits)} instead.
      */
+    @Deprecated
     public Privilege[] getPrivileges(int bits) {
         Set<Privilege> prvs = new PrivilegeManagerImpl(this, resolver).getPrivileges(PrivilegeBits.getInstance(bits));
         return prvs.toArray(new Privilege[prvs.size()]);
@@ -274,6 +278,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @see #getPrivileges(int)
      * @deprecated Use {@link PrivilegeManagerImpl#getBits(javax.jcr.security.Privilege...)} instead.
      */
+    @Deprecated
     public static int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
             throw new AccessControlException("Privilege array is empty or null.");
@@ -346,6 +351,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @return the permissions granted evaluating the given privileges.
      * @deprecated Use {@link #calculatePermissions(PrivilegeBits, PrivilegeBits, boolean, boolean)} instead.
      */
+    @Deprecated
     public static int calculatePermissions(int privs, int parentPrivs, boolean isAllow, boolean protectsPolicy) {
         return calculatePermissions((long) privs, (long) parentPrivs, isAllow, protectsPolicy);
     }

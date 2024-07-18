@@ -81,6 +81,7 @@ public class EventImpl implements Event, Serializable {
      * Creates a new serializable event.
      * @deprecated
      */
+    @Deprecated
     public EventImpl(int type, Path path, ItemId itemId, NodeId parentId,
                      Name primaryNodeTypeName, Name[] mixinTypeNames,
                      String userId) {

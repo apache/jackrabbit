@@ -930,6 +930,7 @@ public class DbDataStore extends AbstractDataStore
      * @deprecated
      * @return the maximum number of connections.
      */
+    @Deprecated
     public int getMaxConnections() {
         return -1;
     }
@@ -938,9 +939,10 @@ public class DbDataStore extends AbstractDataStore
      * Set the maximum number of concurrent connections in the pool.
      * At least 3 connections are required if the garbage collection process is used.
      *
-     *@deprecated
+     * @deprecated
      * @param maxConnections the new value
      */
+    @Deprecated
     public void setMaxConnections(int maxConnections) {
         // no effect
     }

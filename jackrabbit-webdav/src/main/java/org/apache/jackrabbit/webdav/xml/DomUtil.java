@@ -736,6 +736,7 @@ public class DomUtil {
      * is called <code>Expanded Name</code>.
      *
      */
+    @Deprecated
     public static String getQualifiedName(String localName, Namespace namespace) {
         return getExpandedName(localName, namespace);
     }
