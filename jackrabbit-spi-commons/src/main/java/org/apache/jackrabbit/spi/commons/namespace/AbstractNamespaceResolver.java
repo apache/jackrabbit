@@ -35,6 +35,7 @@ import java.util.Iterator;
  *
  * @deprecated https://issues.apache.org/jira/browse/JCR-1700
  */
+@Deprecated
 public abstract class AbstractNamespaceResolver implements NamespaceResolver {
 
     private final Set listeners;

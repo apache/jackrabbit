@@ -45,6 +45,7 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      * @return the id of the root node of the virtual tree.
      * @deprecated use {@link #getVirtualRootIds()} instead.
      */
+    @Deprecated
     NodeId getVirtualRootId();
 
     /**

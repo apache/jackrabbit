@@ -565,6 +565,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * @throws RepositoryException
      * @deprecated use #renameChildNode(NodeId, Name, boolean)
      */
+    @Deprecated
     protected void renameChildNode(Name oldName, int index, NodeId id,
                                    Name newName)
             throws RepositoryException {
@@ -3072,6 +3073,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * @throws RepositoryException if some other error occurs
      * @deprecated
      */
+    @Deprecated
     protected void checkLock() throws LockException, RepositoryException {
         if (isNew()) {
             // a new node needs no check

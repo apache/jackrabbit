@@ -72,6 +72,7 @@ public class LockInfoImpl implements LockInfo, Serializable {
      * @param nodeId the node id of the locked node.
      * @deprecated Use {@link #LockInfoImpl(String, String, boolean, boolean, long, boolean, NodeId)} instaed.
      */
+    @Deprecated
     public LockInfoImpl(String lockToken, String lockOwner, boolean isDeep,
                         boolean isSessionScoped, NodeId nodeId) {
         this(lockToken, lockOwner, isDeep, isSessionScoped, Long.MAX_VALUE, lockToken != null, nodeId);

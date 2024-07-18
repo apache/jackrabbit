@@ -159,6 +159,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         /**
          * @deprecated
          */
+        @Deprecated
         public Result(int allows, int denies, int allowPrivileges, int denyPrivileges) {
             this(allows, denies, PrivilegeBits.getInstance(allowPrivileges), PrivilegeBits.getInstance(denyPrivileges));
         }
@@ -178,6 +179,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         /**
          * @deprecated jackrabbit 2.3 (throws UnsupportedOperationException, use getPrivilegeBits instead)
          */
+        @Deprecated
         public int getPrivileges() {
             throw new UnsupportedOperationException("use #getPrivilegeBits instead.");
         }

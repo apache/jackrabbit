@@ -20,6 +20,7 @@ package org.apache.jackrabbit.webdav.jcr;
  *
  * @deprecated As of Jackrabbit 2.2. Please Use {@link org.apache.jackrabbit.commons.webdav.JcrValueType} instead.
  */
+@Deprecated
 public final class JcrValueType extends org.apache.jackrabbit.commons.webdav.JcrValueType {
 
 }

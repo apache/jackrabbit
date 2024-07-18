@@ -52,6 +52,7 @@ interface UserConstants {
      * rep:userId property redundant. It has been removed from the node type
      * definition.
      */
+    @Deprecated
     Name P_USERID = NF.create(Name.NS_REP_URI, "userId");
     Name P_PASSWORD = NF.create(Name.NS_REP_URI, "password");
     Name P_DISABLED = NF.create(Name.NS_REP_URI, "disabled");
@@ -60,6 +61,7 @@ interface UserConstants {
      * @deprecated As of 2.0 group membership is stored with the group node.
      * @see #P_MEMBERS
      */
+    @Deprecated
     Name P_GROUPS = NF.create(Name.NS_REP_URI, "groups");
 
     Name P_MEMBERS = NF.create(Name.NS_REP_URI, "members");

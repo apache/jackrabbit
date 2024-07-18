@@ -149,6 +149,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @deprecated Use {@link #NodeInfoImpl(Path, NodeId, int, Name, Name[], Iterator, Iterator, Iterator)}
      * instead. The parentId is not used any more.
      */
+    @Deprecated
     public NodeInfoImpl(NodeId parentId, Name name, Path path, NodeId id,
                         int index, Name primaryTypeName, Name[] mixinNames,
                         Iterator<PropertyId> references, Iterator<PropertyId> propertyIds,

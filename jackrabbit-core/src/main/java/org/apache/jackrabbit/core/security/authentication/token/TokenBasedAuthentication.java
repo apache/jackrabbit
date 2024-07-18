@@ -58,6 +58,7 @@ public class TokenBasedAuthentication implements Authentication {
      * behavior of the {@code TokenBasedAuthentication}. Note that as of OAK 1.0
      * this flag will no be supported.
      */
+    @Deprecated
     public static final String PARAM_COMPAT = "TokenCompatMode";
 
     private final TokenInfo tokenInfo;

@@ -296,6 +296,7 @@ public class BundleDbPersistenceManager
      * 
      * @return the database type name.
      */
+    @Deprecated
     public String getSchema() {
         return databaseType;
     }
@@ -317,6 +318,7 @@ public class BundleDbPersistenceManager
      *
      * @param databaseType database type name
      */
+    @Deprecated
     public void setSchema(String databaseType) {
         this.databaseType = databaseType;
     }

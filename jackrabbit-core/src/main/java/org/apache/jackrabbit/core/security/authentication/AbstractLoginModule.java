@@ -77,6 +77,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * deprecated and will no longer be supported in a subsequent release.
      * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
+    @Deprecated
     private static final String PRE_AUTHENTICATED_ATTRIBUTE_OPTION = "trust_credentials_attribute";
 
     private String principalProviderClassName;
@@ -95,6 +96,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * has been deprecated and will no longer be available in a subsequent release.
      * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
+    @Deprecated
     private String preAuthAttributeName;
 
 
@@ -759,6 +761,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * has been deprecated and will no longer be available in a subsequent release.
      * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
+    @Deprecated
     protected final String getPreAuthAttributeName() {
         return preAuthAttributeName;
     }
@@ -783,6 +786,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * has been deprecated and will no longer be available in a subsequent release.
      * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
+    @Deprecated
     protected boolean isPreAuthenticated(final Credentials creds) {
         final String preAuthAttrName = getPreAuthAttributeName();
         boolean isPreAuth = preAuthAttrName != null

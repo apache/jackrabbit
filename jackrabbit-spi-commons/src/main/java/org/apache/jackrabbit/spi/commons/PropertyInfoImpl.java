@@ -87,6 +87,7 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * @deprecated Use {@link #PropertyInfoImpl(Path, PropertyId, int, boolean, QValue[])}
      * instead. The parentId is not used any more.
      */
+    @Deprecated
     public PropertyInfoImpl(NodeId parentId, Name name, Path path,
                             PropertyId id, int type, boolean isMultiValued,
                             QValue[] values) {

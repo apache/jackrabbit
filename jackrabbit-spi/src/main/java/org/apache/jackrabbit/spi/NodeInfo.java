@@ -71,6 +71,7 @@ public interface NodeInfo extends ItemInfo {
      * @see PropertyInfo#getId()
      * @deprecated Use {@link RepositoryService#getReferences(SessionInfo, NodeId, Name, boolean)} instead.
      */
+    @Deprecated
     public PropertyId[] getReferences();
 
     /**
