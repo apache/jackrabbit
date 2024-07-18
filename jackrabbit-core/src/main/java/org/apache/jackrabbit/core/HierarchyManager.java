@@ -49,6 +49,7 @@ public interface HierarchyManager {
      *         if there's no item at <code>path</code>.
      * @throws RepositoryException if an error occurs
      */
+    @Deprecated
     ItemId resolvePath(Path path) throws RepositoryException;
 
     /**

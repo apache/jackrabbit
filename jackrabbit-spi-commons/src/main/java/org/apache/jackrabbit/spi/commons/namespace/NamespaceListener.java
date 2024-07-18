@@ -21,6 +21,7 @@ package org.apache.jackrabbit.spi.commons.namespace;
  *
  * @deprecated https://issues.apache.org/jira/browse/JCR-1700
  */
+@Deprecated
 public interface NamespaceListener {
 
     /**

@@ -190,6 +190,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * @deprecated Use {@link #PARAM_COMPATIBLE_JR16} instead.
      */
+    @Deprecated
     public static final String PARAM_COMPATIBILE_JR16 = "compatibleJR16";
 
     /**
