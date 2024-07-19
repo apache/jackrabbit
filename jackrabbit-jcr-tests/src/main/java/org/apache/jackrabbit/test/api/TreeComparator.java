@@ -28,12 +28,14 @@ import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.nodetype.NodeTypeManager;
+
+import org.junit.Assert;
+
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
 import java.util.Calendar;
-import java.io.ByteArrayInputStream;
 
-import junit.framework.Assert;
+import java.io.ByteArrayInputStream;
 
 /**
  * <code>TreeComparator</code> compares two trees. This allows re-use for
