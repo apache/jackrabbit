@@ -28,7 +28,6 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.Privilege;
 
-import junit.framework.Assert;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueFactory;
@@ -36,6 +35,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
+import org.junit.Assert;
 
 /**
  * Tests the functionality of the JCR AccessControlList API implementation. The
@@ -97,15 +97,14 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
 
         // four different entries
         Assert.assertEquals(4, acl.size());
-        
+
         // UnknownPrincipal entries
         AccessControlEntry[] pentries = getEntries(acl, unknownPrincipal);
         Assert.assertEquals(2, pentries.length);
-        
+
         // secondPrincipal entries
         AccessControlEntry[] sentries = getEntries(acl, knownPrincipal);
         Assert.assertEquals(2, sentries.length);
-        
     }
 
     public void testMultipleEntryEffect() throws Exception {
