@@ -30,14 +30,13 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.query.Query;
 import javax.jcr.query.RowIterator;
 
-import junit.framework.Assert;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.test.JUnitTest;
+import org.junit.Assert;
 
 /**
  * Test for JCR3162
