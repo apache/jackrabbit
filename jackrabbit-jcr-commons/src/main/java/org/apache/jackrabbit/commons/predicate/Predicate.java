@@ -19,8 +19,10 @@ package org.apache.jackrabbit.commons.predicate;
 /**
  * Interface for object predicates, i.e. functions that evaluate a given
  * object to a boolean value.
+ * @deprecated Use {@link java.util.function.Predicate} instead
  */
-public interface Predicate {
+@Deprecated
+public interface Predicate<T> extends java.util.function.Predicate<T> {
 
     /**
      * Evaluates the predicate for the given object.
@@ -28,12 +30,17 @@ public interface Predicate {
      * @param object some object
      * @return predicate result
      */
-    boolean evaluate(Object object);
+    boolean evaluate(T object);
+
+    default boolean test(T object) {
+        return evaluate(object);
+    }
 
     /**
      * Constant predicate that returns <code>true</code> for all objects.
      */
-    Predicate TRUE = new Predicate() {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    Predicate<? extends Object> TRUE = new Predicate() {
         public boolean evaluate(Object object) {
             return true;
         }
@@ -42,10 +49,10 @@ public interface Predicate {
     /**
      * Constant predicate that returns <code>false</code> for all objects.
      */
-    Predicate FALSE = new Predicate() {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    Predicate<? extends Object> FALSE = new Predicate() {
         public boolean evaluate(Object object) {
             return false;
         }
     };
-
 }

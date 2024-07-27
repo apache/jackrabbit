@@ -27,15 +27,37 @@ public class Predicates {
      * Creates an AND predicate over all the given component predicates.
      * All the component predicates must evaluate to <code>true</code>
      * for the AND predicate to do so.
+     * @param <T>
      *
      * @param predicates component predicates
      * @return AND predicate
      */
-    public static Predicate and(final Predicate... predicates) {
-        return new Predicate() {
-            public boolean evaluate(Object object) {
-                for (Predicate predicate : predicates) {
-                    if (!predicate.evaluate(object)) {
+    @SuppressWarnings({ "unchecked", "deprecation" })
+    public static <T> Predicate<T> and(final java.util.function.Predicate<? super T>... predicates) {
+        return computeAnd(predicates);
+    }
+
+    /**
+     * Creates an AND predicate over all the given component predicates.
+     * All the component predicates must evaluate to <code>true</code>
+     * for the AND predicate to do so.
+     * @param <T>
+     *
+     * @param predicates component predicates
+     * @return AND predicate
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated
+    public static <T> Predicate<T> and(Predicate<? super T>... predicates) {
+        return computeAnd(predicates);
+    }
+
+    @SuppressWarnings({ "deprecation", "unchecked" })
+    private static <T> Predicate<T> computeAnd(final java.util.function.Predicate<? super T>... predicates) {
+        return new Predicate<T>() {
+            public boolean evaluate(T object) {
+                for (java.util.function.Predicate<? super T> predicate : predicates) {
+                    if (!predicate.test(object)) {
                         return false;
                     }
                 }
@@ -52,11 +74,31 @@ public class Predicates {
      * @param predicates component predicates
      * @return OR predicate
      */
-    public static Predicate or(final Predicate... predicates) {
-        return new Predicate() {
-            public boolean evaluate(Object object) {
-                for (Predicate predicate : predicates) {
-                    if (predicate.evaluate(object)) {
+    @SuppressWarnings({ "unchecked", "deprecation" })
+    public static <T> Predicate<T> or(final java.util.function.Predicate<? super T>... predicates) {
+        return computeOr(predicates);
+    }
+
+    /**
+     * Creates an OR predicate over all the given component predicates.
+     * At least one of the component predicates must evaluate to
+     * <code>true</code> for the OR predicate to do so.
+     *
+     * @param predicates component predicates
+     * @return OR predicate
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated
+    public static <T> Predicate<T> or(Predicate<? super T>... predicates) {
+        return computeOr(predicates);
+    }
+
+    @SuppressWarnings({ "deprecation", "unchecked" })
+    private static <T> Predicate<T> computeOr(java.util.function.Predicate<? super T>... predicates) {
+        return new Predicate<T>() {
+            public boolean evaluate(T object) {
+                for (java.util.function.Predicate<? super T> predicate : predicates) {
+                    if (predicate.test(object)) {
                         return true;
                     }
                 }
@@ -73,12 +115,28 @@ public class Predicates {
      * @param predicate component predicate
      * @return NOT predicate
      */
-    public static Predicate not(final Predicate predicate) {
-        return new Predicate() {
-            public boolean evaluate(Object object) {
-                return !predicate.evaluate(object);
+    public static <T> java.util.function.Predicate<T> not(java.util.function.Predicate<? super T> target) {
+        return new java.util.function.Predicate<T>() {
+            public boolean test(T object) {
+                return !target.test(object);
             }
         };
     }
 
+    /**
+     * Creates a NOT predicate for the given component predicate.
+     * The NOT predicate evaluates to <code>true</code> when the component
+     * predicate doesn't, and vice versa.
+     *
+     * @param predicate component predicate
+     * @return NOT predicate
+     */
+    @SuppressWarnings("deprecation")
+    public static <T> Predicate<T> not(Predicate<? super T> target) {
+        return new Predicate<T>() {
+            public boolean evaluate(T object) {
+                return !target.test(object);
+            }
+        };
+    }
 }

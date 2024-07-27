@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.commons.iterator;
 
-import org.apache.jackrabbit.commons.predicate.Predicate;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Predicate;
 
 /**
  * Iterator filtering out items which do not match a given predicate.
@@ -27,7 +26,7 @@ import java.util.NoSuchElementException;
  */
 public class FilterIterator<T> implements Iterator<T> {
     private final Iterator<T> iterator;
-    private final Predicate predicate;
+    private final Predicate<T> predicate;
 
     private T next = null;
 
@@ -37,7 +36,14 @@ public class FilterIterator<T> implements Iterator<T> {
      * @param iterator  iterator to filter
      * @param predicate  only item matching this predicate are included
      */
-    public FilterIterator(Iterator<T> iterator, Predicate predicate) {
+    public FilterIterator(Iterator<T> iterator, Predicate<T> predicate) {
+        super();
+        this.iterator = iterator;
+        this.predicate = predicate;
+    }
+
+    @SuppressWarnings("deprecation")
+    public FilterIterator(Iterator<T> iterator, org.apache.jackrabbit.commons.predicate.Predicate<T> predicate) {
         super();
         this.iterator = iterator;
         this.predicate = predicate;
@@ -46,7 +52,7 @@ public class FilterIterator<T> implements Iterator<T> {
     public boolean hasNext() {
         while (next == null && iterator.hasNext()) {
             T e = iterator.next();
-            if (predicate.evaluate(e)) {
+            if (predicate.test(e)) {
                 next = e;
             }
         }
@@ -72,5 +78,4 @@ public class FilterIterator<T> implements Iterator<T> {
     public void remove() {
         throw new UnsupportedOperationException();
     }
-
 }

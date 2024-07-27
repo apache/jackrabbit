@@ -18,10 +18,9 @@ package org.apache.jackrabbit.commons.iterator;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Predicate;
 
 import javax.jcr.RangeIterator;
-
-import org.apache.jackrabbit.commons.predicate.Predicate;
 
 /**
  * Filtering decorator for iterators.
@@ -36,6 +35,7 @@ public class FilteredRangeIterator implements RangeIterator {
     /**
      * Predicate used for filtering.
      */
+    @SuppressWarnings("rawtypes")
     private final Predicate predicate;
 
     /**
@@ -73,7 +73,14 @@ public class FilteredRangeIterator implements RangeIterator {
      * @param bufferSize
      */
     public FilteredRangeIterator(
-            Iterator<?> iterator, Predicate predicate, int bufferSize) {
+            Iterator<?> iterator, Predicate<?> predicate, int bufferSize) {
+        this.iterator = iterator;
+        this.predicate = predicate;
+        this.buffer = new Object[bufferSize];
+    }
+
+    public FilteredRangeIterator(
+            Iterator<?> iterator, org.apache.jackrabbit.commons.predicate.Predicate<?> predicate, int bufferSize) {
         this.iterator = iterator;
         this.predicate = predicate;
         this.buffer = new Object[bufferSize];
@@ -85,7 +92,11 @@ public class FilteredRangeIterator implements RangeIterator {
      * @param iterator underlying iterator
      * @param predicate predicate used for filtering
      */
-    public FilteredRangeIterator(Iterator<?> iterator, Predicate predicate) {
+    public FilteredRangeIterator(Iterator<?> iterator, Predicate<?> predicate) {
+        this(iterator, predicate, 1000);
+    }
+
+    public FilteredRangeIterator(Iterator<?> iterator, org.apache.jackrabbit.commons.predicate.Predicate<?> predicate) {
         this(iterator, predicate, 1000);
     }
 
@@ -98,12 +109,13 @@ public class FilteredRangeIterator implements RangeIterator {
      * @param iterator underlying iterator
      */
     public FilteredRangeIterator(Iterator<?> iterator) {
-        this(iterator, Predicate.TRUE, 1000);
+        this(iterator, x -> true, 1000);
     }
 
     /**
      * Pre-fetches more items into the buffer.
      */
+    @SuppressWarnings("unchecked")
     private void fetch() {
         if (bufferPosition == bufferSize) {
             position += bufferSize;
@@ -111,7 +123,7 @@ public class FilteredRangeIterator implements RangeIterator {
             bufferSize = 0;
             while (bufferSize < buffer.length && iterator.hasNext()) {
                 Object object = iterator.next();
-                if (predicate.evaluate(object)) {
+                if (predicate.test(object)) {
                     buffer[bufferSize++] = object;
                 }
             }

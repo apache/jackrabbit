@@ -18,7 +18,6 @@ package org.apache.jackrabbit.commons.flat;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.iterator.FilterIterator;
-import org.apache.jackrabbit.commons.predicate.Predicate;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -427,17 +426,13 @@ public class BTreeManager implements TreeManager {
      * Filtering ignored properties from the given properties.
      */
     private Iterator<Property> filterProperties(Iterator<Property> properties) {
-        return new FilterIterator<Property>(properties, new Predicate() {
-            public boolean evaluate(Object object) {
+        return new FilterIterator<Property>(properties, prop -> {
                 try {
-                    Property p = (Property) object;
-                    return !ignoredProperties.contains(p.getName());
+                    return !ignoredProperties.contains(prop.getName());
                 }
                 catch (RepositoryException ignore) {
                     return true;
-                }
-            }
-        });
+                }});
     }
 
     private static class WrappedRepositoryException extends RuntimeException {
