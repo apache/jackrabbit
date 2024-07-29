@@ -22,6 +22,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.collections4.list.AbstractLinkedListForJava21;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
@@ -30,7 +31,7 @@ import org.apache.jackrabbit.spi.Path;
  * LinkNode which links the entries of the list.
  */
 @SuppressWarnings("rawtypes")
-class LinkedEntries extends CopyOfAbstractLinkedList {
+class LinkedEntries extends AbstractLinkedListForJava21 {
 
     private Node<?> header;
     private volatile int modCount;
