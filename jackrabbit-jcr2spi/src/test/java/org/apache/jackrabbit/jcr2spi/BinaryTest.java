@@ -16,19 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.util.Random;
-
 import static org.junit.Assert.assertArrayEquals;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Random;
 
-import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.Property;
 import javax.jcr.Binary;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -186,7 +185,9 @@ public class BinaryTest extends AbstractJCRTest {
 
             // check the binaries are indeed the same (JCR-4154)
             byte[] result = new byte[bytes.length];
-            IOUtils.readFully(p.getBinary().getStream(), result);
+            try (InputStream in = p.getBinary().getStream()) {
+                result = in.readAllBytes();
+            }
             assertArrayEquals(bytes, result);
         } finally {
             s.logout();
