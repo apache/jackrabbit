@@ -302,6 +302,7 @@ public interface RepositoryService {
      * @see javax.jcr.version.Version#getContainingHistory()
      * @deprecated Use {@link #getItemInfos(SessionInfo, ItemId)}
      */
+    @Deprecated
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
@@ -382,6 +383,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getProperty(String)
      * @deprecated Use {@link #getItemInfos(SessionInfo, ItemId)}
      */
+    @Deprecated
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws ItemNotFoundException, RepositoryException;
 
     //-----------------------------------------------< general modification >---

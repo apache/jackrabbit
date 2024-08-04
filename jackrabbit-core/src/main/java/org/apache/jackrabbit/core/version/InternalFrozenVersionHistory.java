@@ -55,6 +55,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
     /**
      * @deprecated use {@link #getBaseVersion()} instead
      */
+    @Deprecated
     InternalVersion getBaseVesion() throws VersionException;
 
     /**

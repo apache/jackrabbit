@@ -27,14 +27,14 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>32</version>
+    <version>33</version>
     <relativePath />
   </parent>
 
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.23.0-beta-SNAPSHOT</version>
+  <version>2.23.1-beta-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <issueManagement>
@@ -58,7 +58,7 @@
     <oak-jackrabbit-api.version.implemented>1.66.0</oak-jackrabbit-api.version.implemented>
     <!-- OAK version used in componenents that *use* oak-jackrabbit-api -->
     <oak-jackrabbit-api.version.used>1.22.20</oak-jackrabbit-api.version.used>
-    <jetty.version>9.4.53.v20231009</jetty.version>
+    <jetty.version>9.4.55.v20240627</jetty.version>
     <tika.version>2.4.1</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.36</slf4j.api.version>
@@ -76,7 +76,7 @@
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
     <!-- build time stamp: should be updated prior to a release -->
     <!-- see https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
-    <project.build.outputTimestamp>1717742788</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1721227548</project.build.outputTimestamp>
     <minimalMavenBuildVersion>3.6.1</minimalMavenBuildVersion><!-- due to https://issues.apache.org/jira/browse/MNG-6059 -->
   </properties>
 
@@ -343,7 +343,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.1</version>
+          <version>3.4.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-rar-plugin</artifactId>
@@ -415,12 +415,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>3.4.0</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.22.0</version>
+        <version>3.24.0</version>
         <configuration>
           <targetJdk>${java.version}</targetJdk>
         </configuration>
@@ -428,7 +428,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.8.5.0</version>
+        <version>4.8.6.2</version>
       </plugin>
     </plugins>
   </reporting>
@@ -454,7 +454,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-collections4</artifactId>
-        <version>4.4</version>
+        <version>4.5.0-M2</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
@@ -616,7 +616,7 @@
       <dependency>
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
-        <version>5.2.0</version>
+        <version>5.3.0</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>

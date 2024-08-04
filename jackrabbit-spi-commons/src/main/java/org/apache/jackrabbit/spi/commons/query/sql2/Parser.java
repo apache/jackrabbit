@@ -25,6 +25,7 @@ import javax.jcr.query.qom.QueryObjectModelFactory;
  * @deprecated use {@link org.apache.jackrabbit.commons.query.sql2.Parser}
  *             instead.
  */
+@Deprecated
 public class Parser extends org.apache.jackrabbit.commons.query.sql2.Parser {
 
 

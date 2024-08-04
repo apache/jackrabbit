@@ -26,6 +26,7 @@ import java.io.OutputStream;
  *
  * @deprecated this class should no longer be used
  */
+@Deprecated
 public abstract class RandomAccessOutputStream extends OutputStream {
 
     /**

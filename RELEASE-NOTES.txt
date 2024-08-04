@@ -1,44 +1,34 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.27-beta
+Release Notes -- Apache Jackrabbit -- Version 2.23.0-beta
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.27-beta, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.23.0-beta, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.27-beta is an unstable release cut directly from
+Apache Jackrabbit 2.23.0-beta is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.27-beta
+Changes in Jackrabbit 2.23.0-beta
 ----------------------------------
 
 Task
 
-    [JCR-4972] - Remove RMI support
-    [JCR-5028] - jackrabbit-jcr-rmi: remove
-    [JCR-5042] - jackrabbit-jcr-servlet: remove RMI support
-    [JCR-5044] - Update tomcat dependency to 9.0.87
-    [JCR-5045] - Update commons-io dependency to 2.16.0
-    [JCR-5046] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.62.0
-    [JCR-5047] - Update to jacoco version 0.8.12
-    [JCR-5052] - Update commons-io dependency to 2.16.1
-    [JCR-5053] - Update commons-cli dependency to 1.7.0
-    [JCR-5054] - vfs-ext: update hadoop-hdfs-client dependency to 3.4.0
-    [JCR-5055] - update Apache parent pom to version 32
-    [JCR-5056] - Update maven-jar-plugin to 3.4.1
-    [JCR-5057] - Update pmd-plugin dependency to 3.22.0
-    [JCR-5058] - Update spotbugs-maven-plugin to 4.8.5.0
-    [JCR-5059] - set baseline comparisonVersion to latest stable (2.20.16)
-    [JCR-5060] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.20
-    [JCR-5063] - Update build-helper-maven-plugin to version 3.6.0
-    [JCR-5064] - Update mockito dependency to 5.12.0
-    [JCR-5068] - update aws java sdk version to 1.12.730
-    [JCR-5069] - Update commons-cli dependency to 1.8.0
-    [JCR-5070] - Update tomcat dependency to 9.0.89
-    [JCR-5071] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.64.0
+    [JCR-5073] - core: avoid varargs related compiler warnings in tests
+    [JCR-5075] - set baseline comparisonVersion to latest stable (2.22.0)
+    [JCR-5076] - Use correctly test scope for dependencies of type: test-jar
+    [JCR-5077] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.66.0
+    [JCR-5078] - update Apache parent pom to version 33
+    [JCR-5079] - Update tomcat dependency to 9.0.91
+    [JCR-5080] - Update easymock dependency to 5.3.0
+    [JCR-5081] - update aws java sdk version to 1.12.761
+    [JCR-5082] - update Jetty to 9.4.55.v20240627
+    [JCR-5083] - Update maven-jar-plugin to 3.4.2
+    [JCR-5084] - Update pmd-plugin dependency to 3.24.0
+    [JCR-5086] - Update spotbugs-maven-plugin to 4.8.6.2
 
 
 For more detailed information about all the changes in this and other

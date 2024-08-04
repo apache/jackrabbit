@@ -98,6 +98,7 @@ public class RepositoryLock implements RepositoryLockMechanism {
      * @throws RepositoryException if the canonical path of the directory
      *                             can not be determined
      */
+    @Deprecated
     public RepositoryLock(String path) throws RepositoryException {
         init(path);
     }

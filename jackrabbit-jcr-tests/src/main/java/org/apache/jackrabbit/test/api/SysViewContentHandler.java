@@ -20,6 +20,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.junit.Assert;
 
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.Session;
@@ -44,8 +45,6 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
-
-import junit.framework.Assert;
 
 /**
  * ContentHandler implementation which checks if the system view export of

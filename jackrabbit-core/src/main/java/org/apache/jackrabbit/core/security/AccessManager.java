@@ -36,18 +36,21 @@ public interface AccessManager {
      * READ permission constant
      * @deprecated
      */
+    @Deprecated
     int READ = 1;
 
     /**
      * WRITE permission constant
      * @deprecated
      */
+    @Deprecated
     int WRITE = 2;
 
     /**
      * REMOVE permission constant
      * @deprecated 
      */
+    @Deprecated
     int REMOVE = 4;
 
     /**
@@ -102,6 +105,7 @@ public interface AccessManager {
      * @throws RepositoryException   it an error occurs
      * @deprecated 
      */
+    @Deprecated
     void checkPermission(ItemId id, int permissions)
             throws AccessDeniedException, ItemNotFoundException, RepositoryException;
 
@@ -145,6 +149,7 @@ public interface AccessManager {
      * @throws RepositoryException   if another error occurs
      * @deprecated
      */
+    @Deprecated
     boolean isGranted(ItemId id, int permissions)
             throws ItemNotFoundException, RepositoryException;
 
