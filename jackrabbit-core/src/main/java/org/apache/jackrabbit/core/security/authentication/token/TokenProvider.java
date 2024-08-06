@@ -157,6 +157,9 @@ public class TokenProvider extends ProtectedItemModifier {
                 Name tokenName = session.getQName(Text.replace(ISO8601.format(creation), ":", "."));
                 NodeImpl tokenNode = super.addNode(tokenParent, tokenName, session.getQName(TOKEN_NT_NAME), NodeId.randomId());
 
+                if (tokenNode.getIndex() > 1) {
+                    log.warn("Same name sibling token found for {} within {}", tokenName,tokenParent.getPath());
+                }
                 String key = generateKey(8);
                 String token = new StringBuilder(tokenNode.getId().toString()).append(DELIM).append(key).toString();
 
