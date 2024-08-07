@@ -19,11 +19,19 @@ package org.apache.jackrabbit;
 import javax.jcr.Session;
 
 /**
- * This Interface defines some of the item names that are defined in the
- * jcr spec 1.0, using the default prefixes 'jcr', 'nt' and 'mix'. Please note
- * that those prefixes can by redefined by an application using the
+ * This interface defines some of the item names that are defined in the <a
+ * href=https://s.apache.org/jcr-1.0-javadoc/">JCR Specification 1.0</a>, using
+ * the default prefixes 'jcr', 'nt' and 'mix'.
+ * <p>
+ * Please note that those prefixes can by redefined by an application using the
  * {@link Session#setNamespacePrefix(String, String)} method. As a result, the
  * constants may not refer to the respective items.
+ * <p>
+ * On the other hand, the constants in {@link javax.jcr.nodetype.NodeType} and
+ * {@link javax.jcr.Property} are more complete (covering
+ * <a href="https://s.apache.org/jcr-2.0-javadoc/">JCR 2.0</a> as well) and also
+ * define names using <i>expanded</i> form, which is immune to session local
+ * remappings.
  */
 public interface JcrConstants {
     /**
