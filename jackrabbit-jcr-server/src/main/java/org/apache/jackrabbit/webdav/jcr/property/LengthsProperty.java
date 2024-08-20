@@ -23,7 +23,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * <code>LengthsProperty</code> extends {@link org.apache.jackrabbit.webdav.property.DavProperty} providing
+ * {@code LengthsProperty} extends {@link org.apache.jackrabbit.webdav.property.DavProperty} providing
  * utilities to handle the multiple lengths of the property item represented
  * by this resource.
  */
@@ -32,7 +32,7 @@ public class LengthsProperty extends AbstractDavProperty<long[]> implements Item
     private final long[] value;
 
     /**
-     * Create a new <code>LengthsProperty</code> from the given long array.
+     * Create a new {@code LengthsProperty} from the given long array.
      *
      * @param lengths as retrieved from the JCR property
      */
@@ -42,10 +42,10 @@ public class LengthsProperty extends AbstractDavProperty<long[]> implements Item
     }
 
     /**
-     * Returns an array of {@link long}s representing the value of this
+     * Returns an array of {@code long}s representing the value of this
      * property.
      *
-     * @return an array of {@link long}s
+     * @return an array of {@code long}s
      */
     public long[] getValue() {
         return value;
