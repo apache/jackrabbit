@@ -20,7 +20,7 @@ import javax.jcr.Session;
 
 /**
  * This interface defines some of the item names that are defined in the <a
- * href=https://s.apache.org/jcr-1.0-javadoc/">JCR Specification 1.0</a>, using
+ * href="https://s.apache.org/jcr-1.0-javadoc/">JCR Specification 1.0</a>, using
  * the default prefixes 'jcr', 'nt' and 'mix'.
  * <p>
  * Please note that those prefixes can by redefined by an application using the
