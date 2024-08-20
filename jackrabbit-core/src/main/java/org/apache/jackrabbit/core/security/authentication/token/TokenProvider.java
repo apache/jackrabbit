@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authentication.token;
 
-import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.SecureRandom;
@@ -24,12 +23,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+
 import javax.jcr.AccessDeniedException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
@@ -54,7 +53,6 @@ import org.apache.jackrabbit.core.security.user.PasswordUtility;
 import org.apache.jackrabbit.core.security.user.UserImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +74,7 @@ public class TokenProvider extends ProtectedItemModifier {
 
     private static final char DELIM = '_';
 
-    private static final Set<String> RESERVED_ATTRIBUTES = new HashSet(3);
+    private static final Set<String> RESERVED_ATTRIBUTES = new HashSet<>(3);
     static {
         RESERVED_ATTRIBUTES.add(TOKEN_ATTRIBUTE);
         RESERVED_ATTRIBUTES.add(TOKEN_ATTRIBUTE_EXPIRY);
@@ -150,16 +148,11 @@ public class TokenProvider extends ProtectedItemModifier {
         if (tokenParent != null) {
             try {
                 ValueFactory vf = session.getValueFactory();
-                long creationTime = new Date().getTime();
-                Calendar creation = GregorianCalendar.getInstance();
-                creation.setTimeInMillis(creationTime);
+                long creationTime = System.currentTimeMillis();
 
-                Name tokenName = session.getQName(Text.replace(ISO8601.format(creation), ":", "."));
+                Name tokenName = session.getQName(UUID.randomUUID().toString());
                 NodeImpl tokenNode = super.addNode(tokenParent, tokenName, session.getQName(TOKEN_NT_NAME), NodeId.randomId());
 
-                if (tokenNode.getIndex() > 1) {
-                    log.warn("Same name sibling token found for {} within {}", tokenName,tokenParent.getPath());
-                }
                 String key = generateKey(8);
                 String token = new StringBuilder(tokenNode.getId().toString()).append(DELIM).append(key).toString();
 
