@@ -74,7 +74,9 @@ public class DBDataStoreTest extends JUnitTest {
             try {
                 assertNotNull(stream);
                 for (int j = 0; j < data.length; j++) {
-                    assertEquals((data[j]) & 0xff, stream.read());
+                    int b = stream.read();
+                    assertTrue("early EOF at position " + j + " of stream #" + i, b >= 0);
+                    assertEquals("data should be equal on read of stream #" + i + " at position " + j, (data[j]) & 0xff, b);
                 }
                 assertEquals(-1, stream.read());
             } finally {
@@ -103,7 +105,7 @@ public class DBDataStoreTest extends JUnitTest {
             // test integrity of replayed bytes
             byte[] replayedBytes = new byte[data.length];
             int length = in.read(replayedBytes);
-            assertEquals(length, data.length);
+            assertEquals(data.length, length);
 
             for (int i = 0; i < data.length; i++) {
                 log.append(i + " data: " + data[i] + " replayed: " + replayedBytes[i] + "\n");
@@ -175,7 +177,9 @@ public class DBDataStoreTest extends JUnitTest {
         // verify the contents of all the streams, reading them in parallel
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < streams.length; j++) {
-                assertEquals((data[i]) & 0xff, streams[j].read());
+                int b = streams[j].read();
+                assertTrue("early EOF at position " + i + " of stream #" + j, b >= 0);
+                assertEquals((data[i]) & 0xff, b);
             }
         }
 
