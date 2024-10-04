@@ -1,34 +1,55 @@
-Release Notes -- Apache Jackrabbit -- Version 2.23.0-beta
+Release Notes -- Apache Jackrabbit -- Version 2.23.1-beta
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.23.0-beta, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.23.1-beta, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.23.0-beta is an unstable release cut directly from
+Apache Jackrabbit 2.23.1-beta is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.23.0-beta
+Changes in Jackrabbit 2.23.1-beta
 ----------------------------------
+
+Bug
+
+    [JCR-5107] - DbInputStream makes incorrect assumptions about commons-io internals
+
+Improvement
+
+    [JCR-5093] - jcr2spi: get rid of Commons IO dependency
+    [JCR-5106] - core tests: improve diagnostics in DBDataStoreTest
+
+Test
+
+    [JCR-5098] - jackrabbit-jcr-server: Java 24 javadoc errors
 
 Task
 
-    [JCR-5073] - core: avoid varargs related compiler warnings in tests
-    [JCR-5075] - set baseline comparisonVersion to latest stable (2.22.0)
-    [JCR-5076] - Use correctly test scope for dependencies of type: test-jar
-    [JCR-5077] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.66.0
-    [JCR-5078] - update Apache parent pom to version 33
-    [JCR-5079] - Update tomcat dependency to 9.0.91
-    [JCR-5080] - Update easymock dependency to 5.3.0
-    [JCR-5081] - update aws java sdk version to 1.12.761
-    [JCR-5082] - update Jetty to 9.4.55.v20240627
-    [JCR-5083] - Update maven-jar-plugin to 3.4.2
-    [JCR-5084] - Update pmd-plugin dependency to 3.24.0
-    [JCR-5086] - Update spotbugs-maven-plugin to 4.8.6.2
+    [JCR-5088] - remove warnings about missing @deprecated annotations
+    [JCR-5089] - avoid use of deprecated junit.framework.Assert
+    [JCR-5094] - webapp: bump htmlunit to 4.4.0
+    [JCR-5096] - JcrConstants: refer to the constants in javax.jcr.Property and javax.jcr.nodetype.NodeType
+    [JCR-5097] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.68.0
+    [JCR-5099] - Update Logback version to 1.2.13
+    [JCR-5100] - Update commons-cli dependency to 1.9.0
+    [JCR-5101] - Update easymock dependency to 5.4.0
+    [JCR-5102] - Update mockito dependency to 5.14.1
+    [JCR-5103] - Update oak-jackrabbit-api.version.used to Oak 1.22.21
+    [JCR-5104] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.70.0
+    [JCR-5105] - Update commons-io dependency to 2.17.0
+    [JCR-5108] - remove commons-collections4 version-specific dependency from jackrabbit-standalone
+    [JCR-5109] - Update tomcat dependency to 9.0.95
+    [JCR-5110] - update aws java sdk version to 1.12.773
+    [JCR-5111] - update kotlin-stdlib dependency to 1.9.25
+    [JCR-5112] - update Jetty to 9.4.56.v20240826
+    [JCR-5113] - Update pmd-plugin dependency to 3.25.0
+    [JCR-5114] - update checkstyle-plugin dependency to 3.5.0
+    [JCR-5115] - Update spotbugs-maven-plugin to 4.8.6.4
 
 
 For more detailed information about all the changes in this and other
