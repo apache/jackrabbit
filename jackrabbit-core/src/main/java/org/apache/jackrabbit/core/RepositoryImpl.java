@@ -104,6 +104,7 @@ import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.util.Java23Compatability;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
@@ -1025,8 +1026,7 @@ public class RepositoryImpl extends AbstractRepository
 
         Subject subject = null;
         try {
-            AccessControlContext acc = AccessController.getContext();
-            subject = Subject.getSubject(acc);
+            subject = Java23Compatability.getSubject();
         } catch (SecurityException e) {
             log.warn("Can't check for preauthentication. Reason: {}", e.getMessage());
         }
