@@ -129,6 +129,21 @@ public class MultiStatus implements DavConstants, XmlSerializable {
     }
 
     /**
+     * 
+     * @return {@code true} if at least one status code in any of the responses indicates an error, {@code false} otherwise.
+     * @since 2.24.0
+     */
+    public boolean containsErrorStatus() {
+        for (MultiStatusResponse response : getResponses()) {
+            for (Status status : response.getStatus()) {
+                if (status.getStatusCode() >= DavServletResponse.SC_BAD_REQUEST) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    /**
      * Set the response description.
      *
      * @param responseDescription

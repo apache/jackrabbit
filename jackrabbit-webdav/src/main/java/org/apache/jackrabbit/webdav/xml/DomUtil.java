@@ -16,18 +16,12 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Attr;
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
-import org.w3c.dom.NamedNodeMap;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
@@ -39,12 +33,18 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Attr;
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 /**
  * <code>DomUtil</code> provides some common utility methods related to w3c-DOM.
@@ -102,6 +102,22 @@ public class DomUtil {
             throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
         return docBuilder.parse(stream);
+    }
+
+    /**
+     * Parses the given bytes and returns the resulting DOM document.
+     *
+     * @param data the bytes containing the XML data
+     * @return parsed DOM document
+     * @throws ParserConfigurationException if the document can not be created
+     * @throws SAXException if the document can not be parsed
+     * @throws IOException if the input stream can not be read
+     */
+    public static Document parseDocument(byte[] data)
+            throws ParserConfigurationException, SAXException, IOException {
+        try (InputStream stream = new java.io.ByteArrayInputStream(data)) {
+            return parseDocument(stream);
+        }
     }
 
     /**

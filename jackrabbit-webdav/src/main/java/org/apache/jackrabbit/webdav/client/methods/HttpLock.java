@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpLock extends BaseDavRequest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpLock.class);
+    
 
     private final boolean isRefresh;
 
