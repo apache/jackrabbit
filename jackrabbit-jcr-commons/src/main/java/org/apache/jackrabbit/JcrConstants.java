@@ -20,210 +20,209 @@ import javax.jcr.Session;
 
 /**
  * This interface defines some of the item names that are defined in the <a
- * href="https://s.apache.org/jcr-1.0-javadoc/">JCR Specification 1.0</a>, using
- * the default prefixes 'jcr', 'nt' and 'mix'.
+ * href="https://s.apache.org/jcr-1.0-javadoc/">JCR Specification 1.0</a> in the <i>qualified</i> form,
+ * using the default prefixes {@code jcr}, {@code nt} and {@code mix}.
  * <p>
  * Please note that those prefixes can by redefined by an application using the
  * {@link Session#setNamespacePrefix(String, String)} method. As a result, the
  * constants may not refer to the respective items.
  * <p>
- * On the other hand, the constants in {@link javax.jcr.nodetype.NodeType} and
- * {@link javax.jcr.Property} are more complete (covering
- * <a href="https://s.apache.org/jcr-2.0-javadoc/">JCR 2.0</a> as well) and also
- * define names using <i>expanded</i> form, which is immune to session local
- * remappings.
+ * On the other hand, the constants in {@link javax.jcr.nodetype.NodeType},
+ * {@link javax.jcr.Nodex}, {@link javax.jcr.Property} and {@link javax.jcr.Workspace}
+ * are more complete (covering <a href="https://s.apache.org/jcr-2.0-javadoc/">JCR 2.0</a>
+ * as well) and also define names using <i>expanded</i> form, which is immune to session local
+ * remappings, so it is recommended to use those constants instead whenever possible.
  */
 public interface JcrConstants {
     /**
-     * jcr:autoCreated
+     * Use {@link javax.jcr.Property#JCR_AUTOCREATED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_AUTOCREATED = "jcr:autoCreated";
     /**
-     * jcr:baseVersion
+     * Use {@link javax.jcr.Property#JCR_BASE_VERSION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_BASEVERSION = "jcr:baseVersion";
-    /**
-     * jcr:child
-     */
+    
     public static final String JCR_CHILD = "jcr:child";
     /**
-     * jcr:childNodeDefinition
+     * Use {@link javax.jcr.Node#JCR_CHILD_NODE_DEFINITION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_CHILDNODEDEFINITION = "jcr:childNodeDefinition";
     /**
-     * jcr:content
+     * Use {@link javax.jcr.Node#JCR_CONTENT} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_CONTENT = "jcr:content";
     /**
-     * jcr:created
+     * Use {@link javax.jcr.Property#JCR_CREATED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_CREATED = "jcr:created";
     /**
-     * jcr:data
+     * Use {@link javax.jcr.Property#JCR_DATA} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_DATA = "jcr:data";
     /**
-     * jcr:defaultPrimaryType
+     * Use {@link javax.jcr.Property#JCR_DEFAULT_PRIMARY_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_DEFAULTPRIMARYTYPE = "jcr:defaultPrimaryType";
     /**
-     * jcr:defaultValues
+     * Use {@link javax.jcr.Property#JCR_DEFAULT_VALUES} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_DEFAULTVALUES = "jcr:defaultValues";
     /**
-     * jcr:encoding
+     * Use {@link javax.jcr.Property#JCR_ENCODING} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_ENCODING = "jcr:encoding";
     /**
-     * jcr:frozenMixinTypes
+     * Use {@link javax.jcr.Property#JCR_FROZEN_MIXIN_TYPES} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_FROZENMIXINTYPES = "jcr:frozenMixinTypes";
     /**
-     * jcr:frozenNode
+     * Use {@link javax.jcr.Node#JCR_FROZEN_NODE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_FROZENNODE = "jcr:frozenNode";
     /**
-     * jcr:frozenPrimaryType
+     * Use {@link javax.jcr.Property#JCR_FROZEN_PRIMARY_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_FROZENPRIMARYTYPE = "jcr:frozenPrimaryType";
     /**
-     * jcr:frozenUuid
+     * Use {@link javax.jcr.Property#JCR_FROZEN_UUID} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_FROZENUUID = "jcr:frozenUuid";
     /**
-     * jcr:hasOrderableChildNodes
+     * Use {@link javax.jcr.Property#JCR_HAS_ORDERABLE_CHILD_NODES} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_HASORDERABLECHILDNODES = "jcr:hasOrderableChildNodes";
     /**
-     * jcr:isCheckedOut
+     * Use {@link javax.jcr.Property#JCR_IS_CHECKED_OUT} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_ISCHECKEDOUT = "jcr:isCheckedOut";
     /**
-     * jcr:isMixin
+     * Use {@link javax.jcr.Property#JCR_IS_MIXIN} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_ISMIXIN = "jcr:isMixin";
     /**
-     * jcr:language
+     * Use {@link javax.jcr.Property#JCR_LANGUAGE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_LANGUAGE = "jcr:language";
     /**
-     * jcr:lastModified
+     * Use {@link javax.jcr.Property#JCR_LAST_MODIFIED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_LASTMODIFIED = "jcr:lastModified";
     /**
-     * jcr:lockIsDeep
+     * Use {@link javax.jcr.Property#JCR_LOCK_IS_DEEP} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_LOCKISDEEP = "jcr:lockIsDeep";
     /**
-     * jcr:lockOwner
+     * Use {@link javax.jcr.Property#JCR_LOCK_OWNER} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_LOCKOWNER = "jcr:lockOwner";
     /**
-     * jcr:mandatory
+     * Use {@link javax.jcr.Property#JCR_MANDATORY} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_MANDATORY = "jcr:mandatory";
     /**
-     * jcr:mergeFailed
+     * Use {@link javax.jcr.Property#JCR_MERGE_FAILED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_MERGEFAILED = "jcr:mergeFailed";
     /**
-     * jcr:mimeType
+     * Use {@link javax.jcr.Property#JCR_MIME_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     /**
-     * jcr:mixinTypes
+     * Use {@link javax.jcr.Property#JCR_MIXIN_TYPES} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_MIXINTYPES = "jcr:mixinTypes";
     /**
-     * jcr:multiple
+     * Use {@link javax.jcr.Property#JCR_MULTIPLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_MULTIPLE = "jcr:multiple";
     /**
-     * jcr:name
+     * Use {@link javax.jcr.Property#JCR_NAME} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_NAME = "jcr:name";
     /**
-     * jcr:nodeTypeName
+     * Use {@link javax.jcr.Property#JCR_NODE_TYPE_NAME} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_NODETYPENAME = "jcr:nodeTypeName";
     /**
-     * jcr:onParentVersion
+     * Use {@link javax.jcr.Property#JCR_ON_PARENT_VERSION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_ONPARENTVERSION = "jcr:onParentVersion";
     /**
-     * jcr:predecessors
+     * Use {@link javax.jcr.Property#JCR_PREDECESSORS} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_PREDECESSORS = "jcr:predecessors";
     /**
-     * jcr:primaryItemName
+     * Use {@link javax.jcr.Property#JCR_PRIMARY_ITEM_NAME} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_PRIMARYITEMNAME = "jcr:primaryItemName";
     /**
-     * jcr:primaryType
+     * Use {@link javax.jcr.Property#JCR_PRIMARY_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_PRIMARYTYPE = "jcr:primaryType";
     /**
-     * jcr:propertyDefinition
+     * Use {@link javax.jcr.Node#JCR_PROPERTY_DEFINITION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_PROPERTYDEFINITION = "jcr:propertyDefinition";
     /**
-     * jcr:protected
+     * Use {@link javax.jcr.Property#JCR_PROTECTED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_PROTECTED = "jcr:protected";
     /**
-     * jcr:requiredPrimaryTypes
+     * Use {@link javax.jcr.Property#JCR_REQUIRED_PRIMARY_TYPES} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_REQUIREDPRIMARYTYPES = "jcr:requiredPrimaryTypes";
     /**
-     * jcr:requiredType
+     * Use {@link javax.jcr.Property#JCR_REQUIRED_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_REQUIREDTYPE = "jcr:requiredType";
     /**
-     * jcr:rootVersion
+     * Use {@link javax.jcr.Node#JCR_ROOT_VERSION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_ROOTVERSION = "jcr:rootVersion";
     /**
      * jcr:sameNameSiblings
+     * Use {@link javax.jcr.Property#JCR_SAME_NAME_SIBLINGS} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_SAMENAMESIBLINGS = "jcr:sameNameSiblings";
     /**
-     * jcr:statement
+     * Use {@link javax.jcr.Property#JCR_STATEMENT} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_STATEMENT = "jcr:statement";
     /**
-     * jcr:successors
+     * Use {@link javax.jcr.Property#JCR_SUCCESSORS} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_SUCCESSORS = "jcr:successors";
     /**
-     * jcr:supertypes
+     * Use {@link javax.jcr.Property#JCR_SUPERTYPES} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_SUPERTYPES = "jcr:supertypes";
     /**
-     * jcr:system
+     * Use {@link javax.jcr.Workspace#NAME_SYSTEM_NODE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_SYSTEM = "jcr:system";
     /**
-     * jcr:uuid
+     * Use {@link javax.jcr.Property#JCR_UUID} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_UUID = "jcr:uuid";
     /**
-     * jcr:valueConstraints
+     * Use {@link javax.jcr.Property#JCR_VALUE_CONSTRAINTS} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_VALUECONSTRAINTS = "jcr:valueConstraints";
     /**
-     * jcr:versionHistory
+     * Use {@link javax.jcr.Property#JCR_VERSION_HISTORY} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_VERSIONHISTORY = "jcr:versionHistory";
     /**
-     * jcr:versionLabels
+     * Use {@link javax.jcr.Node#JCR_VERSION_LABELS} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_VERSIONLABELS = "jcr:versionLabels";
     /**
-     * jcr:versionStorage
+     * Use {@link javax.jcr.Workspace#NAME_VERSION_STORAGE_NODE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_VERSIONSTORAGE = "jcr:versionStorage";
     /**
-     * jcr:versionableUuid
+     * Use {@link javax.jcr.Property#JCR_VERSIONABLE_UUID} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_VERSIONABLEUUID = "jcr:versionableUuid";
 
@@ -237,75 +236,75 @@ public interface JcrConstants {
     public static final String JCR_SCORE = "jcr:score";
 
     /**
-     * mix:lockable
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_LOCKABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_LOCKABLE = "mix:lockable";
     /**
-     * mix:referenceable
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_REFERENCEABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_REFERENCEABLE = "mix:referenceable";
     /**
-     * mix:versionable
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_VERSIONABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_VERSIONABLE = "mix:versionable";
     /**
-     * mix:shareable
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_SHAREABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_SHAREABLE = "mix:shareable";
     /**
-     * nt:base
+     * Use {@link javax.jcr.nodetype.NodeType#NT_BASE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_BASE = "nt:base";
     /**
-     * nt:childNodeDefinition
+     * Use {@link javax.jcr.nodetype.NodeType#NT_CHILD_NODE_DEFINITION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_CHILDNODEDEFINITION = "nt:childNodeDefinition";
     /**
-     * nt:file
+     * Use {@link javax.jcr.nodetype.NodeType#NT_FILE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_FILE = "nt:file";
     /**
-     * nt:folder
+     * Use {@link javax.jcr.nodetype.NodeType#NT_FOLDER} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_FOLDER = "nt:folder";
     /**
-     * nt:frozenNode
+     * Use {@link javax.jcr.nodetype.NodeType#NT_FROZEN_NODE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_FROZENNODE = "nt:frozenNode";
     /**
-     * nt:hierarchyNode
+     * Use {@link javax.jcr.nodetype.NodeType#NT_HIERARCHY_NODE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_HIERARCHYNODE = "nt:hierarchyNode";
     /**
-     * nt:linkedFile
+     * Use {@link javax.jcr.nodetype.NodeType#NT_LINKED_FILE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_LINKEDFILE = "nt:linkedFile";
     /**
-     * nt:nodeType
+     * Use {@link javax.jcr.nodetype.NodeType#NT_NODE_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_NODETYPE = "nt:nodeType";
     /**
-     * nt:propertyDefinition
+     * Use {@link javax.jcr.nodetype.NodeType#NT_PROPERTY_DEFINITION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_PROPERTYDEFINITION = "nt:propertyDefinition";
     /**
-     * nt:query
+     * Use {@link javax.jcr.nodetype.NodeType#NT_QUERY} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_QUERY = "nt:query";
     /**
-     * nt:resource
+     * Use {@link javax.jcr.nodetype.NodeType#NT_RESOURCE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_RESOURCE = "nt:resource";
     /**
-     * nt:unstructured
+     * Use {@link javax.jcr.nodetype.NodeType#NT_UNSTRUCTURED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_UNSTRUCTURED = "nt:unstructured";
     /**
-     * nt:version
+     * Use {@link javax.jcr.nodetype.NodeType#NT_VERSION} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_VERSION = "nt:version";
     /**
-     * nt:versionHistory
+     * Use {@link javax.jcr.nodetype.NodeType#NT_VERSION_HISTORY} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_VERSIONHISTORY = "nt:versionHistory";
     /**
@@ -313,7 +312,7 @@ public interface JcrConstants {
      */
     public static final String NT_VERSIONLABELS = "nt:versionLabels";
     /**
-     * nt:versionedChild
+     * Use {@link javax.jcr.nodetype.NodeType#NT_VERSIONED_CHILD} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String NT_VERSIONEDCHILD = "nt:versionedChild";
 }
