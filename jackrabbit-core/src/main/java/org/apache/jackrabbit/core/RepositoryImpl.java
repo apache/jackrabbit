@@ -22,8 +22,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,6 +78,7 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.gc.GarbageCollector;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeIdFactory;
+import org.apache.jackrabbit.core.jdkcompat.Java23Subject;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -1025,8 +1024,7 @@ public class RepositoryImpl extends AbstractRepository
 
         Subject subject = null;
         try {
-            AccessControlContext acc = AccessController.getContext();
-            subject = Subject.getSubject(acc);
+            subject = Java23Subject.getSubject();
         } catch (SecurityException e) {
             log.warn("Can't check for preauthentication. Reason: {}", e.getMessage());
         }
