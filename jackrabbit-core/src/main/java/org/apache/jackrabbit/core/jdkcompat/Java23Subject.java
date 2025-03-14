@@ -34,12 +34,11 @@ import java.util.concurrent.Callable;
  */
 public class Java23Subject {
 
-    static Method current, callAs;
+    static Method current;
 
     static {
         try {
             current = Subject.class.getMethod("current");
-            callAs = Subject.class.getMethod("callAs", Subject.class, Callable.class);
         } catch (NoSuchMethodException ignored) {}
     }
 
