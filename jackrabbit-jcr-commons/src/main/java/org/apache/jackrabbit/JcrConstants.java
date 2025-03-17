@@ -28,7 +28,7 @@ import javax.jcr.Session;
  * constants may not refer to the respective items.
  * <p>
  * On the other hand, the constants in {@link javax.jcr.nodetype.NodeType},
- * {@link javax.jcr.Nodex}, {@link javax.jcr.Property} and {@link javax.jcr.Workspace}
+ * {@link javax.jcr.Node}, {@link javax.jcr.Property} and {@link javax.jcr.Workspace}
  * are more complete (covering <a href="https://s.apache.org/jcr-2.0-javadoc/">JCR 2.0</a>
  * as well) and also define names using <i>expanded</i> form, which is immune to session local
  * remappings, so it is recommended to use those constants instead whenever possible.
@@ -125,7 +125,7 @@ public interface JcrConstants {
      */
     public static final String JCR_MERGEFAILED = "jcr:mergeFailed";
     /**
-     * Use {@link javax.jcr.Property#JCR_MIME_TYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     * Use {@link javax.jcr.Property#JCR_MIMETYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     /**
