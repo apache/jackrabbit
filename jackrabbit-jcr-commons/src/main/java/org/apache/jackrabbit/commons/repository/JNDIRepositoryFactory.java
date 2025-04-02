@@ -28,6 +28,8 @@ import javax.naming.NamingException;
  */
 public class JNDIRepositoryFactory implements RepositoryFactory {
 
+    private static final boolean jndiEnabled = Boolean.getBoolean("jackrabbit.jndi.enabled");
+
     /**
      * JNDI context from which to look up the repository.
      */
@@ -56,25 +58,28 @@ public class JNDIRepositoryFactory implements RepositoryFactory {
      * @throws RepositoryException if the repository can not be found
      */
     public Repository getRepository() throws RepositoryException {
-        try {
-            Object repository = context.lookup(name);
-            if (repository instanceof Repository) {
-                return (Repository) repository;
-            } else if (repository == null) {
+        if (jndiEnabled) {
+            try {
+                Object repository = context.lookup(name);
+                if (repository instanceof Repository) {
+                    return (Repository) repository;
+                } else if (repository == null) {
+                    throw new RepositoryException(
+                            "Repository not found: The JNDI entry "
+                                    + name + " is null");
+                } else {
+                    throw new RepositoryException(
+                            "Invalid repository: The JNDI entry "
+                                    + name + " is an instance of "
+                                    + repository.getClass().getName());
+                }
+            } catch (NamingException e) {
                 throw new RepositoryException(
-                        "Repository not found: The JNDI entry "
-                        + name + " is null");
-            } else {
-                throw new RepositoryException(
-                        "Invalid repository: The JNDI entry "
-                        + name + " is an instance of "
-                        + repository.getClass().getName());
+                        "Repository not found: The JNDI entry " + name
+                                + " could not be looked up", e);
             }
-        } catch (NamingException e) {
-            throw new RepositoryException(
-                    "Repository not found: The JNDI entry " + name
-                    + " could not be looked up", e);
         }
+        return null;
     }
 
 }
