@@ -740,7 +740,16 @@ public class SessionImpl extends AbstractSession
 
     @Override
     public String getExpandedName(Item item) throws RepositoryException {
-        throw new RepositoryException("see JCR-5137");
+        String name = item.getName();
+        int pos = name.indexOf(":");
+        if (pos > 0) {
+            String prefix = name.substring(0, pos);
+            String uri = getNamespaceURI(prefix);
+            return "{" + uri + "}" + name.substring(pos + 1);
+        }
+        else {
+            return "{}" + name;
+        }
     }
 
     @Override

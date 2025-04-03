@@ -18,7 +18,6 @@ package org.apache.jackrabbit.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.junit.Ignore;
 
 import javax.jcr.GuestCredentials;
 import javax.jcr.Item;
@@ -27,6 +26,9 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import static org.mockito.Mockito.mock;
+
+// Borrowed from org.apache.jackrabbit.oak.jcr.session.JackrabbitSessionTest.
+// PLease keep in sync.
 
 public class JackrabbitSessionTest extends AbstractJCRTest {
 
@@ -79,5 +81,27 @@ public class JackrabbitSessionTest extends AbstractJCRTest {
         } catch (RepositoryException e) {
             // success
         }
+    }
+
+    public void testGetExpandedName() throws RepositoryException {
+        // empty namespace uri
+        assertEquals("{}testroot", s.getExpandedName(testRootNode));
+        Node n = testRootNode.addNode("test:bar");
+        assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
+        // now remap namespace uri
+        s.setNamespacePrefix("test", "urn:foo");
+        assertEquals("{urn:foo}bar", s.getExpandedName(n));
+        // use special namespace uri
+        n = testRootNode.addNode("rep:bar");
+        assertEquals("{internal}bar", s.getExpandedName(n));
+    }
+
+    public void testGetExpandedPath() throws RepositoryException {
+        assertEquals("/{}testroot", s.getExpandedPath(testRootNode));
+        Node n = testRootNode.addNode("test:bar").addNode("rep:bar");
+        assertEquals("/{}testroot/{http://www.apache.org/jackrabbit/test}bar/{internal}bar", s.getExpandedPath(n));
+        // now remap namespace uri
+        s.setNamespacePrefix("test", "urn:foo");
+        assertEquals("/{}testroot/{urn:foo}bar/{internal}bar", s.getExpandedPath(n));
     }
 }
