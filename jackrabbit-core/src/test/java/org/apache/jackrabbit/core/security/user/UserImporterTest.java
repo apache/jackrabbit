@@ -1671,6 +1671,16 @@ public class UserImporterTest extends AbstractJCRTest {
             return null;
         }
 
+        @Override
+        public String getExpandedName(Item item) throws RepositoryException {
+            throw new RepositoryException("see JCR-5137");
+        }
+
+        @Override
+        public String getExpandedPath(Item item) throws RepositoryException {
+            throw new RepositoryException("see JCR-5137");
+        }
+
         public Repository getRepository() {
             return null;
         }

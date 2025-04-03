@@ -738,6 +738,16 @@ public class SessionImpl extends AbstractSession
         }
     }
 
+    @Override
+    public String getExpandedName(Item item) throws RepositoryException {
+        throw new RepositoryException("see JCR-5137");
+    }
+
+    @Override
+    public String getExpandedPath(Item item) throws RepositoryException {
+        throw new RepositoryException("see JCR-5137");
+    }
+
     //--------------------------------------------------------------< Session >
     /**
      * {@inheritDoc}
