@@ -21,14 +21,18 @@ import javax.jcr.RepositoryException;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
+import static org.apache.jackrabbit.commons.JndiRepositoryFactory.jndiEnabled;
+
 /**
  * Factory that looks up a repository from JNDI.
+ * <p>
+ * This class is deprecated and will be removed in future releases.
  *
  * @since 1.4
+ * @deprecated use {@link org.apache.jackrabbit.commons.JndiRepositoryFactory} instead
  */
+@Deprecated(forRemoval = true)
 public class JNDIRepositoryFactory implements RepositoryFactory {
-
-    private static final boolean jndiEnabled = Boolean.getBoolean("jackrabbit.jndi.enabled");
 
     /**
      * JNDI context from which to look up the repository.

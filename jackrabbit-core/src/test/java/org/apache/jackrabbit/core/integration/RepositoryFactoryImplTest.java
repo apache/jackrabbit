@@ -27,6 +27,8 @@ import javax.naming.InitialContext;
 import javax.naming.Context;
 
 import javax.jcr.RepositoryFactory;
+import javax.naming.NamingException;
+
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.JndiRepositoryFactory;
@@ -135,12 +137,22 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
         parameters.put(Context.INITIAL_CONTEXT_FACTORY, DummyInitialContextFactory.class.getName());
         parameters.put(Context.PROVIDER_URL, "localhost");
         InitialContext context = new InitialContext(new Hashtable<String, String>(parameters));
-        RegistryHelper.registerRepository(context, name,
-                REPO_CONF.getAbsolutePath(), REPO_HOME.getAbsolutePath(), false);
+        try {
+            RegistryHelper.registerRepository(context, name,
+                    REPO_CONF.getAbsolutePath(), REPO_HOME.getAbsolutePath(), false);
+        } catch (RepositoryException expected) {}
         try {
             parameters.put(JndiRepositoryFactory.JNDI_NAME, name);
-            repo = JcrUtils.getRepository(parameters);
-            checkRepository(repo);
+            try {
+                repo = JcrUtils.getRepository(parameters);
+            } catch (RepositoryException e) {
+                if (JndiRepositoryFactory.jndiEnabled) {
+                    fail("JNDI repository missing: " + e.getMessage());
+                }
+            }
+            if (repo != null) {
+                checkRepository(repo);
+            }
         } finally {
             RegistryHelper.unregisterRepository(context, name);
         }

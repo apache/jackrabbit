@@ -18,6 +18,7 @@ package org.apache.jackrabbit.commons;
 
 import junit.framework.TestCase;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -51,20 +52,52 @@ public class JcrUtilsTest extends TestCase {
                 "java.naming.factory.initial",
                 "org.osjava.sj.memory.MemoryContextFactory");
         parameters.put("org.osjava.sj.jndi.shared", "true");
-        assertTrue(repository == JcrUtils.getRepository(parameters));
+
+        // JDNI ist disabled by default
+        if (JndiRepositoryFactory.jndiEnabled) {
+            assertTrue(repository == JcrUtils.getRepository(parameters));
+        } else {
+            try {
+                JcrUtils.getRepository(parameters);
+                fail("Repository lookup should fail and throw an exception");
+            } catch (RepositoryException expected) {}
+        }
 
         // Test lookup with URI query parameters
-        assertTrue(repository == JcrUtils.getRepository(
-                "jndi://x"
-                + "?org.apache.jackrabbit.repository.jndi.name=repository"
-                + "&org.osjava.sj.jndi.shared=true"
-                + "&java.naming.factory.initial"
-                + "=org.osjava.sj.memory.MemoryContextFactory"));
+        // JDNI ist disabled by default
+        if (JndiRepositoryFactory.jndiEnabled) {
+            assertTrue(repository == JcrUtils.getRepository(
+                    "jndi://x"
+                    + "?org.apache.jackrabbit.repository.jndi.name=repository"
+                    + "&org.osjava.sj.jndi.shared=true"
+                    + "&java.naming.factory.initial"
+                    + "=org.osjava.sj.memory.MemoryContextFactory"));
+        } else {
+            try {
+                JcrUtils.getRepository(
+                        "jndi://x"
+                                + "?org.apache.jackrabbit.repository.jndi.name=repository"
+                                + "&org.osjava.sj.jndi.shared=true"
+                                + "&java.naming.factory.initial"
+                                + "=org.osjava.sj.memory.MemoryContextFactory");
+                fail("Repository lookup should fail and throw an exception");
+            } catch (RepositoryException expected) {}
+        }
 
         // Test lookup with the custom JNDI URI format (JCR-2771)
-        assertTrue(repository == JcrUtils.getRepository(
-                "jndi://org.osjava.sj.memory.MemoryContextFactory/repository"
-                + "?org.osjava.sj.jndi.shared=true"));
+        // JDNI ist disabled by default
+        if (JndiRepositoryFactory.jndiEnabled) {
+            assertTrue(repository == JcrUtils.getRepository(
+                    "jndi://org.osjava.sj.memory.MemoryContextFactory/repository"
+                    + "?org.osjava.sj.jndi.shared=true"));
+        } else {
+            try {
+                JcrUtils.getRepository(
+                        "jndi://org.osjava.sj.memory.MemoryContextFactory/repository"
+                                + "?org.osjava.sj.jndi.shared=true");
+                fail("Repository lookup should fail and throw an exception");
+            } catch (RepositoryException expected) {}
+        }
 
         try {
             JcrUtils.getRepository(

@@ -25,6 +25,8 @@ import javax.naming.StringRefAddr;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
 
+import static org.apache.jackrabbit.commons.JndiRepositoryFactory.jndiEnabled;
+
 /**
  * JNDI helper functionality. This class contains static utility
  * methods for binding and unbinding Jackrabbit repositories to and
@@ -59,24 +61,28 @@ public class RegistryHelper {
                                           String repHomeDir,
                                           boolean overwrite)
             throws NamingException, RepositoryException {
-        Reference reference = new Reference(
-                Repository.class.getName(),
-                BindableRepositoryFactory.class.getName(),
-                null); // no classpath defined
-        reference.add(new StringRefAddr(
-                BindableRepository.CONFIGFILEPATH_ADDRTYPE, configFilePath));
-        reference.add(new StringRefAddr(
-                BindableRepository.REPHOMEDIR_ADDRTYPE, repHomeDir));
+        if (jndiEnabled) {
+            Reference reference = new Reference(
+                    Repository.class.getName(),
+                    BindableRepositoryFactory.class.getName(),
+                    null); // no classpath defined
+            reference.add(new StringRefAddr(
+                    BindableRepository.CONFIGFILEPATH_ADDRTYPE, configFilePath));
+            reference.add(new StringRefAddr(
+                    BindableRepository.REPHOMEDIR_ADDRTYPE, repHomeDir));
 
-        // always create instance by using BindableRepositoryFactory
-        // which maintains an instance cache;
-        // see http://issues.apache.org/jira/browse/JCR-411 for details
-        Object obj = new BindableRepositoryFactory().getObjectInstance(
-                reference, null, null, null);
-        if (overwrite) {
-            ctx.rebind(name, obj);
+            // always create instance by using BindableRepositoryFactory
+            // which maintains an instance cache;
+            // see http://issues.apache.org/jira/browse/JCR-411 for details
+            Object obj = new BindableRepositoryFactory().getObjectInstance(
+                    reference, null, null, null);
+            if (overwrite) {
+                ctx.rebind(name, obj);
+            } else {
+                ctx.bind(name, obj);
+            }
         } else {
-            ctx.bind(name, obj);
+            throw new RepositoryException("JNDI is not enabled");
         }
     }
 
@@ -91,8 +97,10 @@ public class RegistryHelper {
      */
     public static void unregisterRepository(Context ctx, String name)
             throws NamingException {
-        ((JackrabbitRepository) ctx.lookup(name)).shutdown();
-        ctx.unbind(name);
+        if (jndiEnabled) {
+            ((JackrabbitRepository) ctx.lookup(name)).shutdown();
+            ctx.unbind(name);
+        }
     }
 
 }
