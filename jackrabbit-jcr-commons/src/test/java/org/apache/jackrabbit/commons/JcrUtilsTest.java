@@ -18,7 +18,6 @@ package org.apache.jackrabbit.commons;
 
 import junit.framework.TestCase;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -54,7 +53,7 @@ public class JcrUtilsTest extends TestCase {
         parameters.put("org.osjava.sj.jndi.shared", "true");
 
         // JDNI ist disabled by default
-        if (JndiRepositoryFactory.jndiEnabled) {
+        if (JndiRepositoryFactory.JNDI_ENABLED) {
             assertTrue(repository == JcrUtils.getRepository(parameters));
         } else {
             try {
@@ -65,7 +64,7 @@ public class JcrUtilsTest extends TestCase {
 
         // Test lookup with URI query parameters
         // JDNI ist disabled by default
-        if (JndiRepositoryFactory.jndiEnabled) {
+        if (JndiRepositoryFactory.JNDI_ENABLED) {
             assertTrue(repository == JcrUtils.getRepository(
                     "jndi://x"
                     + "?org.apache.jackrabbit.repository.jndi.name=repository"
@@ -86,7 +85,7 @@ public class JcrUtilsTest extends TestCase {
 
         // Test lookup with the custom JNDI URI format (JCR-2771)
         // JDNI ist disabled by default
-        if (JndiRepositoryFactory.jndiEnabled) {
+        if (JndiRepositoryFactory.JNDI_ENABLED) {
             assertTrue(repository == JcrUtils.getRepository(
                     "jndi://org.osjava.sj.memory.MemoryContextFactory/repository"
                     + "?org.osjava.sj.jndi.shared=true"));

@@ -27,7 +27,6 @@ import javax.naming.InitialContext;
 import javax.naming.Context;
 
 import javax.jcr.RepositoryFactory;
-import javax.naming.NamingException;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.JcrUtils;
@@ -146,7 +145,7 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
             try {
                 repo = JcrUtils.getRepository(parameters);
             } catch (RepositoryException e) {
-                if (JndiRepositoryFactory.jndiEnabled) {
+                if (JndiRepositoryFactory.JNDI_ENABLED) {
                     fail("JNDI repository missing: " + e.getMessage());
                 }
             }

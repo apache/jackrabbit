@@ -59,7 +59,7 @@ public class JndiRepositoryFactory implements RepositoryFactory {
     /**
      * Disabled by default, see JCR-5135
      */
-    public static final boolean jndiEnabled = Boolean.getBoolean("jackrabbit.jndi.enabled");
+    public static final boolean JNDI_ENABLED = Boolean.getBoolean("jackrabbit.jndi.enabled");
 
     /**
      * The JNDI name parameter name.
@@ -69,7 +69,7 @@ public class JndiRepositoryFactory implements RepositoryFactory {
 
     public Repository getRepository(Map parameters)
             throws RepositoryException {
-        if (jndiEnabled) {
+        if (JNDI_ENABLED) {
             if (parameters == null) {
                 return null; // no default JNDI repository
             } else {

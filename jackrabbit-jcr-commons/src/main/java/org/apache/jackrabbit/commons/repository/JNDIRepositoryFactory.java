@@ -21,7 +21,7 @@ import javax.jcr.RepositoryException;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-import static org.apache.jackrabbit.commons.JndiRepositoryFactory.jndiEnabled;
+import static org.apache.jackrabbit.commons.JndiRepositoryFactory.JNDI_ENABLED;
 
 /**
  * Factory that looks up a repository from JNDI.
@@ -62,7 +62,7 @@ public class JNDIRepositoryFactory implements RepositoryFactory {
      * @throws RepositoryException if the repository can not be found
      */
     public Repository getRepository() throws RepositoryException {
-        if (jndiEnabled) {
+        if (JNDI_ENABLED) {
             try {
                 Object repository = context.lookup(name);
                 if (repository instanceof Repository) {

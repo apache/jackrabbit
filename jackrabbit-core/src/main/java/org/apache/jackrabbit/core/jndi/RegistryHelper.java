@@ -25,7 +25,7 @@ import javax.naming.StringRefAddr;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
 
-import static org.apache.jackrabbit.commons.JndiRepositoryFactory.jndiEnabled;
+import static org.apache.jackrabbit.commons.JndiRepositoryFactory.JNDI_ENABLED;
 
 /**
  * JNDI helper functionality. This class contains static utility
@@ -61,7 +61,7 @@ public class RegistryHelper {
                                           String repHomeDir,
                                           boolean overwrite)
             throws NamingException, RepositoryException {
-        if (jndiEnabled) {
+        if (JNDI_ENABLED) {
             Reference reference = new Reference(
                     Repository.class.getName(),
                     BindableRepositoryFactory.class.getName(),
@@ -97,7 +97,7 @@ public class RegistryHelper {
      */
     public static void unregisterRepository(Context ctx, String name)
             throws NamingException {
-        if (jndiEnabled) {
+        if (JNDI_ENABLED) {
             ((JackrabbitRepository) ctx.lookup(name)).shutdown();
             ctx.unbind(name);
         }
