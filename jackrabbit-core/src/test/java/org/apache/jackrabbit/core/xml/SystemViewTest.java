@@ -23,6 +23,8 @@ import java.util.Arrays;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
@@ -61,6 +63,73 @@ public class SystemViewTest extends AbstractJCRTest {
             "  </sv:property>\n" +
             createCollidingNodeXml(id) +
             "</sv:node>\n";
+    }
+
+    private String createExpandedNameWithPrefixDefXml() {
+        return "<sv:node xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" " +
+                "xmlns:knownprefix=\"urn:known\"" +
+                " sv:name=\"foo\">" +
+                "<sv:node sv:name=\"{urn:known}bar\">" +
+                "</sv:node>" +
+                "</sv:node>";
+    }
+
+    private String createExpandedNameWithoutPrefixDefXml() {
+        return "<sv:node xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" " +
+                " sv:name=\"foo\">" +
+                "<sv:node sv:name=\"{urn:unknown}bar\">" +
+                "</sv:node>" +
+                "</sv:node>";
+    }
+
+    public void testExpandedNameImportWithPrefixDefinition() throws Exception {
+        importTestNodeTypes();
+
+        String xml = createExpandedNameWithPrefixDefXml();
+        InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+        superuser.importXML(
+                "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
+        assertTrue(nodes.hasNext());
+        Node node = nodes.nextNode();
+
+        String prefix = superuser.getNamespacePrefix("urn:known");
+        assertEquals("knownprefix", prefix);
+        String name = node.getName();
+        assertEquals("knownprefix:bar", name);
+    }
+
+    public void testExpandedNameImportWithCollidingPrefixDefinition() throws Exception {
+        importTestNodeTypes();
+
+        superuser.setNamespacePrefix("alreadyknownprefix", "urn:known");
+        String xml = createExpandedNameWithPrefixDefXml();
+        InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+        superuser.importXML(
+                "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
+        assertTrue(nodes.hasNext());
+        Node node = nodes.nextNode();
+
+        String prefix = superuser.getNamespacePrefix("urn:known");
+        assertEquals("alreadyknownprefix", prefix);
+        String name = node.getName();
+        assertEquals("alreadyknownprefix:bar", name);
+    }
+
+    public void testExpandedNameImportWithoutPrefixDefinition() throws Exception {
+        importTestNodeTypes();
+
+        String xml = createExpandedNameWithoutPrefixDefXml();
+        InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+        superuser.importXML(
+                "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
+        assertTrue(nodes.hasNext());
+        String prefix = superuser.getNamespacePrefix("urn:unknown");
+        assertNotNull(prefix);
+        String name = nodes.nextNode().getName();
+        assertEquals(prefix + ":bar", name);
     }
 
     public void testSameNameErrorMessage() throws Exception {
