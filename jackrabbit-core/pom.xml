@@ -116,7 +116,7 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral      
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265 -->
 org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testNonVersionableCheckedOut <!-- JCR-5007 -->
 org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testModifyNonVersionableNodeWithCheckedOutProperty <!-- JCR-5007 -->
-org.apache.jackrabbit.core.xml.SystemViewTest#testExpandedNameImportWithoutPrefixDefinition <!-- JCR-5139 -->
+org.apache.jackrabbit.core.xml.SystemViewTest#testExpandedNameImportWithoutPrefixDefinitionAndUnregisteredNS <!-- JCR-5139 -->
               </value>
             </property>
             <property>

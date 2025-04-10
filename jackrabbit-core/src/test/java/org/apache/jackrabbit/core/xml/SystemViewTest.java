@@ -19,12 +19,14 @@ package org.apache.jackrabbit.core.xml;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
@@ -65,71 +67,127 @@ public class SystemViewTest extends AbstractJCRTest {
             "</sv:node>\n";
     }
 
-    private String createExpandedNameWithPrefixDefXml() {
+    private String createExpandedNameWithPrefixDefXml(String nid) {
         return "<sv:node xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" " +
-                "xmlns:knownprefix=\"urn:known\"" +
+                "xmlns:definedPrefix=\"" + "urn:" + nid  + "\"" +
                 " sv:name=\"foo\">" +
-                "<sv:node sv:name=\"{urn:known}bar\">" +
+                "<sv:node sv:name=\"{urn:" + nid  + "}bar\">" +
+                "<sv:property sv:type=\"Boolean\" sv:name=\"{" + "urn:" + nid  + "}bar\">" +
+                "<sv:value>true</sv:value>" +
+                "</sv:property>" +
                 "</sv:node>" +
                 "</sv:node>";
     }
 
-    private String createExpandedNameWithoutPrefixDefXml() {
+    private String createExpandedNameWithoutPrefixDefXml(String nid) {
         return "<sv:node xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" " +
                 " sv:name=\"foo\">" +
-                "<sv:node sv:name=\"{urn:unknown}bar\">" +
+                "<sv:node sv:name=\"{urn:" + nid  + "}bar\">" +
+                "<sv:property sv:type=\"Boolean\" sv:name=\"{" + "urn:" + nid  + "}bar\">" +
+                "<sv:value>true</sv:value>" +
+                "</sv:property>" +
                 "</sv:node>" +
                 "</sv:node>";
     }
 
+    // https://issues.apache.org/jira/browse/JCR-5139
+    // Expanded names in content, prefix definition in XML, namespace not yet registered
     public void testExpandedNameImportWithPrefixDefinition() throws Exception {
         importTestNodeTypes();
 
-        String xml = createExpandedNameWithPrefixDefXml();
-        InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+        String nid = "unregisteredNS";
+        String xml = createExpandedNameWithPrefixDefXml(nid);
+        InputStream input = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
         superuser.importXML(
                 "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
         assertTrue(nodes.hasNext());
         Node node = nodes.nextNode();
 
-        String prefix = superuser.getNamespacePrefix("urn:known");
-        assertEquals("knownprefix", prefix);
+        String prefix = superuser.getNamespacePrefix("urn:" + nid);
+        assertEquals("definedPrefix", prefix);
         String name = node.getName();
-        assertEquals("knownprefix:bar", name);
+        assertEquals("definedPrefix:bar", name);
+        Property p = node.getProperty("{urn:" + nid + "}bar");
+        assertNotNull(p);
+        Property q = node.getProperty("definedPrefix:bar");
+        assertNotNull(q);
+        assertEquals(p.getName(), q.getName());
+        assertEquals(p.getBoolean(), q.getBoolean());
     }
 
+    // https://issues.apache.org/jira/browse/JCR-5139
+    // Expanded names in content, prefix definition in XML, prefix already registered
     public void testExpandedNameImportWithCollidingPrefixDefinition() throws Exception {
         importTestNodeTypes();
 
-        superuser.setNamespacePrefix("alreadyknownprefix", "urn:known");
-        String xml = createExpandedNameWithPrefixDefXml();
-        InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+        String nid = "registeredNS";
+        superuser.setNamespacePrefix("registeredPrefix", "urn:" + nid);
+        String xml = createExpandedNameWithPrefixDefXml(nid);
+        InputStream input = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
         superuser.importXML(
                 "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
         assertTrue(nodes.hasNext());
         Node node = nodes.nextNode();
 
-        String prefix = superuser.getNamespacePrefix("urn:known");
-        assertEquals("alreadyknownprefix", prefix);
+        String prefix = superuser.getNamespacePrefix("urn:" + nid);
+        assertEquals("registeredPrefix", prefix);
         String name = node.getName();
-        assertEquals("alreadyknownprefix:bar", name);
+        assertEquals("registeredPrefix:bar", name);
+        Property p = node.getProperty("{urn:" + nid + "}bar");
+        assertNotNull(p);
+        Property q = node.getProperty("registeredPrefix:bar");
+        assertNotNull(q);
+        assertEquals(p.getName(), q.getName());
+        assertEquals(p.getBoolean(), q.getBoolean());
     }
 
-    public void testExpandedNameImportWithoutPrefixDefinition() throws Exception {
+    // https://issues.apache.org/jira/browse/JCR-5139
+    // Expanded names in content, no prefix definition in XML, prefix already registered
+    public void testExpandedNameImportWithoutPrefixDefinitionAndRegisteredNS() throws Exception {
         importTestNodeTypes();
 
-        String xml = createExpandedNameWithoutPrefixDefXml();
-        InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+        String nid = "registeredNS";
+        superuser.setNamespacePrefix("registeredPrefix", "urn:" + nid);
+        String xml = createExpandedNameWithoutPrefixDefXml(nid);
+        InputStream input = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
         superuser.importXML(
                 "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
         assertTrue(nodes.hasNext());
-        String prefix = superuser.getNamespacePrefix("urn:unknown");
+        Node node = nodes.nextNode();
+
+        String prefix = superuser.getNamespacePrefix("urn:" + nid);
+        assertEquals("registeredPrefix", prefix);
+        String name = node.getName();
+        assertEquals("registeredPrefix:bar", name);
+        Property p = node.getProperty("{urn:" + nid + "}bar");
+        assertNotNull(p);
+        Property q = node.getProperty("registeredPrefix:bar");
+        assertNotNull(q);
+        assertEquals(p.getName(), q.getName());
+        assertEquals(p.getBoolean(), q.getBoolean());
+    }
+
+    // https://issues.apache.org/jira/browse/JCR-5139
+    // Expanded names in content, no prefix definition in XML, prefix not yet registered
+    public void testExpandedNameImportWithoutPrefixDefinitionAndUnregisteredNS() throws Exception {
+        importTestNodeTypes();
+
+        String nid = "unregisteredNS";
+        String xml = createExpandedNameWithoutPrefixDefXml(nid);
+        InputStream input = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
+        superuser.importXML(
+                "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        NodeIterator nodes = superuser.getRootNode().getNode("foo").getNodes();
+        assertTrue(nodes.hasNext());
+        Node node = nodes.nextNode();
+
+        String prefix = superuser.getNamespacePrefix("urn:" + nid);
         assertNotNull(prefix);
-        String name = nodes.nextNode().getName();
-        assertEquals(prefix + ":bar", name);
+        Property p = node.getProperty("{urn:" + nid + "}bar");
+        assertNotNull(p);
     }
 
     public void testSameNameErrorMessage() throws Exception {
