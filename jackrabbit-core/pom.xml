@@ -122,6 +122,7 @@ org.apache.jackrabbit.core.nodetype.CyclicNodeTypeRegistrationTest <!-- JCR-5208
 org.apache.jackrabbit.core.query.lucene.SearchIndexConsistencyCheckTest#testDoubleCheckStressTest <!-- JCR-5209 -->
 org.apache.jackrabbit.core.version.RemoveAndAddVersionLabelXATest#testVersionLabel <!-- JCR-5210 -->
 org.apache.jackrabbit.core.xml.SystemViewTest#testExpandedNameImportWithoutPrefixDefinition <!-- JCR-5139 -->
+org.apache.jackrabbit.core.xml.SystemViewTest#testExpandedNameImportWithoutPrefixDefinitionAndUnregisteredNS <!-- JCR-5139 -->
               </value>
             </property>
             <property>
