@@ -90,7 +90,6 @@ public class SystemViewTest extends AbstractJCRTest {
                 "</sv:node>";
     }
 
-    // https://issues.apache.org/jira/browse/JCR-5139
     // Expanded names in content, prefix definition in XML, namespace not yet registered
     public void testExpandedNameImportWithPrefixDefinition() throws Exception {
         importTestNodeTypes();
@@ -116,7 +115,6 @@ public class SystemViewTest extends AbstractJCRTest {
         assertEquals(p.getBoolean(), q.getBoolean());
     }
 
-    // https://issues.apache.org/jira/browse/JCR-5139
     // Expanded names in content, prefix definition in XML, prefix already registered
     public void testExpandedNameImportWithCollidingPrefixDefinition() throws Exception {
         importTestNodeTypes();
@@ -143,7 +141,6 @@ public class SystemViewTest extends AbstractJCRTest {
         assertEquals(p.getBoolean(), q.getBoolean());
     }
 
-    // https://issues.apache.org/jira/browse/JCR-5139
     // Expanded names in content, no prefix definition in XML, prefix already registered
     public void testExpandedNameImportWithoutPrefixDefinitionAndRegisteredNS() throws Exception {
         importTestNodeTypes();
