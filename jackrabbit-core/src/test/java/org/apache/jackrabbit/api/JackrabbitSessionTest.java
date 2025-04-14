@@ -89,9 +89,7 @@ public class JackrabbitSessionTest extends AbstractJCRTest {
         Node n = testRootNode.addNode("test:bar");
         assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
         // now remap namespace uri
-// see https://issues.apache.org/jira/browse/OAK-11637
-//        s.setNamespacePrefix("test", "urn:foo");
-//        assertEquals("{urn:foo}bar", s.getExpandedName(n));
+        assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
         // use special namespace uri
         n = testRootNode.addNode("rep:bar");
         assertEquals("{internal}bar", s.getExpandedName(n));
