@@ -16,8 +16,15 @@
  */
 package org.apache.jackrabbit.commons;
 
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -198,23 +205,23 @@ public class NamespaceHelper {
             // Check if the namespace is registered
             registry.getPrefix(uri);
         } catch (NamespaceException e1) {
-             // Replace troublesome prefix hints
+             // Throw away Troublesome prefix hints
             if (prefix == null || prefix.length() == 0
                     || prefix.toLowerCase().startsWith("xml")
                     || !XMLChar.isValidNCName(prefix)) {
-                prefix = "ns"; // ns, ns2, ns3, ns4, ...
+                prefix = null;
             }
 
-            // Loop until an unused prefix is found
-            try {
-                String base = prefix;
-                for (int i = 2; true; i++) {
-                    registry.getURI(prefix);
-                    prefix = base + i;
-                }
-            } catch (NamespaceException e2) {
-                // Exit the loop
-            } 
+            if (prefix == null) {
+                prefix = suggestPrefix(uri, namespace -> {
+                    // prefix checker
+                    try {
+                        return registry.getPrefix(namespace);
+                    } catch (RepositoryException e) {
+                        return null;
+                    }
+                });
+            }
 
             // Register the namespace
             registry.registerNamespace(prefix, uri);
@@ -237,4 +244,109 @@ public class NamespaceHelper {
         }
     }
 
+    // non-public supporting code
+
+    // map with 'optimal' prefix mappings; hard-wired should be ok
+    private static final Map<String, String> KNOWN_PREFIXES =
+            Map.of("http://purl.org/dc/terms/", "dc",
+                    "http://ns.adobe.com/exif/1.0/", "exif");
+
+
+    // suggest an available prefix for the provided namespace, based on a random UUID
+    // (last resort)
+    private static String makeUpPrefixByUUID(String namespace, Function<String, String> lookupNamespace) {
+        String prefix;
+
+        do {
+            prefix = "u-" + UUID.randomUUID();
+        } while (namespace.equals(lookupNamespace.apply(prefix)));
+
+        return prefix;
+    }
+
+    // compute SHA-256, null when NoSuchAlgorithmException
+    private static String getSha256(String namespace) {
+        try {
+            byte[] bytes = MessageDigest.getInstance("SHA-256").digest(namespace.getBytes(StandardCharsets.UTF_8));
+            return new BigInteger(1, bytes).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            // this really, really should not happen
+            return null;
+        }
+    }
+
+    // suggest an available prefix for the provided namespace, based on the sha-256
+    // of the namespace name, and a final fallback to UUID based (while considering pre-existing mappings)
+    private static String makeUpPrefixTrySha256(String namespace, Function<String, String> lookupNamespace) {
+
+        String sha = getSha256(namespace);
+        if (sha != null) {
+            for (int i = 7; i <= sha.length(); i++) {
+                String prefix = "s-" + sha.substring(0, i);
+                if (!namespace.equals(lookupNamespace.apply(prefix))) {
+                    // prefix not in use; so we're ok
+                    return prefix;
+                }
+            }
+        }
+
+        // fallback to UUID
+        return makeUpPrefixByUUID(namespace, lookupNamespace);
+    }
+
+    // suggest an available prefix for the provided namespace, based on the characters
+    // in the namespace name (while considering pre-existing mappings)
+    private static String makeUpPrefix(String namespace, Function<String, String> lookupNamespace) {
+        String prefix = namespace.toLowerCase(Locale.ENGLISH);
+
+        // https://www.w3.org/guide/editor/namespaces.html
+        if (prefix.startsWith("http://www.w3c.org/ns/")) {
+            prefix = prefix.substring(22);
+        }
+
+        // strip scheme when http(s)
+        if (prefix.startsWith("http://")) {
+            prefix = prefix.substring(7);
+        } else if (prefix.startsWith("https://")) {
+            prefix = prefix.substring(8);
+        }
+
+        // strip common host name prefixes
+        if (prefix.startsWith("www.")) {
+            prefix = prefix.substring(4);
+        } else if (prefix.startsWith("ns")) {
+            prefix = prefix.substring(3);
+        }
+
+        // strip trailing slash
+        if (prefix.endsWith("/")) {
+            prefix = prefix.substring(0, prefix.length() - 1);
+        }
+
+        // TODO: make sure it's really a valid JCR name prefix
+        prefix = prefix.replace("/", "-");
+
+        String lookedUpNamespace = lookupNamespace.apply(prefix);
+        if (lookedUpNamespace == null || lookedUpNamespace.equals(namespace)) {
+            return prefix;
+        } else {
+            return makeUpPrefixTrySha256(namespace, lookupNamespace);
+        }
+    }
+
+    // suggest an available prefix for the provided namespace (while considering pre-existing mappings)
+    private static String suggestPrefix(String namespace, Function<String, String> lookupPrefix) {
+        // try hard-wired map
+        String known = KNOWN_PREFIXES.get(namespace);
+
+        // lookup using supplied mapper as well
+        String lookedUpNamespace = known != null ? lookupPrefix.apply(known) : null;
+
+        // return hardwired prefix if unused or mapper has the prefix mapped to the same namespace
+        if (known != null && (lookedUpNamespace == null || namespace.equals(lookedUpNamespace))) {
+            return known;
+        } else {
+            return makeUpPrefix(namespace, lookupPrefix);
+        }
+    }
 }
