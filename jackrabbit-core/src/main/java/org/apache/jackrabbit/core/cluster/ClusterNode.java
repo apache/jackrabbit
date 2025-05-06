@@ -394,6 +394,41 @@ public class ClusterNode implements Runnable,
     }
 
     /**
+     * Pauses sync on the cluster node.
+     */
+    public synchronized void pauseSync() throws ClusterException {
+        try {
+            syncLock.acquire();
+        } catch (InterruptedException e) {
+            String msg = "Interrupted while waiting for mutex.";
+            throw new ClusterException(msg);
+        }
+    }
+
+    /**
+     * Attempts to pause sync on the cluster node waiting up to the provided msecs.
+     * @see EDU.oswego.cs.dl.util.concurrent.Mutex#attempt(long)
+     * @param msecs Number of milliseconds to wait
+     * @return True of lock was acquired, otherwise false
+     * @throws ClusterException
+     */
+    public synchronized boolean pauseSync(long msecs) throws ClusterException {
+        try {
+            return syncLock.attempt(msecs);
+        } catch (InterruptedException e) {
+            String msg = "Interrupted while waiting for mutex.";
+            throw new ClusterException(msg);
+        }
+    }
+
+    /**
+     * Resumes sync the cluster node.
+     */
+    public synchronized void resumeSync() {
+        syncLock.release();
+    }
+
+    /**
      * Create an {@link UpdateEventChannel} for some workspace.
      *
      * @param workspace workspace name
