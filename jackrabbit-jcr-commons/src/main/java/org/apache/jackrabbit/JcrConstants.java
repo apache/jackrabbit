@@ -258,7 +258,7 @@ public interface JcrConstants {
     /**
      * Use {@link javax.jcr.nodetype.NodeType#MIX_MIMETYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
-    public static final String MIX_MIMEYPTE = "mix:mimetype";
+    public static final String MIX_MIMETYPE = "mix:mimetype";
     /**
      * Use {@link javax.jcr.nodetype.NodeType#MIX_REFERENCEABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
