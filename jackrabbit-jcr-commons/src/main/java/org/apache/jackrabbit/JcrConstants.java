@@ -202,6 +202,10 @@ public interface JcrConstants {
      */
     public static final String JCR_SYSTEM = "jcr:system";
     /**
+     * Use {@link javax.jcr.Property#JCR_TITLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String JCR_TITLE = "jcr:title";
+    /**
      * Use {@link javax.jcr.Property#JCR_UUID} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String JCR_UUID = "jcr:uuid";
