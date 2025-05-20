@@ -236,13 +236,37 @@ public interface JcrConstants {
     public static final String JCR_SCORE = "jcr:score";
 
     /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_CREATED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_CREATED = "mix:created";
+    /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_LANGUAGE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_LANGUAGE = "mix:language";
+    /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_LAST_MODIFIED} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_LAST_MODIFIED = "mix:lastModified";
+    /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_LIFECYCLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_LIFECYCLE = "mix:lifecycle";
+    /**
      * Use {@link javax.jcr.nodetype.NodeType#MIX_LOCKABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_LOCKABLE = "mix:lockable";
     /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_MIMETYPE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_MIMETYPE = "mix:mimetype";
+    /**
      * Use {@link javax.jcr.nodetype.NodeType#MIX_REFERENCEABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_REFERENCEABLE = "mix:referenceable";
+    /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_SIMPLE_VERSIONABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_SIMPLE_VERSIONABLE = "mix:simpleVersionable";
     /**
      * Use {@link javax.jcr.nodetype.NodeType#MIX_VERSIONABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
@@ -251,6 +275,10 @@ public interface JcrConstants {
      * Use {@link javax.jcr.nodetype.NodeType#MIX_SHAREABLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
     public static final String MIX_SHAREABLE = "mix:shareable";
+    /**
+     * Use {@link javax.jcr.nodetype.NodeType#MIX_TITLE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
+     */
+    public static final String MIX_TITLE = "mix:title";
     /**
      * Use {@link javax.jcr.nodetype.NodeType#NT_BASE} whenever <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded JCR names are supported (e.g. in JCR API method parameters)</a>.
      */
