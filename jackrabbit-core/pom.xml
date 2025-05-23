@@ -362,7 +362,7 @@ org.apache.jackrabbit.core.version.RemoveAndAddVersionLabelXATest#testVersionLab
 
       Note: the ${config.db.name} database is dropped and re-created in the clean phase. 
     -->
-    <profile>
+    <!-- JCR-5148 <profile>
       <id>mysql</id>
       <properties>
         <config.db.name>jackrabbit</config.db.name>
@@ -380,7 +380,7 @@ org.apache.jackrabbit.core.version.RemoveAndAddVersionLabelXATest#testVersionLab
         <config.db.dropcommand>drop database ${config.db.name}</config.db.dropcommand>
         <config.db.createcommand>create database ${config.db.name}</config.db.createcommand>
       </properties>
-    </profile>
+    </profile> -->
     <profile>
       <id>mssql</id>
       <properties>
@@ -448,13 +448,13 @@ org.apache.jackrabbit.core.version.RemoveAndAddVersionLabelXATest#testVersionLab
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>sql-maven-plugin</artifactId>
           <dependencies>
-            <dependency>
+            <!-- JCR-5148 <dependency>
               <groupId>mysql</groupId>
               <artifactId>mysql-connector-java</artifactId>
               <version>5.1.6</version>
               <type>jar</type>
               <scope>provided</scope>
-            </dependency>
+            </dependency> -->
             <dependency>
               <groupId>net.sourceforge.jtds</groupId>
               <artifactId>jtds</artifactId>
@@ -546,13 +546,13 @@ org.apache.jackrabbit.core.version.RemoveAndAddVersionLabelXATest#testVersionLab
       </plugins>
       </build>
       <dependencies>
-        <dependency>
+        <!-- JCR-5148 <dependency>
           <groupId>mysql</groupId>
           <artifactId>mysql-connector-java</artifactId>
           <version>5.1.6</version>
           <type>jar</type>
           <scope>test</scope>
-        </dependency>
+        </dependency> -->
         <dependency>
           <groupId>net.sourceforge.jtds</groupId>
           <artifactId>jtds</artifactId>
