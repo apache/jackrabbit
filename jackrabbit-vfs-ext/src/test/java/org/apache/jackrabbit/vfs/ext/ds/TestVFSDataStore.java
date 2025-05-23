@@ -190,7 +190,11 @@ public class TestVFSDataStore extends TestCaseBase {
         File [] identities = configBuilder.getIdentities(fso);
         Assert.assertNotNull(identities);
         Assert.assertEquals(1, identities.length);
-        Assert.assertEquals("/home/tester/.ssh/id_rsa", FilenameUtils.separatorsToUnix(identities[0].getPath()));
+        String expectedPath = identities[0].getPath();
+        if (FilenameUtils.getPrefixLength(expectedPath) != 0) {
+            expectedPath = expectedPath.substring(FilenameUtils.getPrefixLength(expectedPath) - 1);
+        }
+        Assert.assertEquals("/home/tester/.ssh/id_rsa", FilenameUtils.separatorsToUnix(expectedPath));
         Assert.assertEquals(Integer.valueOf(30000), configBuilder.getTimeout(fso));
 
         dataStore.close();

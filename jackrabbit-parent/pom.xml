@@ -260,7 +260,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
+        <version>0.8.13</version>
         <executions>
           <execution>
             <id>pre-unit-test</id>
@@ -622,7 +622,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.14.1</version>
+        <version>5.17.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
