@@ -38,7 +38,7 @@ public abstract class ConsistencyCheckError {
      */
     protected final NodeId id;
 
-    ConsistencyCheckError(String message, NodeId id) {
+    protected ConsistencyCheckError(String message, NodeId id) {
         this.message = message;
         this.id = id;
     }
@@ -61,7 +61,7 @@ public abstract class ConsistencyCheckError {
      * Executes the repair operation.
      * @throws Exception if an error occurs while repairing.
      */
-    abstract void repair() throws Exception;
+    protected abstract void repair() throws Exception;
 
     /**
      * Double check the error. Used to rule out false positives in live environments.
@@ -70,6 +70,6 @@ public abstract class ConsistencyCheckError {
      * @throws RepositoryException
      * @throws IOException
      */
-    abstract boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+    protected abstract boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
             throws RepositoryException, IOException;
 }
