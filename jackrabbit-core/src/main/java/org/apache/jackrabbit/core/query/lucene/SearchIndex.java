@@ -92,7 +92,6 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Payload;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.IndexSearcher;
@@ -429,6 +428,11 @@ public class SearchIndex extends AbstractQueryHandler {
     private Class<?> synonymProviderClass;
 
     /**
+     * The class that implements {@link ConsistencyCheckInterface}.
+     */
+    private Class<? extends ConsistencyCheckInterface> consistencyCheckClass = DefaultConsistencyCheck.class;
+
+    /**
      * The currently set synonym provider.
      */
     private SynonymProvider synProvider;
@@ -587,7 +591,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 && (index.getRedoLogApplied() || forceConsistencyCheck)) {
             log.info("Running consistency check...");
             try {
-                ConsistencyCheck check = runConsistencyCheck();
+                ConsistencyCheckInterface check = doConsistencyCheck();
                 if (autoRepair) {
                     check.repair(true);
                 } else {
@@ -1141,13 +1145,21 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * @deprecated use {@link #doConsistencyCheck()} instead
+     */
+    @Deprecated
+    public ConsistencyCheck runConsistencyCheck() throws IOException {
+        return (ConsistencyCheck) doConsistencyCheck();
+    }
+
+    /**
      * Runs a consistency check on this search index.
      *
      * @return the result of the consistency check.
      * @throws IOException if an error occurs while running the check.
      */
-    public ConsistencyCheck runConsistencyCheck() throws IOException {
-        return index.runConsistencyCheck();
+    public ConsistencyCheckInterface doConsistencyCheck() throws IOException {
+        return index.doConsistencyCheck();
     }
 
     /**
@@ -2304,6 +2316,42 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public String getIndexingConfigurationClass() {
         return indexingConfigurationClass.getName();
+    }
+
+    /**
+     * Sets the class name of the {@link ConsistencyCheckInterface} implementation.
+     *
+     * @param className the class name of the consistency check implementation.
+     */
+    public void setConsistencyCheckClass(String className) {
+        if (className != null && className.length() > 0) {
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends ConsistencyCheckInterface> clazz =
+                    (Class<? extends ConsistencyCheckInterface>) Class.forName(className);
+                consistencyCheckClass = clazz;
+            } catch (ClassCastException e) {
+                log.warn("Invalid value for consistencyCheckClass, {} " +
+                        "does not implement ConsistencyCheckInterface interface", className);
+            } catch (ClassNotFoundException e) {
+                log.warn("Invalid value for consistencyCheckClass, class {} not found.",
+                        className);
+            }
+        }
+    }
+
+    /**
+     * @return the class name of the configured {@link ConsistencyCheckInterface} implementation.
+     */
+    public String getConsistencyCheckClassName() {
+        return consistencyCheckClass.getName();
+    }
+    
+    /**
+     * @return the configured {@link ConsistencyCheckInterface} class.
+     */
+    public Class<? extends ConsistencyCheckInterface> getConsistencyCheckClass() {
+        return consistencyCheckClass;
     }
 
     /**
