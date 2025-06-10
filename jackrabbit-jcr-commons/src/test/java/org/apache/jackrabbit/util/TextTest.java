@@ -202,4 +202,14 @@ public class TextTest extends TestCase {
     public void testEscapeHTML() {
         assertEquals("&amp;&lt;&gt;&#39;&quot;", Text.encodeIllegalHTMLCharacters("&<>'\""));
     }
+
+    public void testIsValidJcrLocalName() {
+        assertTrue(Text.isValidJcrLocalName("valid%Name..\n\r test.\"'"));
+        assertFalse(Text.isValidJcrLocalName("invalid|name"));
+        assertFalse(Text.isValidJcrLocalName("some:name"));
+        // containing non XML characters (unicode control character)
+        assertFalse(Text.isValidJcrLocalName("\u000FinvalidName"));
+        assertFalse(Text.isValidJcrLocalName(".."));
+        assertFalse(Text.isValidJcrLocalName("."));
+    }
 }
