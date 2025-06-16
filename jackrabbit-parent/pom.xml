@@ -27,14 +27,14 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>32</version>
+    <version>33</version>
     <relativePath />
   </parent>
 
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.23.0-beta-SNAPSHOT</version>
+  <version>2.23.2-beta-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <issueManagement>
@@ -47,7 +47,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jackrabbit.git</developerConnection>
     <url>https://github.com/apache/jackrabbit/tree/${project.scm.tag}</url>
-    <tag>jackrabbit-2.23.0-beta</tag>
+    <tag>jackrabbit-2.23.1-beta</tag>
   </scm>
 
   <properties>
@@ -55,16 +55,16 @@
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <!-- OAK version used in componenents that *implement* oak-jackrabbit-api -->
-    <oak-jackrabbit-api.version.implemented>1.64.0</oak-jackrabbit-api.version.implemented>
+    <oak-jackrabbit-api.version.implemented>1.76.0</oak-jackrabbit-api.version.implemented>
     <!-- OAK version used in componenents that *use* oak-jackrabbit-api -->
-    <oak-jackrabbit-api.version.used>1.22.20</oak-jackrabbit-api.version.used>
-    <jetty.version>9.4.53.v20231009</jetty.version>
+    <oak-jackrabbit-api.version.used>1.22.22</oak-jackrabbit-api.version.used>
+    <jetty.version>9.4.56.v20240826</jetty.version>
     <tika.version>2.4.1</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.36</slf4j.api.version>
     <slf4j.version>1.7.36</slf4j.version> <!-- sync with logback version -->
-    <logback.version>1.2.11</logback.version>
-
+    <logback.version>1.2.13</logback.version>
+    
     <!-- determines the bytecode version (i.e. the minimum JRE required to run the build artifact) -->
     <javaTargetVersion>11</javaTargetVersion>
     <maven.compiler.release>${javaTargetVersion}</maven.compiler.release>
@@ -76,7 +76,7 @@
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
     <!-- build time stamp: should be updated prior to a release -->
     <!-- see https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
-    <project.build.outputTimestamp>1717742788</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1728379281</project.build.outputTimestamp>
     <minimalMavenBuildVersion>3.6.1</minimalMavenBuildVersion><!-- due to https://issues.apache.org/jira/browse/MNG-6059 -->
   </properties>
 
@@ -94,10 +94,6 @@
   <!-- =================================================================== -->
   <!-- B U I L D   S E T T I N G S                                         -->
   <!-- =================================================================== -->
-  <prerequisites>
-    <maven>3.2.1</maven>
-  </prerequisites>
-
   <profiles>
     <profile>
       <id>javadoc</id>
@@ -264,7 +260,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
+        <version>0.8.13</version>
         <executions>
           <execution>
             <id>pre-unit-test</id>
@@ -343,7 +339,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.1</version>
+          <version>3.4.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-rar-plugin</artifactId>
@@ -383,7 +379,7 @@
               </goals>
               <configuration>
                 <!-- this should refer to the latest stable release -->
-                <comparisonVersion>2.20.16</comparisonVersion>
+                <comparisonVersion>2.22.0</comparisonVersion>
               </configuration>
             </execution>
           </executions>
@@ -415,12 +411,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>3.5.0</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.22.0</version>
+        <version>3.25.0</version>
         <configuration>
           <targetJdk>${java.version}</targetJdk>
         </configuration>
@@ -428,7 +424,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.8.5.0</version>
+        <version>4.8.6.4</version>
       </plugin>
     </plugins>
   </reporting>
@@ -454,12 +450,12 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-collections4</artifactId>
-        <version>4.4</version>
+        <version>4.5.0-M3</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.16.1</version>
+        <version>2.17.0</version>
       </dependency>
       <dependency>
         <groupId>javax.transaction</groupId>
@@ -616,7 +612,7 @@
       <dependency>
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
-        <version>5.2.0</version>
+        <version>5.5.0</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -626,7 +622,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.12.0</version>
+        <version>5.17.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

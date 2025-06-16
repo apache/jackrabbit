@@ -177,6 +177,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @deprecated this value is not used anymore. Instead the default value
      * is calculated as follows: 2 * Runtime.getRuntime().availableProcessors().
      */
+    @Deprecated
     public static final int DEFAULT_EXTRACTOR_POOL_SIZE = 0;
 
     /**
@@ -2101,6 +2102,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param filterClasses comma separated list of class names
      * @deprecated 
      */
+    @Deprecated
     public void setTextFilterClasses(String filterClasses) {
         log.warn("The textFilterClasses configuration parameter has"
                 + " been deprecated, and the configured value will"
@@ -2114,6 +2116,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return class names of the text filters in use.
      * @deprecated 
      */
+    @Deprecated
     public String getTextFilterClasses() {
         return "deprectated";
     }

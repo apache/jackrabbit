@@ -50,6 +50,7 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
      * parentId is not used any more and the corresponding getter has been
      * removed.
      */
+    @Deprecated
     public ItemInfoImpl(NodeId parentId, Name name, Path path, boolean isNode) {
         this(path, isNode);
     }

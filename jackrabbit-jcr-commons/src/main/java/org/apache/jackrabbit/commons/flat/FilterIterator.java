@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
  * @param <T>
  * @deprecated use {@link org.apache.jackrabbit.commons.iterator.FilterIterator}
  */
+@Deprecated
 public class FilterIterator<T> extends org.apache.jackrabbit.commons.iterator.FilterIterator<T> {
 
     /**

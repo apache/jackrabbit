@@ -98,6 +98,7 @@ public class TextsearchQueryNode extends QueryNode {
      * @return property name or <code>null</code>.
      * @deprecated Use {@link #getRelativePath()} instead.
      */
+    @Deprecated
     public Name getPropertyName() {
         return relPath == null ? null : relPath.getName();
     }
@@ -108,6 +109,7 @@ public class TextsearchQueryNode extends QueryNode {
      * @param property the name of the property.
      * @deprecated Use {@link #setRelativePath(Path)} instead.
      */
+    @Deprecated
     public void setPropertyName(Name property) {
         PathBuilder builder = new PathBuilder();
         builder.addLast(property);

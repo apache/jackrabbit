@@ -16,6 +16,23 @@
  */
 package org.apache.jackrabbit.core.security.authentication.token;
 
+import java.lang.Thread.UncaughtExceptionHandler;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.jcr.LoginException;
+import javax.jcr.Node;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
@@ -25,18 +42,6 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
-
-import javax.jcr.LoginException;
-import javax.jcr.Node;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 
 /**
  * <code>TokenBasedLoginTest</code>...
@@ -230,120 +235,69 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
      * Tests concurrent login on the Repository including token creation.
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
      */
-    public void testConcurrentLogin() throws RepositoryException, NotExecutableException {
-        final Exception[] exception = new Exception[1];
-        List<Thread> testRunner = new ArrayList<Thread>();
-        for (int i = 0; i < 10; i++) {
-            testRunner.add(new Thread(new Runnable() {
-                public void run() {
-                    for (int i = 0; i < 100; i++) {
-                        try {
-                            SimpleCredentials sc = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
-                            sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+    public void testConcurrentLogin() throws Throwable {
+        assertParallelExecutionSucceeds(10, new JcrRunnable() {
+            public void run() throws RepositoryException {
+                for (int i = 0; i < 100; i++) {
+                    SimpleCredentials sc = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
+                    sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
 
-                            Session s = getHelper().getRepository().login(sc);
-                            try {
-                                Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
-                                assertFalse(tcs.isEmpty());
-                            } finally {
-                                s.logout();
-                            }
-                        } catch (Exception e) {
-                            exception[0] = e;
-                            break;
-                        }
+                    Session s = getHelper().getRepository().login(sc);
+                    try {
+                        Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+                        assertFalse(tcs.isEmpty());
+                    } finally {
+                        s.logout();
                     }
                 }
-            }));
-        }
-
-        // start threads
-        for (Object aTestRunner : testRunner) {
-            ((Thread) aTestRunner).start();
-        }
-
-        // join threads
-        for (Object aTestRunner : testRunner) {
-            try {
-                ((Thread) aTestRunner).join();
-            } catch (InterruptedException e) {
-                fail(e.toString());
             }
-        }
+        });
 
-        if (exception[0] != null) {
-            fail(exception[0].toString());
-        }
     }
 
     /**
      * Tests concurrent login of 3 different users on the Repository including
      * token creation.
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
+     * @throws InterruptedException 
      */
-    public void testConcurrentLoginOfDifferentUsers() throws RepositoryException, NotExecutableException {
-        final Exception[] exception = new Exception[1];
-        List<Thread> testRunner = new ArrayList<Thread>();
-        for (int i = 0; i < 10; i++) {
-            testRunner.add(new Thread(new Runnable() {
-                public void run() {
-                    for (int i = 0; i < 100; i++) {
-                        try {
-                            SimpleCredentials c;
-                            double rand = 3 * Math.random();
-                            int index = (int) Math.floor(rand);
-                            switch (index) {
-                                case 0:
-                                    c = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
-                                    break;
-                                case 1:
-                                    c = new SimpleCredentials(getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_SUPERUSER_NAME), getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_SUPERUSER_PWD).toCharArray());
-                                    break;
-                                default:
-                                    c = new SimpleCredentials(getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_READONLY_NAME), getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_READONLY_PWD).toCharArray());
-                                    break;
-                            }
-                            c.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-                            Session s = getHelper().getRepository().login(c);
-                            try {
-                                Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
-                                assertFalse(tcs.isEmpty());
-                            } finally {
-                                s.logout();
-                            }
-                        } catch (Exception e) {
-                            exception[0] = e;
+    public void testConcurrentLoginOfDifferentUsers() throws InterruptedException {
+        assertParallelExecutionSucceeds(10, new JcrRunnable() {
+            public void run() throws RepositoryException {
+                for (int i = 0; i < 100; i++) {
+                    SimpleCredentials c;
+                    double rand = 3 * Math.random();
+                    int index = (int) Math.floor(rand);
+                    switch (index) {
+                        case 0:
+                            c = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
                             break;
-                        }
+                        case 1:
+                            c = new SimpleCredentials(getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_SUPERUSER_NAME), getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_SUPERUSER_PWD).toCharArray());
+                            break;
+                        default:
+                            c = new SimpleCredentials(getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_READONLY_NAME), getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_READONLY_PWD).toCharArray());
+                            break;
+                    }
+                    c.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+                    Session s = getHelper().getRepository().login(c);
+                    try {
+                        Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+                        assertFalse(tcs.isEmpty());
+                    } finally {
+                        s.logout();
                     }
                 }
-            }));
-        }
-
-        // start threads
-        for (Object aTestRunner : testRunner) {
-            ((Thread) aTestRunner).start();
-        }
-
-        // join threads
-        for (Object aTestRunner : testRunner) {
-            try {
-                ((Thread) aTestRunner).join();
-            } catch (InterruptedException e) {
-                fail(e.toString());
             }
-        }
-
-        if (exception[0] != null) {
-            fail(exception[0].toString());
-        }
+        });
     }
 
     /**
      * Tests concurrent login on the Repository including token creation.
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
+     * @throws InterruptedException 
      */
-    public void testConcurrentLoginDifferentWorkspaces() throws RepositoryException, NotExecutableException {
+    public void testConcurrentLoginDifferentWorkspaces() throws RepositoryException, NotExecutableException, InterruptedException {
         final String testID = testuser.getID();
 
         // check if test is executable
@@ -367,53 +321,86 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
             }
         }
 
-        final Exception[] exception = new Exception[1];
+        assertParallelExecutionSucceeds(10, new JcrRunnable() {
+            public void run() throws RepositoryException {
+                for (int i = 0; i < 100; i++) {
+                    double rand = wspNames.size() * Math.random();
+                    int index = (int) Math.floor(rand);
+                    String wspName = wspNames.get(index);
+
+                    SimpleCredentials sc = new SimpleCredentials(testID, testID.toCharArray());
+                    sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+
+                    Session s = getHelper().getRepository().login(sc, wspName);
+                    try {
+                        Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+                        assertFalse(tcs.isEmpty());
+                    } finally {
+                        s.logout();
+                    }
+                }
+            }
+        });
+    }
+
+    static class UncheckedRepositoryException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        public UncheckedRepositoryException(RepositoryException e) {
+            super(e);
+        }
+    }
+
+    /**
+     * Similar to {@link Runnable} but allows to throw {@link RepositoryException} in its {@link #run()} method.
+     */
+    static interface JcrRunnable {
+        public void run() throws RepositoryException;
+    }
+
+    private static void assertParallelExecutionSucceeds(int numThreads, JcrRunnable runnable) throws InterruptedException {
         List<Thread> testRunner = new ArrayList<Thread>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < numThreads; i++) {
             testRunner.add(new Thread(new Runnable() {
                 public void run() {
-                    for (int i = 0; i < 100; i++) {
-                        try {
-                            double rand = wspNames.size() * Math.random();
-                            int index = (int) Math.floor(rand);
-                            String wspName = wspNames.get(index);
-
-                            SimpleCredentials sc = new SimpleCredentials(testID, testID.toCharArray());
-                            sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-
-                            Session s = getHelper().getRepository().login(sc, wspName);
-                            try {
-                                Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
-                                assertFalse(tcs.isEmpty());
-                            } finally {
-                                s.logout();
-                            }
-
-                        } catch (Exception e) {
-                            exception[0] = e;
-                            break;
-                        }
+                    try {
+                        runnable.run();
+                    } catch (RepositoryException e) {
+                        throw new UncheckedRepositoryException(e);
                     }
                 }
             }));
         }
+        assertThreadExecutionSucceeds(testRunner);
+    }
 
+    /**
+     * Executes all given threads and waits for them to finish. Exception in any of the thread will make the calling thread die with an exception as well
+     * @param testRunner the threads to execute
+     * @throws InterruptedException
+     */
+    private static void assertThreadExecutionSucceeds(Collection<Thread> testRunner) throws InterruptedException {
+        Map<String, Throwable> threadExceptions = new ConcurrentHashMap<>();
         // start threads
-        for (Object aTestRunner : testRunner) {
-            ((Thread) aTestRunner).start();
+        for (Thread aTestRunner : testRunner) {
+            aTestRunner.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+                public void uncaughtException(Thread t, Throwable e) {
+                    threadExceptions.put(t.getName() + " (id " + t.getId() +")", e);
+                }
+            } );
+            aTestRunner.start();
         }
 
         // join threads
-        for (Object aTestRunner : testRunner) {
-            try {
-                ((Thread) aTestRunner).join();
-            } catch (InterruptedException e) {
-                fail(e.toString());
-            }
+        for (Thread aTestRunner : testRunner) {
+            aTestRunner.join();
         }
 
-        if (exception[0] != null) {
-            fail(exception[0].toString());
+        // only rethrow one exception (put the other ones as suppressed)
+        IllegalStateException mainException = threadExceptions.entrySet().stream().findFirst().map(e -> new IllegalStateException("Thread " + e.getKey() + " failed", e.getValue())).orElse(null);
+        if (mainException != null) {
+            threadExceptions.entrySet().stream().skip(1).forEach(e -> mainException.addSuppressed(new IllegalStateException("Thread " + e.getKey() + " failed", e.getValue())));
+            throw mainException;
         }
     }
 }

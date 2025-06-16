@@ -106,6 +106,7 @@ public interface EffectiveNodeType {
      * @deprecated Use {@link #hasRemoveNodeConstraint(Name)} and
      * {@link #hasRemovePropertyConstraint(Name)} respectively.
      */
+    @Deprecated
     public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException;
 
     /**

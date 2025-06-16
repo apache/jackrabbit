@@ -933,6 +933,7 @@ public class RepositoryConfig
      * @return repository name
      * @deprecated Use {@link SecurityConfig#getAppName()} instead.
      */
+    @Deprecated
     public String getAppName() {
         return sec.getAppName();
     }
@@ -943,6 +944,7 @@ public class RepositoryConfig
      * @return access manager configuration
      * @deprecated Use {@link SecurityConfig#getAccessManagerConfig()} instead.
      */
+    @Deprecated
     public AccessManagerConfig getAccessManagerConfig() {
         return sec.getAccessManagerConfig();
     }
@@ -954,6 +956,7 @@ public class RepositoryConfig
      *         JAAS mechanism should be used.
      * @deprecated Use {@link SecurityConfig#getLoginModuleConfig()} instead.
      */
+    @Deprecated
     public LoginModuleConfig getLoginModuleConfig() {
         return sec.getLoginModuleConfig();
     }

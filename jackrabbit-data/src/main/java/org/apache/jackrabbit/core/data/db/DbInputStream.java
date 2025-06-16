@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.data.db;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.ResultSet;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
@@ -40,6 +41,7 @@ public class DbInputStream extends AutoCloseInputStream {
     protected boolean endOfStream;
 
     protected ResultSet rs;
+    private InputStream initialStream;
 
     /**
      * Create a database input stream for the given identifier.
@@ -52,6 +54,7 @@ public class DbInputStream extends AutoCloseInputStream {
         super(null);
         this.store = store;
         this.identifier = identifier;
+        this.initialStream = super.in;
     }
 
     /**
@@ -63,13 +66,11 @@ public class DbInputStream extends AutoCloseInputStream {
         if (endOfStream) {
             throw new EOFException();
         }
-        if (in == null) {
+        if (in == initialStream) {
             try {
                 in = store.openStream(this, identifier);
             } catch (DataStoreException e) {
-                IOException e2 = new IOException(e.getMessage());
-                e2.initCause(e);
-                throw e2;
+                throw new IOException(e.getMessage(), e);
             }
         }
     }
@@ -121,9 +122,9 @@ public class DbInputStream extends AutoCloseInputStream {
      * When the stream is consumed, the database objects held by the instance are closed.
      */
     public void close() throws IOException {
-        if (in != null) {
+        if (in != initialStream) {
             in.close();
-            in = null;
+            in = initialStream;
             // some additional database objects
             // may need to be closed
             if (rs != null) {

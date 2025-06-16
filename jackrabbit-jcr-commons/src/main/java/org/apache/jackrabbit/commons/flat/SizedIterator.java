@@ -23,5 +23,6 @@ package org.apache.jackrabbit.commons.flat;
  * @param <T> the type of elements of this iterator
  * @deprecated use {@link org.apache.jackrabbit.commons.iterator.SizedIterator}
  */
+@Deprecated
 public interface SizedIterator<T> extends org.apache.jackrabbit.commons.iterator.SizedIterator<T> {
 }

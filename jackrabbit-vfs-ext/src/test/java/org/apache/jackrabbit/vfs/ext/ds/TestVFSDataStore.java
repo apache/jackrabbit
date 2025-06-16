@@ -32,13 +32,12 @@ import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
-
-import junit.framework.Assert;
 
 /**
  * Test {@link CachingDataStore} with VFSBackend with a VFS file system (local file system) by default.
@@ -191,7 +190,11 @@ public class TestVFSDataStore extends TestCaseBase {
         File [] identities = configBuilder.getIdentities(fso);
         Assert.assertNotNull(identities);
         Assert.assertEquals(1, identities.length);
-        Assert.assertEquals("/home/tester/.ssh/id_rsa", FilenameUtils.separatorsToUnix(identities[0].getPath()));
+        String expectedPath = identities[0].getPath();
+        if (FilenameUtils.getPrefixLength(expectedPath) != 0) {
+            expectedPath = expectedPath.substring(FilenameUtils.getPrefixLength(expectedPath) - 1);
+        }
+        Assert.assertEquals("/home/tester/.ssh/id_rsa", FilenameUtils.separatorsToUnix(expectedPath));
         Assert.assertEquals(Integer.valueOf(30000), configBuilder.getTimeout(fso));
 
         dataStore.close();

@@ -57,6 +57,11 @@ import javax.naming.NamingException;
 public class JndiRepositoryFactory implements RepositoryFactory {
 
     /**
+     * Disabled by default, see JCR-5135
+     */
+    public static final boolean JNDI_ENABLED = Boolean.getBoolean("jackrabbit.jndi.enabled");
+
+    /**
      * The JNDI name parameter name.
      */
     public static final String JNDI_NAME =
@@ -64,29 +69,32 @@ public class JndiRepositoryFactory implements RepositoryFactory {
 
     public Repository getRepository(Map parameters)
             throws RepositoryException {
-        if (parameters == null) {
-            return null; // no default JNDI repository
-        } else {
-            Hashtable environment = new Hashtable(parameters);
-            if (environment.containsKey(JNDI_NAME)) {
-                String name = environment.remove(JNDI_NAME).toString();
-                return getRepository(name, environment);
-            } else if (environment.containsKey(JcrUtils.REPOSITORY_URI)) {
-                Object parameter = environment.remove(JcrUtils.REPOSITORY_URI);
-                try {
-                    URI uri = new URI(parameter.toString().trim());
-                    if ("jndi".equalsIgnoreCase(uri.getScheme())) {
-                        return getRepository(uri, environment);
-                    } else {
-                        return null; // not a jndi: URI
-                    }
-                } catch (URISyntaxException e) {
-                    return null; // not a valid URI
-                }
+        if (JNDI_ENABLED) {
+            if (parameters == null) {
+                return null; // no default JNDI repository
             } else {
-                return null; // unknown parameters
+                Hashtable environment = new Hashtable(parameters);
+                if (environment.containsKey(JNDI_NAME)) {
+                    String name = environment.remove(JNDI_NAME).toString();
+                    return getRepository(name, environment);
+                } else if (environment.containsKey(JcrUtils.REPOSITORY_URI)) {
+                    Object parameter = environment.remove(JcrUtils.REPOSITORY_URI);
+                    try {
+                        URI uri = new URI(parameter.toString().trim());
+                        if ("jndi".equalsIgnoreCase(uri.getScheme())) {
+                            return getRepository(uri, environment);
+                        } else {
+                            return null; // not a jndi: URI
+                        }
+                    } catch (URISyntaxException e) {
+                        return null; // not a valid URI
+                    }
+                } else {
+                    return null; // unknown parameters
+                }
             }
         }
+        return null;
     }
 
     private Repository getRepository(URI uri, Hashtable environment)

@@ -51,6 +51,7 @@ public class CryptedSimpleCredentials implements Credentials {
      * @throws UnsupportedEncodingException
      * @deprecated
      */
+    @Deprecated
     public CryptedSimpleCredentials(SimpleCredentials credentials)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
         userId = credentials.getUserID();

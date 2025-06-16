@@ -17,14 +17,15 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -39,7 +40,9 @@ public class CopyMoveToJsonTest extends AbstractJCRTest {
         try {
             Property p = s.getNode(testRoot).getNode("test.json").getNode(JcrConstants.JCR_CONTENT)
                     .getProperty(JcrConstants.JCR_DATA);
-            assertEquals(jsondata, IOUtils.toString(p.getBinary().getStream(), "UTF-8"));
+            try (InputStream in = p.getBinary().getStream()) {
+                assertEquals(jsondata, new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            }
         } finally {
             s.logout();
         }
@@ -53,7 +56,9 @@ public class CopyMoveToJsonTest extends AbstractJCRTest {
         try {
             Property p = s.getNode(testRoot).getNode("target.json").getNode(JcrConstants.JCR_CONTENT)
                     .getProperty(JcrConstants.JCR_DATA);
-            assertEquals(jsondata, IOUtils.toString(p.getBinary().getStream(), "UTF-8"));
+            try (InputStream in = p.getBinary().getStream()) {
+                assertEquals(jsondata, new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            }
         } finally {
             s.logout();
         }
@@ -67,7 +72,9 @@ public class CopyMoveToJsonTest extends AbstractJCRTest {
         try {
             Property p = s.getNode(testRoot).getNode("target.json").getNode(JcrConstants.JCR_CONTENT)
                     .getProperty(JcrConstants.JCR_DATA);
-            assertEquals(jsondata, IOUtils.toString(p.getBinary().getStream(), "UTF-8"));
+            try (InputStream in = p.getBinary().getStream()) {
+                assertEquals(jsondata, new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            }
         } finally {
             s.logout();
         }

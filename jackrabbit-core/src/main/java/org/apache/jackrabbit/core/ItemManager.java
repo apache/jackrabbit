@@ -467,6 +467,7 @@ public class ItemManager implements ItemStateListener {
      * @param path path to the item to be checked
      * @return true if the specified item exists
      */
+    @Deprecated
     public boolean itemExists(Path path) {
         try {
             sanityCheck();
@@ -544,6 +545,7 @@ public class ItemManager implements ItemStateListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
+    @Deprecated
     public ItemImpl getItem(Path path) throws PathNotFoundException,
             AccessDeniedException, RepositoryException {
         ItemId id = hierMgr.resolvePath(path);

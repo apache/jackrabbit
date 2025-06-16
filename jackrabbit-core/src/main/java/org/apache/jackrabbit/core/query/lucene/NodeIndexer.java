@@ -665,6 +665,7 @@ public class NodeIndexer {
      * @deprecated Use {@link #addStringValue(Document, String, String, boolean)
      *             addStringValue(Document, String, Object, boolean)} instead.
      */
+    @Deprecated
     protected void addStringValue(Document doc, String fieldName, String internalValue) {
         addStringValue(doc, fieldName, internalValue, true, true, DEFAULT_BOOST, true);
     }
@@ -702,6 +703,7 @@ public class NodeIndexer {
      * @param boost              the boost value for this string field.
      * @deprecated use {@link #addStringValue(Document, String, String, boolean, boolean, float, boolean)} instead.
      */
+    @Deprecated
     protected void addStringValue(Document doc, String fieldName,
                                   String internalValue, boolean tokenized,
                                   boolean includeInNodeIndex, float boost) {
@@ -791,6 +793,7 @@ public class NodeIndexer {
      * @return a lucene field.
      * @deprecated use {@link #createFulltextField(String, boolean, boolean, boolean)} instead.
      */
+    @Deprecated
     protected Field createFulltextField(String value) {
         return createFulltextField(value, supportHighlighting, supportHighlighting);
     }
@@ -804,6 +807,7 @@ public class NodeIndexer {
      * @return a lucene field.
      * @deprecated use {@link #createFulltextField(String, boolean, boolean, boolean)} instead.
      */
+    @Deprecated
     protected Field createFulltextField(String value,
                                         boolean store,
                                         boolean withOffsets) {
@@ -855,6 +859,7 @@ public class NodeIndexer {
      * @return a lucene field.
      * @deprecated use {@link #createFulltextField(InternalValue, Metadata, boolean)} instead.
      */
+    @Deprecated
     protected Fieldable createFulltextField(
             InternalValue value, Metadata metadata) {
         return createFulltextField(value, metadata, true);
