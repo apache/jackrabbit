@@ -24,6 +24,8 @@
     <relativePath>../jackrabbit-jcr-server-project</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-server-jakarta</artifactId>
+  <name>Jackrabbit JCR Server (Jakarta)</name>
+  <description>WebDAV server implementations for JCR, using supporting the Jakarta Servlet API 5.0, as transformed from the jackrabbit-jcr-server project.</description>
   <build>
     <plugins>
       <plugin>

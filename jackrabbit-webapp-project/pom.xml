@@ -24,6 +24,8 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-webapp-project</artifactId>
+  <name>Jackrabbit Web Application (parent)</name>
+  <description>Parent project for the Jackrabbit web application for both legacy Servlet API and Jakarta Servlet API 5.0.</description>
   <packaging>pom</packaging>
   <modules>
     <module>../jackrabbit-webapp</module>

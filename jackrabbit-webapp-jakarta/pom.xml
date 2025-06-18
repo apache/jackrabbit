@@ -24,9 +24,11 @@
     <relativePath>../jackrabbit-webapp-project</relativePath>
   </parent>
   <artifactId>jackrabbit-webapp-jakarta</artifactId>
+  <name>Jackrabbit Web Application (Jakarta)</name>
+  <description>Web application that hosts and serves a Jackrabbit content repository. This artifact supports the Jakarta Servlet API 5.0, as transformed from the jackrabbit-webapp project.</description>
   <packaging>war</packaging>
   <properties>
-    <tomcat.version>10.1.6</tomcat.version>
+    <tomcat.version>10.1.42</tomcat.version>
   </properties>
   <build>
     <plugins>
@@ -62,6 +64,7 @@
           </execution>
         </executions>
       </plugin>
+
     </plugins>
   </build>
   <profiles>
@@ -137,18 +140,23 @@
       <version>${tomcat.version}</version>
     </dependency>
     <dependency>
-     <groupId>org.apache.tika</groupId>
-     <artifactId>tika-parsers-standard-package</artifactId>
-     <exclusions>
-      <exclusion>
-       <groupId>org.bouncycastle</groupId>
-       <artifactId>bcmail-jdk15on</artifactId>
-      </exclusion>
-      <exclusion>
-       <groupId>org.bouncycastle</groupId>
-       <artifactId>bcprov-jdk15on</artifactId>
-      </exclusion>
-     </exclusions>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derbytools</artifactId>
+      <scope>test</scope>
     </dependency>
+<!--    <dependency>-->
+<!--     <groupId>org.apache.tika</groupId>-->
+<!--     <artifactId>tika-parsers-standard-package</artifactId>-->
+<!--     <exclusions>-->
+<!--      <exclusion>-->
+<!--       <groupId>org.bouncycastle</groupId>-->
+<!--       <artifactId>bcmail-jdk15on</artifactId>-->
+<!--      </exclusion>-->
+<!--      <exclusion>-->
+<!--       <groupId>org.bouncycastle</groupId>-->
+<!--       <artifactId>bcprov-jdk15on</artifactId>-->
+<!--      </exclusion>-->
+<!--     </exclusions>-->
+<!--    </dependency>-->
   </dependencies>
 </project>

@@ -25,7 +25,8 @@
   </parent>
   <artifactId>jackrabbit-webdav-project</artifactId>
   <packaging>pom</packaging>
-  <name>Jackrabbit JCR Servlet Project</name>
+  <name>Jackrabbit WebDAV Library (parent)</name>
+  <description>Parent project for the two API-versions of the WebDAV Library (legacy Servlet API and Jakarta Servlet API 5.0)</description>
   <modules>
     <module>../jackrabbit-webdav</module>
     <module>../jackrabbit-webdav-jakarta</module>

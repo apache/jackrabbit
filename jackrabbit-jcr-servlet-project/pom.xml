@@ -25,7 +25,8 @@
   </parent>
   <artifactId>jackrabbit-jcr-servlet-project</artifactId>
   <packaging>pom</packaging>
-  <name>Jackrabbit WebDAV Project</name>
+  <name>Jackrabbit JCR Servlets (parent)</name>
+  <description>Parent project for JCR servlets for both legacy Servlet API and Jakarta Servlet API 5.0.</description>
   <modules>
     <module>../jackrabbit-jcr-servlet</module>
     <module>../jackrabbit-jcr-servlet-jakarta</module>

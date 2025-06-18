@@ -24,6 +24,8 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-server-project</artifactId>
+  <name>Jackrabbit JCR Server (parent)</name>
+  <description>Parent project for JCR Server for both legacy Servlet API and Jakarta Servlet API 5.0.</description>
   <packaging>pom</packaging>
   <modules>
     <module>../jackrabbit-jcr-server</module>

@@ -24,6 +24,8 @@
     <relativePath>../jackrabbit-webdav-project</relativePath>
   </parent>
   <artifactId>jackrabbit-webdav-jakarta</artifactId>
+  <name>Jackrabbit WebDAV Library (Jakarta)</name>
+  <description>Generic WebDAV Library supporting the Jakarta Servlet API 5.0, transformed from the jackrabbit-webdav project.</description>
   <build>
     <plugins>
       <plugin>
