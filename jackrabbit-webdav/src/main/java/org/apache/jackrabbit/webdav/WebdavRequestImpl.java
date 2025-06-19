@@ -61,6 +61,7 @@ import org.apache.jackrabbit.webdav.header.LabelHeader;
 import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 import org.apache.jackrabbit.webdav.header.PollTimeoutHeader;
 import org.apache.jackrabbit.webdav.header.TimeoutHeader;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
@@ -619,19 +620,22 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
      * @see org.apache.jackrabbit.webdav.lock.ActiveLock#getToken()
      */
     public boolean matchesIfHeader(DavResource resource) {
-        // no ifheader, no resource or no write lock on resource
+        // no ifheader
         // >> preconditions ok so far
-        if (!ifHeader.hasValue() || resource == null || !resource.hasLock(Type.WRITE, Scope.EXCLUSIVE)) {
+        if (!ifHeader.hasValue() || resource == null) {
             return true;
         }
 
-        boolean isMatching = false;
-        String lockToken = resource.getLock(Type.WRITE, Scope.EXCLUSIVE).getToken();
-        if (lockToken != null) {
-            isMatching = matchesIfHeader(resource.getHref(), lockToken, getStrongETag(resource));
-        } // else: lockToken is null >> the if-header will not match.
-
-        return isMatching;
+        ActiveLock[] locks = resource.getLocks();
+        if (!resource.exists() || locks.length == 0) {
+            return matchesIfHeader(resource.getHref(), null, getStrongETag(resource));
+        }
+        for (ActiveLock lock : locks) {
+            if (matchesIfHeader(resource.getHref(), lock.getToken(), getStrongETag(resource))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -650,11 +654,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants, ContentCo
      * @return strong etag or empty string.
      */
     private String getStrongETag(DavResource resource) {
-        DavProperty<?> prop = resource.getProperty(DavPropertyName.GETETAG);
-        if (prop != null && prop.getValue() != null) {
-            String etag = prop.getValue().toString();
-            if (isStrongETag(etag)) {
-                return etag;
+        if (resource.exists()) {
+            DavProperty<?> prop = resource.getProperty(DavPropertyName.GETETAG);
+            if (prop != null && prop.getValue() != null) {
+                String etag = prop.getValue().toString();
+                if (isStrongETag(etag)) {
+                    return etag;
+                }
             }
         }
         // no strong etag available

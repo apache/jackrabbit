@@ -23,7 +23,7 @@ package org.apache.jackrabbit.spi.commons.conversion;
  * {@link javax.jcr.NamespaceException} is thrown if the prefix of the JCR name
  * string is syntactically valid but not bound to any namespace.
  * <p>
- * See the section 4.6 of the JCR 1.0 specification for details of the
+ * See the section 3.4 of the JCR 2.0 specification for details of the
  * JCR name syntax.
  */
 public class IllegalNameException extends NameException {

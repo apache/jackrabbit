@@ -20,10 +20,12 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-jcr-servlet-project</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.2-beta-SNAPSHOT</version>
     <relativePath>../jackrabbit-jcr-servlet-project</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-servlet-jakarta</artifactId>
+  <name>Jackrabbit JCR Servlets (Jakarta)</name>
+  <description>Servlets and related classes for easy use of JCR content repositories in web applications, supporting the Jakarta Servlet API 5.0, as transformed from the jackrabbit-jcr-servlet project.</description>
   <build>
     <plugins>
       <plugin>

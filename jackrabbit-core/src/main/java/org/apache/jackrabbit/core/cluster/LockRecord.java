@@ -166,6 +166,7 @@ public class LockRecord extends ClusterRecord {
      * @return user id
      * @deprecated User {@link #getOwner()} instead.
      */
+    @Deprecated
     public String getUserId() {
         return lockOwner;
     }

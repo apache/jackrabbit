@@ -20,12 +20,13 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.21.16-SNAPSHOT</version>
+    <version>2.23.2-beta-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-servlet-project</artifactId>
   <packaging>pom</packaging>
-  <name>Jackrabbit WebDAV Project</name>
+  <name>Jackrabbit JCR Servlets (parent)</name>
+  <description>Parent project for JCR servlets for both legacy Servlet API and Jakarta Servlet API 5.0.</description>
   <modules>
     <module>../jackrabbit-jcr-servlet</module>
     <module>../jackrabbit-jcr-servlet-jakarta</module>
@@ -39,12 +40,6 @@
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-jcr-rmi</artifactId>
-      <version>${project.version}</version>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>

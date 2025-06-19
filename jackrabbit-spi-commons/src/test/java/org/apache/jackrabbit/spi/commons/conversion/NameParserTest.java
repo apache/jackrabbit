@@ -110,6 +110,9 @@ public class NameParserTest extends TestCase {
         valid.add(new String[] {"abc { }", "", "abc { }"});
         valid.add(new String[] {"{ ab }", "", "{ ab }"});
         valid.add(new String[] {"{ }abc", "", "{ }abc"});
+        // see JCR-4917
+        valid.add(new String[] {"a\u200ab", "", "a\u200ab"});
+        valid.add(new String[] {"\u200ab\u200a", "", "\u200ab\u200a"});
         // unknown uri -> but valid non-prefixed jcr-name
         valid.add(new String[] {"{test}abc", "", "{test}abc"});
         valid.add(new String[] {"{ab}", "", "{ab}"});
@@ -238,12 +241,24 @@ public class NameParserTest extends TestCase {
         }
     }
 
-    public void testMessage() {
+    public void testMessageTab() {
         try {
             NameParser.checkFormat("horizontal\ttab");
             fail("should fail with IllegalNameException");
         } catch (IllegalNameException ex) {
-            assertTrue("message should contain '\\u0009'", ex.getMessage().indexOf("'\\u0009'") >= 0);
+            assertTrue("message should contain '\\t', was: >>>" + ex.getMessage() + "<<<", ex.getMessage().indexOf("\\t") >= 0);
+            assertTrue("message should contain 'horizontal', was: >>>" + ex.getMessage() + "<<<",
+                    ex.getMessage().indexOf("horizontal") >= 0);
+        }
+    }
+
+    public void testMessageWithNonAscii() {
+        try {
+            NameParser.checkFormat("\uD83D\uDCA9[]");
+            fail("should fail with IllegalNameException");
+        } catch (IllegalNameException ex) {
+            assertTrue("message should contain '\\ud83d\\udca9', was: >>>" + ex.getMessage() + "<<<",
+                    ex.getMessage().indexOf("\\ud83d\\udca9") >= 0);
         }
     }
 

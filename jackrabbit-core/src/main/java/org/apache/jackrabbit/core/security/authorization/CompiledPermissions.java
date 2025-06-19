@@ -62,6 +62,7 @@ public interface CompiledPermissions {
      * @throws RepositoryException if an error occurs
      * @deprecated Use {@link #getPrivilegeSet(Path)} instead.
      */
+    @Deprecated
     int getPrivileges(Path absPath) throws RepositoryException;
 
     /**

@@ -471,7 +471,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
     }
 
-    //-------------------------------------------------< AbstractLinkedList >---
+    //-------------------------------------------------< CopyOfAbstractLinkedList >---
 
     //--------------------------------------------------------------------------
     /**

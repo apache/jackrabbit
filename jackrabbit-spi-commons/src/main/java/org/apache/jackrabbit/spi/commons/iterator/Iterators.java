@@ -121,6 +121,7 @@ public final class Iterators {
      * @return
      * @deprecated use {@link #filterIterator(Iterator, java.util.function.Predicate)} instead
      */
+    @Deprecated
     public static <T> Iterator<T> filterIterator(Iterator<? extends T> iterator,
             final Predicate<? super T> predicate) {
 

@@ -16,12 +16,16 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import static org.junit.Assert.assertNotEquals;
+
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -364,6 +368,56 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Tests that, after locally re-assigning a prefix, a previously created
+     * node continues to work with respect to sameness and consistent naming
+     * behavior.
+     */
+    public void testPrefixRemapping() throws NamespaceException, RepositoryException {
+        Random r = new Random();
+        int i1 = r.nextInt();
+        int i2 = r.nextInt();
+        String prefix = getUnusedPrefix();
+        String uri1 = "foobar:1-" + i1;
+        String uri2 = "foobar:2-" + i2;
+        String testLocalName = "test";
+        String expandedTestName ="{" + uri1  + "}" + testLocalName;
+
+        try {
+            superuser.getWorkspace().getNamespaceRegistry().registerNamespace(prefix, uri1);
+
+            String originalName = prefix + ":" + testLocalName;
+            Node testNode = superuser.getRootNode().addNode(originalName);
+            superuser.save();
+
+            // check that expanded name works
+            Node n2 = superuser.getRootNode().getNode(expandedTestName);
+            assertTrue(testNode.isSame(n2));
+
+            // remap prefix1 to uri2
+            superuser.setNamespacePrefix(prefix, uri2);
+
+            // check that expanded name still works
+            Node n3 = superuser.getRootNode().getNode(expandedTestName);
+            assertTrue(testNode.isSame(n3));
+
+            String remappedName = n3.getName();
+            assertNotEquals(originalName, remappedName);
+
+            int colon = remappedName.indexOf(':');
+            assertTrue("remapped name must contain colon:" + remappedName, colon > 0);
+            String remappedPrefix = remappedName.substring(0, colon);
+            assertNotEquals("prefix after mapping must be different", prefix, remappedPrefix);
+
+            assertEquals("remapped prefix need to map to original URI " + uri1, uri1, superuser.getNamespaceURI(remappedPrefix));
+        } finally {
+            try {
+                superuser.getWorkspace().getNamespaceRegistry().unregisterNamespace(prefix);
+            } catch (RepositoryException ignored) {
+                // best effort cleanup
+            }
+        }
+    }
 
     /**
      * Returns a namespace prefix that is not in use.

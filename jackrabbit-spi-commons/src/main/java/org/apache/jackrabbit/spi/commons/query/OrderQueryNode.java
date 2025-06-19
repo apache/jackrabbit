@@ -135,6 +135,7 @@ public class OrderQueryNode extends QueryNode {
      *                  ordered ascending; descending if <code>false</code>.
      * @deprecated use {@link #addOrderSpec(Path , boolean)} instead.
      */
+    @Deprecated
     public void addOrderSpec(Name property, boolean ascending) {
         addOrderSpec(createPath(property), ascending);
     }
@@ -232,6 +233,7 @@ public class OrderQueryNode extends QueryNode {
          *                  ascending, otherwise descending.
          * @deprecated use {@link OrderSpec#OrderSpec(Path, boolean)} instead.
          */
+        @Deprecated
         public OrderSpec(Name property, boolean ascending) {
             this(createPath(property), ascending);
         }
@@ -254,6 +256,7 @@ public class OrderQueryNode extends QueryNode {
          * @return the name of the property.
          * @deprecated use {@link #getPropertyPath()} instead.
          */
+        @Deprecated
         public Name getProperty() {
             return property.getName();
         }

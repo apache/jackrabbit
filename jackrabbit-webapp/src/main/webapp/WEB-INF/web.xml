@@ -363,10 +363,10 @@
     <!-- ====================================================================== -->
     <!-- R M I   B I N D I N G   S E R V L E T                                  -->
     <!-- ====================================================================== -->
-    <servlet>
-      <servlet-name>RMI</servlet-name>
-      <servlet-class>org.apache.jackrabbit.servlet.remote.RemoteBindingServlet</servlet-class>
-    </servlet>
+<!--    <servlet>-->
+<!--      <servlet-name>RMI</servlet-name>-->
+<!--      <servlet-class>org.apache.jackrabbit.servlet.remote.RemoteBindingServlet</servlet-class>-->
+<!--    </servlet>-->
 
     <!-- ====================================================================== -->
     <!-- S E R V L E T   M A P P I N G                                          -->
@@ -383,10 +383,10 @@
         <servlet-name>JCRWebdavServer</servlet-name>
         <url-pattern>/server/*</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>RMI</servlet-name>
-        <url-pattern>/rmi</url-pattern>
-    </servlet-mapping>
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>RMI</servlet-name>-->
+<!--        <url-pattern>/rmi</url-pattern>-->
+<!--    </servlet-mapping>-->
 
     <!-- ====================================================================== -->
     <!-- W E L C O M E   F I L E S                                              -->

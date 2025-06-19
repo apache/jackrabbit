@@ -19,7 +19,7 @@ You can build Jackrabbit like this:
 
     mvn clean install
 
-You need Maven 3 (or higher) with Java 8 (or higher) for the
+You need Maven 3 (or higher) with Java 11 (or higher) for the
 build. For more instructions, please see the documentation at:
 
    http://jackrabbit.apache.org/building-jackrabbit.html
@@ -56,21 +56,9 @@ Jackrabbit mailing lists as well as links to list archives, please see:
 Latest development
 ==================
 
-The latest Jackrabbit source code is available via Subversion at
+The latest Jackrabbit source code is available at
 
-   https://svn.apache.org/repos/asf/jackrabbit/trunk/
-
-or with ViewVC at
-
-   https://svn.apache.org/viewvc/jackrabbit/trunk/
-
-To checkout the main Jackrabbit source tree, run
-
-   svn checkout https://svn.apache.org/repos/asf/jackrabbit/trunk jackrabbit
-
-If you use Git, you can clone Jackrabbit with
-
-   git clone git://git.apache.org/jackrabbit.git
+   https://github.com/apache/jackrabbit
 
 Credits
 =======

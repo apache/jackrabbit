@@ -22,7 +22,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.collections4.list.AbstractLinkedList;
+import org.apache.commons.collections4.list.AbstractLinkedListJava21;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
@@ -31,7 +31,7 @@ import org.apache.jackrabbit.spi.Path;
  * LinkNode which links the entries of the list.
  */
 @SuppressWarnings("rawtypes")
-class LinkedEntries extends AbstractLinkedList {
+class LinkedEntries extends AbstractLinkedListJava21 {
 
     private Node<?> header;
     private volatile int modCount;
@@ -166,7 +166,7 @@ class LinkedEntries extends AbstractLinkedList {
      *
      * @param value a child node entry.
      * @return a wrapping {@link LinkedEntries.LinkNode}.
-     * @see AbstractLinkedList#createNode(Object)
+     * @see AbstractLinkedListJava21#createNode(Object)
      */
     @Override
     protected Node createNode(Object value) {
@@ -175,7 +175,7 @@ class LinkedEntries extends AbstractLinkedList {
 
     /**
      * @return a new <code>LinkNode</code>.
-     * @see AbstractLinkedList#createHeaderNode()
+     * @see AbstractLinkedListJava21#createHeaderNode()
      */
     @Override
     protected Node createHeaderNode() {
@@ -192,7 +192,7 @@ class LinkedEntries extends AbstractLinkedList {
 
     //----------------------------------------------------------------------
     /**
-     * Extends the <code>AbstractLinkedList.Node</code>.
+     * Extends the <code>CopyOfAbstractLinkedList.Node</code>.
      */
     protected final class LinkNode extends Node {
 

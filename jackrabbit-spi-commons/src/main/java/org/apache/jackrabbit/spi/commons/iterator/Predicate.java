@@ -22,6 +22,7 @@ package org.apache.jackrabbit.spi.commons.iterator;
  * @param <T> type of values this predicate is defined on
  * @deprecated use {@link java.util.function.Predicate} instead
  */
+@Deprecated
 public interface Predicate<T> {
 
     /**

@@ -16,15 +16,20 @@
  */
 package org.apache.jackrabbit.commons;
 
+import junit.framework.TestCase;
+
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 
+import org.mockito.Mockito;
+import org.mockito.internal.verification.Times;
+
 /**
  * Test cases for the {@link AbstractRepositoryTest} class.
  */
-public class AbstractRepositoryTest extends MockCase {
+public class AbstractRepositoryTest extends TestCase {
 
     /**
      * Tests the {@link AbstractRepository#login()} method.
@@ -32,13 +37,10 @@ public class AbstractRepositoryTest extends MockCase {
      * @throws RepositoryException if an error occurs
      */
     public void testLogin() throws RepositoryException {
-        Repository repository = (Repository) record(AbstractRepository.class);
+        Repository repository = Mockito.spy(AbstractRepository.class);
         repository.login(null, null);
-
-        replay();
         repository.login();
-
-        verify();
+        Mockito.verify(repository, new Times(2)).login(null, null);
     }
 
     /**
@@ -48,14 +50,10 @@ public class AbstractRepositoryTest extends MockCase {
      */
     public void testLoginWithCredentials() throws RepositoryException {
         Credentials credentials = new SimpleCredentials("", "".toCharArray());
-
-        Repository repository = (Repository) record(AbstractRepository.class);
+        Repository repository = Mockito.spy(AbstractRepository.class);
         repository.login(credentials, null);
-
-        replay();
         repository.login(credentials);
-
-        verify();
+        Mockito.verify(repository, new Times(2)).login(credentials, null);
     }
 
     /**
@@ -65,13 +63,10 @@ public class AbstractRepositoryTest extends MockCase {
      * @throws RepositoryException if an error occurs
      */
     public void testLoginWithNullCredentials() throws RepositoryException {
-        Repository repository = (Repository) record(AbstractRepository.class);
+        Repository repository = Mockito.spy(AbstractRepository.class);
         repository.login(null, null);
-
-        replay();
         repository.login((Credentials) null);
-
-        verify();
+        Mockito.verify(repository, new Times(2)).login(null, null);
     }
 
     /**
@@ -80,13 +75,10 @@ public class AbstractRepositoryTest extends MockCase {
      * @throws RepositoryException if an error occurs
      */
     public void testLoginWithWorkspace() throws RepositoryException {
-        Repository repository = (Repository) record(AbstractRepository.class);
+        Repository repository = Mockito.spy(AbstractRepository.class);
         repository.login(null, "workspace");
-
-        replay();
         repository.login("workspace");
-
-        verify();
+        Mockito.verify(repository, new Times(2)).login(null, "workspace");
     }
 
     /**
@@ -96,12 +88,9 @@ public class AbstractRepositoryTest extends MockCase {
      * @throws RepositoryException if an error occurs
      */
     public void testLoginWithNullWorkspace() throws RepositoryException {
-        Repository repository = (Repository) record(AbstractRepository.class);
+        Repository repository = Mockito.spy(AbstractRepository.class);
         repository.login(null, null);
-
-        replay();
         repository.login((String) null);
-
-        verify();
+        Mockito.verify(repository, new Times(2)).login(null, null);
     }
 }

@@ -651,6 +651,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      *
      * @return the database type
      */
+    @Deprecated
     public String getSchema() {
         return databaseType;
     }
@@ -706,6 +707,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      *
      * @param databaseType the database type
      */
+    @Deprecated
     public void setSchema(String databaseType) {
         this.databaseType = databaseType;
     }

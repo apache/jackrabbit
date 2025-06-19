@@ -54,12 +54,6 @@
 		<command name="collectProperties"
 			className="org.apache.jackrabbit.standalone.cli.collect.CollectProperties"/>
 
-		<command name="connectToRmiServer"
-			className="org.apache.jackrabbit.standalone.cli.ext.ConnectToRmiServer"/>
-
-		<command name="connectToJndiServer"
-			className="org.apache.jackrabbit.standalone.cli.ext.ConnectToJNDIServer"/>
-			
 		<command name="copy"
 			className="org.apache.jackrabbit.standalone.cli.core.Copy"/>
 

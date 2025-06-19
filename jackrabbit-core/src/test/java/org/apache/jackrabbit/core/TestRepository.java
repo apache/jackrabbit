@@ -17,14 +17,14 @@
 package org.apache.jackrabbit.core;
 
 import java.io.InputStream;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.beanutils.BeanMap;
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.config.ConfigurationException;
@@ -117,11 +117,16 @@ public class TestRepository {
     private static Repository getIntegratedInstance() throws Exception {
         Class test =
             Class.forName("org.apache.jackrabbit.test.AbstractJCRTest");
-        Map helper = new BeanMap(test.getField("helper").get(null));
+        Field helperField = test.getField("helper");
+        helperField.setAccessible(true);
+        Object helper = helperField.get(null);
+        Method getRepository = helper.getClass().getMethod("getRepository");
+        Method getSuperuserCredentials = helper.getClass().getMethod("getSuperuserCredentials");
         final Repository repository =
-            (Repository) helper.get("repository");
+            (Repository) getRepository.invoke(helper);
         final Credentials superuser =
-            (Credentials) helper.get("superuserCredentials");
+            (Credentials) getSuperuserCredentials.invoke(helper);
+
         return new ProxyRepository(new RepositoryFactory() {
 
             public Repository getRepository() throws RepositoryException {

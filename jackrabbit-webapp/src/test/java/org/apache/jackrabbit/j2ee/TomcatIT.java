@@ -20,21 +20,21 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.io.FileUtils;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.google.common.io.Files;
+import org.htmlunit.WebClient;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
 
 public class TomcatIT extends TestCase {
 
@@ -75,8 +75,11 @@ public class TomcatIT extends TestCase {
         tomcat.setBaseDir(baseDir.getPath());
         tomcat.setHostname(url.getHost());
         tomcat.setPort(url.getPort());
+        tomcat.getConnector();
 
-        tomcat.addWebapp("", war.getAbsolutePath());
+        StandardJarScanner jarScanner = new StandardJarScanner();
+        jarScanner.setScanManifest(false);
+        tomcat.addWebapp("", war.getAbsolutePath()).setJarScanner(jarScanner);
 
         tomcat.start();
 
@@ -112,10 +115,10 @@ public class TomcatIT extends TestCase {
     }
 
     private void rewriteWebXml(File war) throws IOException {
-        File webXml = new File(war, new File("WEB-INF","web.xml").getPath());
+        File webXml = new File(war, new File("WEB-INF", "web.xml").getPath());
         assertTrue(webXml.exists());
-        List<String> lines = Files.readLines(webXml, StandardCharsets.UTF_8);
-        BufferedWriter writer = Files.newWriter(webXml, StandardCharsets.UTF_8);
+        List<String> lines = Files.readAllLines(webXml.toPath());
+        BufferedWriter writer = Files.newBufferedWriter(webXml.toPath());
         try {
             for (String line : lines) {
                 line = line.replace("<param-value>jackrabbit/bootstrap.properties</param-value>",

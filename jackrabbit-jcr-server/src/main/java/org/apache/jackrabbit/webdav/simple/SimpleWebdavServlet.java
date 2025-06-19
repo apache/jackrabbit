@@ -214,7 +214,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
             }
         }
 
-        return !resource.exists() || request.matchesIfHeader(resource);
+        return request.matchesIfHeader(resource);
     }
 
     /**

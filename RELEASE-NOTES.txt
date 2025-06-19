@@ -1,45 +1,55 @@
-Release Notes -- Apache Jackrabbit -- Version 2.21.15
+Release Notes -- Apache Jackrabbit -- Version 2.23.1-beta
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.21.15, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.23.1-beta, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.21.15 is an unstable release cut directly from
+Apache Jackrabbit 2.23.1-beta is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.21.15
------------------------------
+Changes in Jackrabbit 2.23.1-beta
+----------------------------------
+
+Bug
+
+    [JCR-5107] - DbInputStream makes incorrect assumptions about commons-io internals
+
+Improvement
+
+    [JCR-5093] - jcr2spi: get rid of Commons IO dependency
+    [JCR-5106] - core tests: improve diagnostics in DBDataStoreTest
+
+Test
+
+    [JCR-5098] - jackrabbit-jcr-server: Java 24 javadoc errors
 
 Task
 
-    [JCR-4878] - Javadoc fixes
-    [JCR-4879] - update checkstyle-plugin dependency to 3.2.0
-    [JCR-4880] - Update javadoc-plugin dependency to 3.4.1
-    [JCR-4881] - Update maven-jar-plugin to 3.3.0
-    [JCR-4882] - Update animal-sniffer plugin dependency to 1.22
-    [JCR-4883] - Update pmd-plugin dependency to 3.19.0
-    [JCR-4884] - Update spotbugs-maven-plugin to 4.7.3.0
-    [JCR-4885] - update Apache parent pom to version 28
-    [JCR-4886] - Update Jackrabbit trunk to Oak 1.46.0
-    [JCR-4888] - update Apache parent pom to version 29
-    [JCR-4889] - Update javacc-maven-plugin to version 3.0.1
-    [JCR-4891] - set baseline comparisonVersion to latest stable (2.20.8)
-    [JCR-4893] - Update mockito dependency to 4.11.0
-    [JCR-4894] - webapp: update htmlunit dependency to 2.69.0
-    [JCR-4895] - update aws java sdk version to 1.12.383
-    [JCR-4896] - Update easymock dependency to 5.1.0
-    [JCR-4897] - update kotlin-stdlib dependency to 1.8.0
-    [JCR-4898] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.14
-    [JCR-4899] - Update tomcat dependency to 8.5.85
-    [JCR-4900] - Update oak-jackrabbit-api.version.implemented in trunk and 2.20 to Oak 1.48.0
-    [JCR-4901] - webapp: update htmlunit dependency to 2.70.0
-    [JCR-4903] - update checkstyle-plugin dependency to 3.2.1
-    [JCR-4905] - Update pmd-plugin dependency to 3.20.0
+    [JCR-5088] - remove warnings about missing @deprecated annotations
+    [JCR-5089] - avoid use of deprecated junit.framework.Assert
+    [JCR-5094] - webapp: bump htmlunit to 4.4.0
+    [JCR-5096] - JcrConstants: refer to the constants in javax.jcr.Property and javax.jcr.nodetype.NodeType
+    [JCR-5097] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.68.0
+    [JCR-5099] - Update Logback version to 1.2.13
+    [JCR-5100] - Update commons-cli dependency to 1.9.0
+    [JCR-5101] - Update easymock dependency to 5.4.0
+    [JCR-5102] - Update mockito dependency to 5.14.1
+    [JCR-5103] - Update oak-jackrabbit-api.version.used to Oak 1.22.21
+    [JCR-5104] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.70.0
+    [JCR-5105] - Update commons-io dependency to 2.17.0
+    [JCR-5108] - remove commons-collections4 version-specific dependency from jackrabbit-standalone
+    [JCR-5109] - Update tomcat dependency to 9.0.95
+    [JCR-5110] - update aws java sdk version to 1.12.773
+    [JCR-5111] - update kotlin-stdlib dependency to 1.9.25
+    [JCR-5112] - update Jetty to 9.4.56.v20240826
+    [JCR-5113] - Update pmd-plugin dependency to 3.25.0
+    [JCR-5114] - update checkstyle-plugin dependency to 3.5.0
+    [JCR-5115] - Update spotbugs-maven-plugin to 4.8.6.4
 
 
 For more detailed information about all the changes in this and other
@@ -87,6 +97,4 @@ Trademarks
 
 Apache Jackrabbit, Jackrabbit, Apache, the Apache feather logo, and the Apache
 Jackrabbit project logo are trademarks of The Apache Software Foundation.
-
-
 

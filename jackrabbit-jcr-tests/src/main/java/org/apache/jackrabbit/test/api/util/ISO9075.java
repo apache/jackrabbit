@@ -21,6 +21,8 @@ package org.apache.jackrabbit.test.api.util;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.jackrabbit.test.XMLChar;
+
 /**
  * Implements the encode and decode routines as specified for XML name to SQL
  * identifier conversion in ISO 9075-14:2003.<br>

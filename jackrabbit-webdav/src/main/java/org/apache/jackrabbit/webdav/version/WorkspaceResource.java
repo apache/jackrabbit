@@ -56,6 +56,7 @@ public interface WorkspaceResource extends DeltaVResource {
     /**
      * @deprecated Use {@link #CURRENT_ACTIVITY_SET} instead.
      */
+    @Deprecated
     public static final DavPropertyName CUURENT_ACTIVITY_SET = DavPropertyName.create("current-activity-set", DeltaVConstants.NAMESPACE);
 
     /**

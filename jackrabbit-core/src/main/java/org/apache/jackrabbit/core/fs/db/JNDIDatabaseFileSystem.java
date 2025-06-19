@@ -35,6 +35,7 @@ import javax.sql.DataSource;
  * for the entire lifetime of the file system instance. The configured data
  * source should be prepared for this.
  */
+@Deprecated
 public class JNDIDatabaseFileSystem extends DatabaseFileSystem {
 
     /**

@@ -78,6 +78,7 @@ import javax.jcr.lock.LockException;
  *
  * @deprecated Use org.apache.jackrabbit.util.Locked instead.
  */
+@Deprecated
 public abstract class Locked {
 
     /**

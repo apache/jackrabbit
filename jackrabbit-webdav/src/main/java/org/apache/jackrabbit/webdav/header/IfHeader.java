@@ -103,6 +103,8 @@ public class IfHeader implements Header {
      */
     private List<String> allNotTokens = new ArrayList<String>();
 
+    private String uriPrefix;
+
     /**
      * Create a Untagged <code>IfHeader</code> if the given lock tokens.
      *
@@ -127,6 +129,9 @@ public class IfHeader implements Header {
      * @param req The request object
      */
     public IfHeader(HttpServletRequest req) {
+        String host = req.getHeader("Host");
+        String scheme = req.getScheme();
+        uriPrefix = scheme + "://" + host + req.getContextPath();
         headerValue = req.getHeader(DavConstants.HEADER_IF);
         ifHeader = parse();
     }
@@ -657,7 +662,7 @@ public class IfHeader implements Header {
          */
         @Override
         public boolean match(String token, String etag) {
-            return super.match(token);
+            return token == null || super.match(token);
         }
 
         /**
@@ -858,7 +863,7 @@ public class IfHeader implements Header {
          Tagged = { "&lt;" Word "&gt;" "(" IfList ")" } .
      * </pre>
      */
-    private static class IfHeaderMap extends HashMap<String, IfHeaderList> implements IfHeaderInterface {
+    private class IfHeaderMap extends HashMap<String, IfHeaderList> implements IfHeaderInterface {
 
         /**
          * Matches the token and etag for the given resource. If the resource is
@@ -876,10 +881,22 @@ public class IfHeader implements Header {
         public boolean matches(String resource, String token, String etag) {
             log.debug("matches: Trying to match resource="+resource+", token="+token+","+etag);
 
-            IfHeaderList list = get(resource);
+            String uri;
+            String path;
+            if (resource.startsWith("/")) {
+                path = resource;
+                uri = IfHeader.this.uriPrefix + resource;
+            } else {
+                path = resource.substring(IfHeader.this.uriPrefix.length());
+                uri = resource;
+            }
+            IfHeaderList list = get(path);
             if (list == null) {
-                log.debug("matches: No entry for tag "+resource+", assuming match");
-                return true;
+                list = get(uri);
+            }
+            if (list == null) {
+                log.debug("matches: No entry for tag "+resource+", assuming mismatch");
+                return false;
             } else {
                 return list.matches(resource, token, etag);
             }

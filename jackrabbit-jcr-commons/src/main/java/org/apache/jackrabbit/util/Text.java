@@ -24,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * This Class provides some text related utilities
@@ -40,6 +41,8 @@ public class Text {
      * used for the md5
      */
     public static final char[] hexTable = "0123456789abcdef".toCharArray();
+
+    private static final Set<Character> INVALID_JCR_LOCAL_NAME_CHARS = Set.of( '/', ':', '[', ']', '*', '|');
 
     /**
      * Calculate an MD5 hash of the string given.
@@ -466,6 +469,10 @@ public class Text {
      * char ::= nonspace | ' '
      * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', '|' or any whitespace character *)
      * </pre>
+     * <p>
+     * Note that just using this method does not necessarily return a string which is a 
+     * <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.2%20Local%20Names">valid local name</a>.
+     * You still have to take care of invalid <a href="https://www.w3.org/TR/xml/#NT-Char">XML characters</a>.
      *
      * @param name the name to escape
      * @return the escaped name
@@ -565,6 +572,31 @@ public class Text {
         }
         buffer.append(name);
         return buffer.toString();
+    }
+
+    /**
+     * Checks if the given name is a valid JCR local name.
+     * <p>
+     * Note that the return value of {@link #escapeIllegalJcrChars(String)} is not necessarily a valid local name.
+     * You still have to take care of invalid <a href="https://www.w3.org/TR/xml/#NT-Char">XML characters</a>.
+     * 
+     * @param localName the string value to check
+     * @return <code>true</code> if the name is valid, <code>false</code> otherwise.
+     * @see <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.2%20Local%20Names">JCR 2.0 Spec, §3.2.2 Local Names</a>
+     * @see #escapeIllegalJcrChars(String)
+     * @since 2.6.0 (Apache Jackrabbit 2.24.0)
+     */
+    public static boolean isValidJcrLocalName(String localName) {
+        if (localName == null || localName.isEmpty()) {
+            return false;
+        }
+        // self or parent are invalid
+        if (localName.equals(".") || localName.equals("..")) {
+            return false;
+        }
+        return localName.chars().noneMatch(c -> 
+            INVALID_JCR_LOCAL_NAME_CHARS.contains((char) c) || !XMLChar.isValid(c)
+        );
     }
 
     /**
