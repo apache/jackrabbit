@@ -21,14 +21,17 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.GuestCredentials;
 import javax.jcr.Item;
+import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
+import java.util.UUID;
+
 import static org.mockito.Mockito.mock;
 
 // Borrowed from org.apache.jackrabbit.oak.jcr.session.JackrabbitSessionTest.
-// PLease keep in sync.
+// Please keep in sync.
 
 public class JackrabbitSessionTest extends AbstractJCRTest {
 
@@ -60,7 +63,7 @@ public class JackrabbitSessionTest extends AbstractJCRTest {
     }
 
     // @Ignore("Jackrabbit does not check cross-Session request")
-    public void ignoreTestGetParentOrNullSessionMismatch() throws Exception {
+    public void ignoreGetParentOrNullSessionMismatch() throws Exception {
         JackrabbitSession guest = (JackrabbitSession) getHelper().getRepository().login(new GuestCredentials());
         try {
             guest.getParentOrNull(s.getNode(testRoot));
@@ -72,8 +75,8 @@ public class JackrabbitSessionTest extends AbstractJCRTest {
         }
     }
 
-    // @Ignore("Jackrabbit does not verify that the Item was obtained from Jackrabbit")
-    public void ignoreTestGetParentOrNullImplMismatch() {
+    // @Ignore("Jackrabbit does not check cross-Session request")
+    public void ignoreGetParentOrNullImplMismatch() {
         try {
             Item item = mock(Item.class);
             s.getParentOrNull(item);
@@ -88,19 +91,47 @@ public class JackrabbitSessionTest extends AbstractJCRTest {
         assertEquals("{}testroot", s.getExpandedName(testRootNode));
         Node n = testRootNode.addNode("test:bar");
         assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
-        // now remap namespace uri
+        // now remap namespace uri - should not affect expanded name
+        assertEquals("prefix 'test' has unexpected mapping",
+                "http://www.apache.org/jackrabbit/test", s.getNamespaceURI("test"));
+        s.setNamespacePrefix("test", "urn:foo");
         assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
         // use special namespace uri
         n = testRootNode.addNode("rep:bar");
         assertEquals("{internal}bar", s.getExpandedName(n));
     }
 
-    public void testGetExpandedPath() throws RepositoryException {
+    public void testGetExpandedNameBrokenNamespace() throws RepositoryException {
+        String uuid = UUID.randomUUID().toString();
+        String randomNamespacePrefix = "prefix-" + uuid;
+        // below is not a valid namespace a.k.a. namespace URI
+        String randomNamespaceName = "name-" + uuid;
+
+        // register broken namespace prefix/name mapping
+        s.getWorkspace().getNamespaceRegistry().registerNamespace(randomNamespacePrefix, randomNamespaceName);
+
+        try {
+            Node n = testRootNode.addNode(randomNamespacePrefix + ":qux");
+
+            // there is no expanded name, thus we expect an exception here
+            String result = s.getExpandedName(n);
+            fail("there is no expanded name in this case, so we expect the call to fail, however we get: " + result);
+        } catch (NamespaceException ex) {
+            // expected
+        }
+        //finally {
+        // not supported in Jackrabbit
+        // s.getWorkspace().getNamespaceRegistry().unregisterNamespace(randomNamespacePrefix);
+        // }
+    }
+
+    // @Ignore("not implemented yet")
+    public void ignoreGetExpandedPath() throws RepositoryException {
         assertEquals("/{}testroot", s.getExpandedPath(testRootNode));
         Node n = testRootNode.addNode("test:bar").addNode("rep:bar");
         assertEquals("/{}testroot/{http://www.apache.org/jackrabbit/test}bar/{internal}bar", s.getExpandedPath(n));
-        // now remap namespace uri
+        // now remap namespace uri - should not affect expanded name
         s.setNamespacePrefix("test", "urn:foo");
-        assertEquals("/{}testroot/{urn:foo}bar/{internal}bar", s.getExpandedPath(n));
+        assertEquals("/{}testroot/{http://www.apache.org/jackrabbit/test}bar/{internal}bar", s.getExpandedPath(n));
     }
 }

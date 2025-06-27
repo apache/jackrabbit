@@ -738,6 +738,12 @@ public class SessionImpl extends AbstractSession
         }
     }
 
+    private static boolean isValidNamespaceName(String namespace) {
+        // the empty namespace and "internal" are valid as well, otherwise it always contains a colon (as it is a URI)
+        // compare with RFC 3986, Section 3 (https://datatracker.ietf.org/doc/html/rfc3986#section-3)
+        return namespace.isEmpty() || namespace.equals(Name.NS_REP_URI) || namespace.contains(":");
+    }
+
     @Override
     public String getExpandedName(Item item) throws RepositoryException {
         String name = item.getName();
@@ -745,6 +751,10 @@ public class SessionImpl extends AbstractSession
         if (pos > 0) {
             String prefix = name.substring(0, pos);
             String uri = getNamespaceURI(prefix);
+            if (!isValidNamespaceName(uri)) {
+                throw new NamespaceException("Cannot determine expanded name for '" + name +
+                    "' as registered namespace name '" + uri + "' is invalid");
+            }
             return "{" + uri + "}" + name.substring(pos + 1);
         }
         else {
