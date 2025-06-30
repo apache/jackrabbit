@@ -55,7 +55,7 @@ jobs:
           fi
       - name: Build
         # executing ITs requires installing artifacts to the local repository
-        run: mvn -B ${{ env.MVN_GOAL }} ${{ env.MVN_ADDITIONAL_OPTS }} -Pcoverage,integrationTesting,javadoc
+        run: mvn -B ${{ env.MVN_GOAL }} ${{ env.MVN_ADDITIONAL_OPTS }} -Pcoverage,integrationTesting,javadoc -Dorg.ops4j.pax.url.mvn.repositories="https://repo1.maven.org/maven2@id=central"
       - name: Upload build result
         uses: actions/upload-artifact@v4
         with:
