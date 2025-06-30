@@ -765,9 +765,9 @@ public class SessionImpl extends AbstractSession
     @Override
     public String getExpandedPath(Item item) throws RepositoryException {
         StringBuilder result = new StringBuilder();
-        String name = item.getName();
+        String name;
         do {
-            result.insert(0, "/" + name);
+            result.insert(0, "/" + getExpandedName(item));
             item = item.getParent();
             name = item.getName();
             // walk up to the root
