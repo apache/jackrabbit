@@ -125,8 +125,7 @@ public class JackrabbitSessionTest extends AbstractJCRTest {
         // }
     }
 
-    // @Ignore("not implemented yet")
-    public void ignoreGetExpandedPath() throws RepositoryException {
+    public void testGetExpandedPath() throws RepositoryException {
         assertEquals("/{}testroot", s.getExpandedPath(testRootNode));
         Node n = testRootNode.addNode("test:bar").addNode("rep:bar");
         assertEquals("/{}testroot/{http://www.apache.org/jackrabbit/test}bar/{internal}bar", s.getExpandedPath(n));
