@@ -1,0 +1,136 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.api;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+
+import javax.jcr.GuestCredentials;
+import javax.jcr.Item;
+import javax.jcr.NamespaceException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+
+import java.util.UUID;
+
+import static org.mockito.Mockito.mock;
+
+// Borrowed from org.apache.jackrabbit.oak.jcr.session.JackrabbitSessionTest.
+// Please keep in sync.
+
+public class JackrabbitSessionTest extends AbstractJCRTest {
+
+    private JackrabbitSession s;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        if (superuser instanceof JackrabbitSession) {
+            s = (JackrabbitSession) superuser;
+        } else {
+            throw new NotExecutableException("JackrabbitSession expected");
+        }
+    }
+
+    public void testGetParentOrNullRootNode() throws Exception {
+        assertNull(s.getParentOrNull(s.getRootNode()));
+    }
+
+    public void testGetParentOrNull() throws Exception {
+        Node n = s.getNode(testRoot);
+        assertEquivalentNode(n, s.getParentOrNull(n.getProperty(Property.JCR_PRIMARY_TYPE)));
+        assertEquivalentNode(n.getParent(), s.getParentOrNull(n));
+    }
+
+    private static void assertEquivalentNode(Node expected, Node result) throws Exception {
+        assertNotNull(result);
+        assertEquals(expected.getPath(), result.getPath());
+    }
+
+    // @Ignore("Jackrabbit does not check cross-Session request")
+    public void ignoreGetParentOrNullSessionMismatch() throws Exception {
+        JackrabbitSession guest = (JackrabbitSession) getHelper().getRepository().login(new GuestCredentials());
+        try {
+            guest.getParentOrNull(s.getNode(testRoot));
+            fail("RepositoryException expected");
+        } catch (RepositoryException e) {
+            // success
+        } finally {
+            guest.logout();
+        }
+    }
+
+    // @Ignore("Jackrabbit does not check cross-Session request")
+    public void ignoreGetParentOrNullImplMismatch() {
+        try {
+            Item item = mock(Item.class);
+            s.getParentOrNull(item);
+            fail("RepositoryException expected");
+        } catch (RepositoryException e) {
+            // success
+        }
+    }
+
+    public void testGetExpandedName() throws RepositoryException {
+        // empty namespace uri
+        assertEquals("{}testroot", s.getExpandedName(testRootNode));
+        Node n = testRootNode.addNode("test:bar");
+        assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
+        // now remap namespace uri - should not affect expanded name
+        assertEquals("prefix 'test' has unexpected mapping",
+                "http://www.apache.org/jackrabbit/test", s.getNamespaceURI("test"));
+        s.setNamespacePrefix("test", "urn:foo");
+        assertEquals("{http://www.apache.org/jackrabbit/test}bar", s.getExpandedName(n));
+        // use special namespace uri
+        n = testRootNode.addNode("rep:bar");
+        assertEquals("{internal}bar", s.getExpandedName(n));
+    }
+
+    public void testGetExpandedNameBrokenNamespace() throws RepositoryException {
+        String uuid = UUID.randomUUID().toString();
+        String randomNamespacePrefix = "prefix-" + uuid;
+        // below is not a valid namespace a.k.a. namespace URI
+        String randomNamespaceName = "name-" + uuid;
+
+        // register broken namespace prefix/name mapping
+        s.getWorkspace().getNamespaceRegistry().registerNamespace(randomNamespacePrefix, randomNamespaceName);
+
+        try {
+            Node n = testRootNode.addNode(randomNamespacePrefix + ":qux");
+
+            // there is no expanded name, thus we expect an exception here
+            String result = s.getExpandedName(n);
+            fail("there is no expanded name in this case, so we expect the call to fail, however we get: " + result);
+        } catch (NamespaceException ex) {
+            // expected
+        }
+        //finally {
+        // not supported in Jackrabbit
+        // s.getWorkspace().getNamespaceRegistry().unregisterNamespace(randomNamespacePrefix);
+        // }
+    }
+
+    public void testGetExpandedPath() throws RepositoryException {
+        assertEquals("/{}testroot", s.getExpandedPath(testRootNode));
+        Node n = testRootNode.addNode("test:bar").addNode("rep:bar");
+        assertEquals("/{}testroot/{http://www.apache.org/jackrabbit/test}bar/{internal}bar", s.getExpandedPath(n));
+        // now remap namespace uri - should not affect expanded name
+        s.setNamespacePrefix("test", "urn:foo");
+        assertEquals("/{}testroot/{http://www.apache.org/jackrabbit/test}bar/{internal}bar", s.getExpandedPath(n));
+    }
+}
