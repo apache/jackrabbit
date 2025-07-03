@@ -72,10 +72,10 @@ public class NamespaceHelper {
      * @throws RepositoryException if the namespaces could not be retrieved
      */
     public Map<String, String> getNamespaces() throws RepositoryException {
-        Map<String, String> namespaces = new HashMap<String, String>();
+        Map<String, String> namespaces = new HashMap<>();
         String[] prefixes = session.getNamespacePrefixes();
-        for (String prefixe : prefixes) {
-            namespaces.put(prefixe, session.getNamespaceURI(prefixe));
+        for (String prefix : prefixes) {
+            namespaces.put(prefix, session.getNamespaceURI(prefix));
         }
         return namespaces;
     }
