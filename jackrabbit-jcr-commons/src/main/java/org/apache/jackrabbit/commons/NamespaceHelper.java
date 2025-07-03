@@ -82,12 +82,12 @@ public class NamespaceHelper {
 
     /**
      * Returns the prefix mapped to the given namespace URI in the current
-     * session, or <code>null</code> if the namespace does not exist.
+     * session, or {@code null} if the namespace does not exist.
      *
      * @see Session#getNamespacePrefix(String)
      * @param uri namespace URI
-     * @return namespace prefix, or <code>null</code>
-     * @throws RepositoryException if the namespace could not be retrieved
+     * @return namespace prefix, or {@code null}
+     * @throws RepositoryException if the namespace prefix could not be retrieved
      */
     public String getPrefix(String uri) throws RepositoryException {
         try {
