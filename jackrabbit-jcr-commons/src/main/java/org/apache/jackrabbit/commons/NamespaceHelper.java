@@ -144,6 +144,11 @@ public class NamespaceHelper {
      * <pre>
      *     node.getProperty(helper.getName("jcr:data"));
      * </pre>
+     * Note that it is simpler to just use the <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded name</a> wherever supported:
+     * <pre>
+     *     node.getProperty("http://www.jcp.org/jcr/1.0}data");
+     * </pre>
+     * Also note the predefined constants in {@link org.apache.jackrabbit.JcrConstants}.
      *
      * @param name prefixed name using the standard JCR prefixes
      * @return prefixed name using the current session namespace mappings

@@ -91,6 +91,32 @@ public class NamespaceHelperTest extends TestCase {
     public void testGetJcrName() throws RepositoryException {
         NamespaceHelper nsHelper = new NamespaceHelper(session);
 
+        when(session.getNamespacePrefix(NamespaceHelper.JCR)).thenReturn("jcr");
+        assertEquals("jcr:xyz", nsHelper.getJcrName("jcr:xyz"));
+
+        when(session.getNamespacePrefix(NamespaceHelper.MIX)).thenReturn("foo");
+        assertEquals("foo:xyz", nsHelper.getJcrName("mix:xyz"));
+
+        try {
+            when(session.getNamespacePrefix("urn:foo")).thenReturn("unknown");
+            String shouldFail = nsHelper.getJcrName("foo:xyz");
+            fail("getJcrName should fail for unknown prefix foo, but got: " + shouldFail);
+        } catch (IllegalArgumentException expected) {
+            // all good
+        }
+
+        try {
+            when(session.getNamespacePrefix(NamespaceHelper.NT)).thenThrow(NamespaceException.class);
+            String shouldFail = nsHelper.getJcrName(NamespaceHelper.NT);
+            fail("getJcrName should fail for unknown prefix nt, but got: " + shouldFail);
+        } catch (IllegalArgumentException expected) {
+            // all good
+        }
+    }
+
+    public void testGetJcrName2() throws RepositoryException {
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
         assertEquals("foo", nsHelper.getJcrName(null, "foo"));
         assertEquals("foo", nsHelper.getJcrName("", "foo"));
 
