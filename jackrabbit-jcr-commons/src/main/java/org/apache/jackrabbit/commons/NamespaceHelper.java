@@ -103,7 +103,7 @@ public class NamespaceHelper {
      *
      * @see Session#getNamespaceURI(String)
      * @param prefix namespace prefix
-     * @return namespace prefix, or <{@code null}
+     * @return namespace prefix, or {@code null}
      * @throws RepositoryException if the namespace could not be retrieved
      */
     public String getURI(String prefix) throws RepositoryException {
