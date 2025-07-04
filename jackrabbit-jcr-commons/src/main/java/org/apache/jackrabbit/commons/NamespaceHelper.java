@@ -183,7 +183,7 @@ public class NamespaceHelper {
     /**
      * Safely registers the given namespace. If the namespace already exists,
      * then the prefix mapped to the namespace in the current session is
-     * returned. Otherwise the namespace is registered to the namespace
+     * returned. Otherwise, the namespace is registered to the namespace
      * registry. If the given prefix is already registered for some other
      * namespace or otherwise invalid, then another prefix is automatically
      * generated. After the namespace has been registered, the prefix mapped
@@ -204,7 +204,7 @@ public class NamespaceHelper {
             registry.getPrefix(uri);
         } catch (NamespaceException e1) {
              // Replace troublesome prefix hints
-            if (prefix == null || prefix.length() == 0
+            if (prefix == null || !prefix.isEmpty()
                     || prefix.toLowerCase().startsWith("xml")
                     || !XMLChar.isValidNCName(prefix)) {
                 prefix = "ns"; // ns, ns2, ns3, ns4, ...
@@ -236,8 +236,7 @@ public class NamespaceHelper {
      * @throws RepositoryException if the namespaces could not be registered
      */
     public void registerNamespaces(Map<String,String> namespaces) throws RepositoryException {
-        for (Map.Entry<String, String> stringStringEntry : namespaces.entrySet()) {
-            Map.Entry<String, String> entry = stringStringEntry;
+        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
             registerNamespace(entry.getKey(), entry.getValue());
         }
     }
