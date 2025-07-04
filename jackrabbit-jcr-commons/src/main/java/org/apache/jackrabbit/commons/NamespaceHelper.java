@@ -99,7 +99,7 @@ public class NamespaceHelper {
 
     /**
      * Returns the namespace URI mapped to the given prefix in the current
-     * session, or <{@code null} if the namespace does not exist.
+     * session, or {@code null} if the namespace does not exist.
      *
      * @see Session#getNamespaceURI(String)
      * @param prefix namespace prefix
