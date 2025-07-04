@@ -71,7 +71,7 @@
     <maven.compiler.target>${javaTargetVersion}</maven.compiler.target>
     <minimalJavaBuildVersion>${javaTargetVersion}</minimalJavaBuildVersion>
 
-    <skip.coverage>true</skip.coverage>
+    <skip.coverage>false</skip.coverage>
     <minimum.line.coverage>0.0</minimum.line.coverage>
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
     <!-- build time stamp: should be updated prior to a release -->
@@ -282,7 +282,7 @@
             <configuration>
               <skip>${skip.coverage}</skip>
               <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-              <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+              <outputDirectory>${project.build.directory}/jacoco-ut</outputDirectory>
             </configuration>
           </execution>
           <execution>
