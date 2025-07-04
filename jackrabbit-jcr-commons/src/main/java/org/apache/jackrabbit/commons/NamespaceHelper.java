@@ -99,11 +99,11 @@ public class NamespaceHelper {
 
     /**
      * Returns the namespace URI mapped to the given prefix in the current
-     * session, or <code>null</code> if the namespace does not exist.
+     * session, or <{@code null} if the namespace does not exist.
      *
      * @see Session#getNamespaceURI(String)
      * @param prefix namespace prefix
-     * @return namespace prefix, or <code>null</code>
+     * @return namespace prefix, or <{@code null}
      * @throws RepositoryException if the namespace could not be retrieved
      */
     public String getURI(String prefix) throws RepositoryException {

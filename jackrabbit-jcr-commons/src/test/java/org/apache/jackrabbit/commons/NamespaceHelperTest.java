@@ -19,6 +19,7 @@ package org.apache.jackrabbit.commons;
 import junit.framework.TestCase;
 import org.mockito.Mockito;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class NamespaceHelperTest extends TestCase {
 
     private Session session;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         session = Mockito.mock(Session.class);
@@ -58,16 +60,32 @@ public class NamespaceHelperTest extends TestCase {
     public void testGetPrefix() throws RepositoryException {
         NamespaceHelper nsHelper = new NamespaceHelper(session);
 
-        String uri = "urn:uuid" + UUID.randomUUID();
+        String uri1 = "urn:test1";
 
-        String prefix = nsHelper.getPrefix(uri);
+        when(session.getNamespacePrefix(uri1)).thenThrow(NamespaceException.class);
+        String prefix = nsHelper.getPrefix(uri1);
         assertNull(prefix);
 
-        prefix = nsHelper.getPrefix(uri);
-        assertNull(prefix);
+        String uri2 = "urn:test2";
 
-        when(session.getNamespacePrefix(uri)).thenReturn("foo");
-        prefix = nsHelper.getPrefix(uri);
+        when(session.getNamespacePrefix(uri2)).thenReturn("foo");
+        prefix = nsHelper.getPrefix(uri2);
         assertEquals("foo", prefix);
+    }
+
+    public void testGetURI() throws RepositoryException {
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        String prefix1 = "prefix1";
+
+        when(session.getNamespaceURI(prefix1)).thenThrow(NamespaceException.class);
+        String uri = nsHelper.getURI(prefix1);
+        assertNull(uri);
+
+        String prefix2 = "prefix2";
+
+        when(session.getNamespaceURI(prefix2)).thenReturn("foo:bar");
+        uri = nsHelper.getURI(prefix2);
+        assertEquals("foo:bar", uri);
     }
 }
