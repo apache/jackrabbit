@@ -126,7 +126,7 @@ public class NamespaceHelper {
      */
     public String getJcrName(String uri, String name)
             throws NamespaceException, RepositoryException {
-        if (uri != null && uri.length() > 0) {
+        if (uri != null && !uri.isEmpty()) {
             return session.getNamespacePrefix(uri) + ":" + name;
         } else {
             return name;

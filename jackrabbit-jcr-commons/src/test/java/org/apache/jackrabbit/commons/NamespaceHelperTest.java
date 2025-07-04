@@ -23,7 +23,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 
@@ -87,5 +86,15 @@ public class NamespaceHelperTest extends TestCase {
         when(session.getNamespaceURI(prefix2)).thenReturn("foo:bar");
         uri = nsHelper.getURI(prefix2);
         assertEquals("foo:bar", uri);
+    }
+
+    public void testGetJcrName() throws RepositoryException {
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        assertEquals("foo", nsHelper.getJcrName(null, "foo"));
+        assertEquals("foo", nsHelper.getJcrName("", "foo"));
+
+        when(session.getNamespacePrefix("urn:bar")).thenReturn("bar");
+        assertEquals("bar:foo", nsHelper.getJcrName("urn:bar", "foo"));
     }
 }
