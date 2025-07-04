@@ -162,16 +162,16 @@ public class NamespaceHelperTest extends TestCase {
         uri2pref.put(NamespaceRegistry.NAMESPACE_JCR, "jcr");
 
         Mockito.doAnswer(invocation -> {
-                    String rpref = invocation.getArgument(0);
-                    String ruri = invocation.getArgument(1);
-                    if (null != uri2pref.get(ruri)) {
-                        throw new NamespaceException();
-                    } else {
-                        pref2uri.put(rpref, ruri);
-                        uri2pref.put(ruri, rpref);
-                        return null;
-                    }
-                }).when(nsReg).registerNamespace(any(), any());
+            String rpref = invocation.getArgument(0);
+            String ruri = invocation.getArgument(1);
+            if (null != uri2pref.get(ruri) || null != pref2uri.get(rpref)) {
+                throw new NamespaceException();
+            } else {
+                pref2uri.put(rpref, ruri);
+                uri2pref.put(ruri, rpref);
+                return null;
+            }
+        }).when(nsReg).registerNamespace(any(), any());
 
         when(nsReg.getPrefix(any())).thenAnswer(invocation -> {
             String found = uri2pref.get(invocation.getArgument(0));
@@ -211,6 +211,8 @@ public class NamespaceHelperTest extends TestCase {
 
         NamespaceHelper nsHelper = new NamespaceHelper(session);
 
+        // register namespace (test makes assumptions about implementation)
+
         assertEquals("ns", nsHelper.registerNamespace("", "foo:"));
         assertEquals("ns2", nsHelper.registerNamespace("", "foo2:"));
         assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
@@ -224,5 +226,12 @@ public class NamespaceHelperTest extends TestCase {
 
         assertEquals("jcr", nsHelper.registerNamespace("wtf", NamespaceRegistry.NAMESPACE_JCR));
         assertEquals("xml", nsHelper.registerNamespace("", NamespaceRegistry.NAMESPACE_XML));
+
+        // register namespaces
+        Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
+        nsHelper.registerNamespaces(input);
+        assertEquals("test1", nsReg.getPrefix("test1:"));
+        assertEquals("test2", nsReg.getPrefix("test2"));
+        assertEquals("ns6", nsReg.getPrefix("test3:"));
     }
 }
