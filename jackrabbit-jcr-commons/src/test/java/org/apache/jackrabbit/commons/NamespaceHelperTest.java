@@ -20,10 +20,14 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Workspace;
+import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class NamespaceHelperTest extends TestCase {
@@ -122,5 +126,103 @@ public class NamespaceHelperTest extends TestCase {
 
         when(session.getNamespacePrefix("urn:bar")).thenReturn("bar");
         assertEquals("bar:foo", nsHelper.getJcrName("urn:bar", "foo"));
+    }
+
+    public void testRegisterNamespaceAlreadyRegistered() throws RepositoryException {
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = Mockito.mock(NamespaceRegistry.class);
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+
+        when(nsReg.getPrefix("foo:")).thenReturn("xyz");
+        when(session.getNamespacePrefix("foo:")).thenReturn("xyz");
+        String prefix = nsHelper.registerNamespace("bar", "foo:");
+        assertEquals("xyz", prefix);
+    }
+
+    public void testRegisterNamespace() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = Mockito.mock(NamespaceRegistry.class);
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+
+        // poor man's namespace registry
+
+        final HashMap<String, String> pref2uri = new HashMap<>();
+        final HashMap<String, String> uri2pref = new HashMap<>();
+
+        // defaults (incomplete)
+        pref2uri.put("xml", NamespaceRegistry.NAMESPACE_XML);
+        uri2pref.put(NamespaceRegistry.NAMESPACE_XML, "xml");
+        pref2uri.put("jcr", NamespaceRegistry.NAMESPACE_JCR);
+        uri2pref.put(NamespaceRegistry.NAMESPACE_JCR, "jcr");
+
+        Mockito.doAnswer(invocation -> {
+                    String rpref = invocation.getArgument(0);
+                    String ruri = invocation.getArgument(1);
+                    if (null != uri2pref.get(ruri)) {
+                        throw new NamespaceException();
+                    } else {
+                        pref2uri.put(rpref, ruri);
+                        uri2pref.put(ruri, rpref);
+                        return null;
+                    }
+                }).when(nsReg).registerNamespace(any(), any());
+
+        when(nsReg.getPrefix(any())).thenAnswer(invocation -> {
+            String found = uri2pref.get(invocation.getArgument(0));
+            if (found != null) {
+                return found;
+            } else {
+                throw new NamespaceException();
+            }
+        });
+
+        when(nsReg.getURI(any())).thenAnswer(invocation -> {
+            String found = pref2uri.get(invocation.getArgument(0));
+            if (found != null) {
+                return found;
+            } else {
+                throw new NamespaceException();
+            }
+        });
+
+        when(session.getNamespacePrefix(any())).thenAnswer(invocation -> {
+            String found = uri2pref.get(invocation.getArgument(0));
+            if (found != null) {
+                return found;
+            } else {
+                throw new NamespaceException();
+            }
+        });
+
+        when(session.getNamespaceURI(any())).thenAnswer(invocation -> {
+            String found = pref2uri.get(invocation.getArgument(0));
+            if (found != null) {
+                return found;
+            } else {
+                throw new NamespaceException();
+            }
+        });
+
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        assertEquals("ns", nsHelper.registerNamespace("", "foo:"));
+        assertEquals("ns2", nsHelper.registerNamespace("", "foo2:"));
+        assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+        assertEquals("ns4", nsHelper.registerNamespace("123", "foo4:"));
+        assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+        assertEquals("ns5", nsHelper.registerNamespace(null, "foo6:"));
+
+        assertEquals("bar", nsHelper.registerNamespace("bar", "bar:"));
+        assertEquals("bar2", nsHelper.registerNamespace("bar", "bar2:"));
+        assertEquals("bar3", nsHelper.registerNamespace("bar", "bar3:"));
+
+        assertEquals("jcr", nsHelper.registerNamespace("wtf", NamespaceRegistry.NAMESPACE_JCR));
+        assertEquals("xml", nsHelper.registerNamespace("", NamespaceRegistry.NAMESPACE_XML));
     }
 }
