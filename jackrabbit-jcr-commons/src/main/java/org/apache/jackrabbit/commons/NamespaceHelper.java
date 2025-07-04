@@ -204,7 +204,7 @@ public class NamespaceHelper {
             registry.getPrefix(uri);
         } catch (NamespaceException e1) {
              // Replace troublesome prefix hints
-            if (prefix == null || !prefix.isEmpty()
+            if (prefix == null || prefix.isEmpty()
                     || prefix.toLowerCase().startsWith("xml")
                     || !XMLChar.isValidNCName(prefix)) {
                 prefix = "ns"; // ns, ns2, ns3, ns4, ...
