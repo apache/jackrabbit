@@ -65,7 +65,7 @@ public class NamespaceHelper {
      */
     public NamespaceHelper(Session session) {
         this.session = session;
-        // will be set on demand.
+        // will be set on lazily
         this.namespaceRegistry = null;
     }
 
