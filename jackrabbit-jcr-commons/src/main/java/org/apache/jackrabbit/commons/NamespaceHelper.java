@@ -54,12 +54,30 @@ public class NamespaceHelper {
     private final Session session;
 
     /**
+     * Current namespace registry.
+     */
+    private NamespaceRegistry namespaceRegistry;
+
+    /**
      * Creates a namespace helper for the given session.
      *
      * @param session current session
      */
     public NamespaceHelper(Session session) {
         this.session = session;
+        // will be set on demand.
+        this.namespaceRegistry = null;
+    }
+
+    /**
+        Get the namespace registry; needs to be done on-demand because the constructor
+        does not allow RepositoryException
+     */
+    private NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
+        if (namespaceRegistry == null) {
+            namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
+        }
+        return namespaceRegistry;
     }
 
     /**
@@ -197,8 +215,7 @@ public class NamespaceHelper {
      */
     public String registerNamespace(String prefix, String uri)
             throws RepositoryException {
-        NamespaceRegistry registry =
-            session.getWorkspace().getNamespaceRegistry();
+        NamespaceRegistry registry = getNamespaceRegistry();
         try {
             // Check if the namespace is registered
             registry.getPrefix(uri);
