@@ -72,22 +72,22 @@ public class NamespaceHelper {
      * @throws RepositoryException if the namespaces could not be retrieved
      */
     public Map<String, String> getNamespaces() throws RepositoryException {
-        Map<String, String> namespaces = new HashMap<String, String>();
+        Map<String, String> namespaces = new HashMap<>();
         String[] prefixes = session.getNamespacePrefixes();
-        for (String prefixe : prefixes) {
-            namespaces.put(prefixe, session.getNamespaceURI(prefixe));
+        for (String prefix : prefixes) {
+            namespaces.put(prefix, session.getNamespaceURI(prefix));
         }
         return namespaces;
     }
 
     /**
      * Returns the prefix mapped to the given namespace URI in the current
-     * session, or <code>null</code> if the namespace does not exist.
+     * session, or {@code null} if the namespace does not exist.
      *
      * @see Session#getNamespacePrefix(String)
      * @param uri namespace URI
-     * @return namespace prefix, or <code>null</code>
-     * @throws RepositoryException if the namespace could not be retrieved
+     * @return namespace prefix, or {@code null}
+     * @throws RepositoryException if the namespace prefix could not be retrieved
      */
     public String getPrefix(String uri) throws RepositoryException {
         try {
@@ -99,11 +99,11 @@ public class NamespaceHelper {
 
     /**
      * Returns the namespace URI mapped to the given prefix in the current
-     * session, or <code>null</code> if the namespace does not exist.
+     * session, or {@code null} if the namespace does not exist.
      *
      * @see Session#getNamespaceURI(String)
      * @param prefix namespace prefix
-     * @return namespace prefix, or <code>null</code>
+     * @return namespace prefix, or {@code null}
      * @throws RepositoryException if the namespace could not be retrieved
      */
     public String getURI(String prefix) throws RepositoryException {
@@ -126,7 +126,7 @@ public class NamespaceHelper {
      */
     public String getJcrName(String uri, String name)
             throws NamespaceException, RepositoryException {
-        if (uri != null && uri.length() > 0) {
+        if (uri != null && !uri.isEmpty()) {
             return session.getNamespacePrefix(uri) + ":" + name;
         } else {
             return name;
@@ -144,6 +144,11 @@ public class NamespaceHelper {
      * <pre>
      *     node.getProperty(helper.getName("jcr:data"));
      * </pre>
+     * Note that it is simpler to just use the <a href="https://s.apache.org/jcr-2.0-spec/3_Repository_Model.html#3.2.6%20Use%20of%20Qualified%20and%20Expanded%20Names">expanded name</a> wherever supported:
+     * <pre>
+     *     node.getProperty("http://www.jcp.org/jcr/1.0}data");
+     * </pre>
+     * Also note the predefined constants in {@link org.apache.jackrabbit.JcrConstants}.
      *
      * @param name prefixed name using the standard JCR prefixes
      * @return prefixed name using the current session namespace mappings
@@ -178,7 +183,7 @@ public class NamespaceHelper {
     /**
      * Safely registers the given namespace. If the namespace already exists,
      * then the prefix mapped to the namespace in the current session is
-     * returned. Otherwise the namespace is registered to the namespace
+     * returned. Otherwise, the namespace is registered to the namespace
      * registry. If the given prefix is already registered for some other
      * namespace or otherwise invalid, then another prefix is automatically
      * generated. After the namespace has been registered, the prefix mapped
@@ -199,7 +204,7 @@ public class NamespaceHelper {
             registry.getPrefix(uri);
         } catch (NamespaceException e1) {
              // Replace troublesome prefix hints
-            if (prefix == null || prefix.length() == 0
+            if (prefix == null || prefix.isEmpty()
                     || prefix.toLowerCase().startsWith("xml")
                     || !XMLChar.isValidNCName(prefix)) {
                 prefix = "ns"; // ns, ns2, ns3, ns4, ...
@@ -231,8 +236,7 @@ public class NamespaceHelper {
      * @throws RepositoryException if the namespaces could not be registered
      */
     public void registerNamespaces(Map<String,String> namespaces) throws RepositoryException {
-        for (Map.Entry<String, String> stringStringEntry : namespaces.entrySet()) {
-            Map.Entry<String, String> entry = stringStringEntry;
+        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
             registerNamespace(entry.getKey(), entry.getValue());
         }
     }
