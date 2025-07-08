@@ -233,5 +233,8 @@ public class NamespaceHelperTest extends TestCase {
         assertEquals("test1", nsReg.getPrefix("test1:"));
         assertEquals("test2", nsReg.getPrefix("test2"));
         assertEquals("ns6", nsReg.getPrefix("test3:"));
+
+        // check invocation count for getNamespaceRegistry (JCR-5161)
+        Mockito.verify(workspace, Mockito.times(1)).getNamespaceRegistry();
     }
 }
