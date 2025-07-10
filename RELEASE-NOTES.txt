@@ -1,55 +1,56 @@
-Release Notes -- Apache Jackrabbit -- Version 2.23.1-beta
+Release Notes -- Apache Jackrabbit -- Version 2.23.2-beta
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.23.1-beta, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.23.2-beta, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.23.1-beta is an unstable release cut directly from
+Apache Jackrabbit 2.23.2-beta is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.23.1-beta
+Changes in Jackrabbit 2.23.2-beta
 ----------------------------------
 
 Bug
 
-    [JCR-5107] - DbInputStream makes incorrect assumptions about commons-io internals
+    [JCR-5121] - Java 23: getSubject is supported only if a security manager is allowed
 
 Improvement
 
-    [JCR-5093] - jcr2spi: get rid of Commons IO dependency
-    [JCR-5106] - core tests: improve diagnostics in DBDataStoreTest
+    [JCR-5127] - Add javadoc links to JcrConstants' constants which have expanded name equivalents in the JCR API
+    [JCR-5146] - Add missing mixin values (defined in JCR 2.0 spec) to JcrConstants
+    [JCR-5150] - Add missing constant for jcr:title
+    [JCR-5152] - Add method isValidJcrLocalName(String) to o.a.j.util.Text
+    [JCR-5161] - Add variant of NamespaceHelper.registerNamespace
 
-Test
+Wish
 
-    [JCR-5098] - jackrabbit-jcr-server: Java 24 javadoc errors
+    [JCR-5157] - configure CI for PRs on github
 
 Task
 
-    [JCR-5088] - remove warnings about missing @deprecated annotations
-    [JCR-5089] - avoid use of deprecated junit.framework.Assert
-    [JCR-5094] - webapp: bump htmlunit to 4.4.0
-    [JCR-5096] - JcrConstants: refer to the constants in javax.jcr.Property and javax.jcr.nodetype.NodeType
-    [JCR-5097] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.68.0
-    [JCR-5099] - Update Logback version to 1.2.13
-    [JCR-5100] - Update commons-cli dependency to 1.9.0
-    [JCR-5101] - Update easymock dependency to 5.4.0
-    [JCR-5102] - Update mockito dependency to 5.14.1
-    [JCR-5103] - Update oak-jackrabbit-api.version.used to Oak 1.22.21
-    [JCR-5104] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.70.0
-    [JCR-5105] - Update commons-io dependency to 2.17.0
-    [JCR-5108] - remove commons-collections4 version-specific dependency from jackrabbit-standalone
-    [JCR-5109] - Update tomcat dependency to 9.0.95
-    [JCR-5110] - update aws java sdk version to 1.12.773
-    [JCR-5111] - update kotlin-stdlib dependency to 1.9.25
-    [JCR-5112] - update Jetty to 9.4.56.v20240826
-    [JCR-5113] - Update pmd-plugin dependency to 3.25.0
-    [JCR-5114] - update checkstyle-plugin dependency to 3.5.0
-    [JCR-5115] - Update spotbugs-maven-plugin to 4.8.6.4
+    [JCR-5048] - Jackrabbit should build and test with Java 24
+    [JCR-5120] - webapp: update tomcat dependency to 9.0.97
+    [JCR-5128] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.74.0
+    [JCR-5130] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.76.0
+    [JCR-5131] - jackrabbit-jcr2spi: switch to commons-collections4 4.5.0-M3
+    [JCR-5132] - webapp: update tomcat dependency to 9.0.104
+    [JCR-5133] - Update easymock dependency to 5.5.0
+    [JCR-5134] - Update oak-jackrabbit-api.version.used to Oak 1.22.22
+    [JCR-5135] - Make JNDI support opt-in
+    [JCR-5137] - Update JCR commons to implement current jackrabbit-api
+    [JCR-5138] - Borrow JackrabbitSessionImpl tests from Oak
+    [JCR-5143] - Update Mockito dependency to 5.17.0
+    [JCR-5145] - Upgrade Commons VFS to 2.10.0
+    [JCR-5147] - remove jackrabbit 1.x compatibility and performance tests
+    [JCR-5148] - remove (comment out) mysql test profile
+    [JCR-5158] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.82.0
+    [JCR-5159] - Create coverage for NamespaceHelper
+    [JCR-5163] - Update commons file-upload dependency to 1.6.0
 
 
 For more detailed information about all the changes in this and other
