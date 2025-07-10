@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.22.0
+Release Notes -- Apache Jackrabbit -- Version 2.22.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.22.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.22.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.22.0 is an incremental feature release based on
+Apache Jackrabbit 2.22.1 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.22.x releases are considered stable and targeted for production use.
 
@@ -18,76 +18,57 @@ The minimum Java version for this release is Java 11. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.22.0
+Changes in Jackrabbit 2.22.1
 ----------------------------
-
-(as compared to 2.20.16)
 
 Bug
 
-    [JCR-4808] - 'pedantic' profile should run integration tests
-    [JCR-4907] - Javadocs have incorrect copyright date
+    [JCR-5107] - DbInputStream makes incorrect assumptions about commons-io internals
 
 Improvement
 
-    [JCR-4578] - IndexMerger should log more debug informations about the internal IndexBuckets
-    [JCR-4785] - ChildNodeEntriesImpl requires access to removed AbstractLinkedList feature
+    [JCR-5093] - jcr2spi: get rid of Commons IO dependency
+    [JCR-5106] - core tests: improve diagnostics in DBDataStoreTest
+    [JCR-5165] - various parsing improvements/consistency
+
+Test
+
+    [JCR-5098] - jackrabbit-jcr-server: Java 24 javadoc errors
 
 Task
 
-    [JCR-4352] - Update lucene-core dependency to 3.6.2
-    [JCR-4516] - switch bundle comparisonVersion for 2.20.0
-    [JCR-4580] - switch bundle comparisonVersion for 2.20.1
-    [JCR-4602] - jackrabbit-core: remove unused commons-collections dependency
-    [JCR-4634] - Jackrabbit should build and test with Java 16
-    [JCR-4650] - set baseline comparisonVersion to latest stable (2.20.2)
-    [JCR-4695] - set baseline comparisonVersion to latest stable (2.20.3)
-    [JCR-4737] - set baseline comparisonVersion to latest stable (2.20.4)
-    [JCR-4771] - set baseline comparisonVersion to latest stable (2.20.5)
-    [JCR-4809] - set baseline comparisonVersion to latest stable (2.20.6)
-    [JCR-4867] - set baseline comparisonVersion to latest stable (2.20.7)
-    [JCR-4891] - set baseline comparisonVersion to latest stable (2.20.8)
-    [JCR-4902] - Update mockito dependency to 5.11.0
-    [JCR-4912] - set baseline comparisonVersion to latest stable (2.20.9)
-    [JCR-4914] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.60.0
-    [JCR-4931] - set baseline comparisonVersion to latest stable (2.20.10)
-    [JCR-4938] - update remaining copies of XMLChar.java with latest version from Xerces
-    [JCR-4955] - set baseline comparisonVersion to latest stable (2.20.11)
-    [JCR-4969] - set baseline comparisonVersion to latest stable (2.20.12)
-    [JCR-4972] - Remove RMI support
-    [JCR-4977] - use 'beta' identifier for releases in unstable branch
-    [JCR-4989] - set baseline comparisonVersion to latest stable (2.20.13)
-    [JCR-5000] - update Apache parent pom to version 31
-    [JCR-5012] - set baseline comparisonVersion to latest stable (2.20.14)
-    [JCR-5018] - Bump up minimal Java version to 11
-    [JCR-5020] - jackrabbit-webapp: deprecate RMI support "for removal"
-    [JCR-5021] - jackrabbit-jcr-rmi: deprecate RMI support "for removal"
-    [JCR-5022] - Update derby dependency to 10.15.2.0
-    [JCR-5026] - standalone: remove remote repository support (RMI and JNDI)
-    [JCR-5027] - jackrabbit-webapp: remove RMI support
-    [JCR-5028] - jackrabbit-jcr-rmi: remove
-    [JCR-5034] - set baseline comparisonVersion to latest stable (2.20.15)
-    [JCR-5039] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.19
-    [JCR-5042] - jackrabbit-jcr-servlet: remove RMI support
-    [JCR-5044] - Update tomcat dependency to 9.0.87
-    [JCR-5045] - Update commons-io dependency to 2.16.0
-    [JCR-5046] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.62.0
-    [JCR-5047] - Update to jacoco version 0.8.12
-    [JCR-5052] - Update commons-io dependency to 2.16.1
-    [JCR-5053] - Update commons-cli dependency to 1.7.0
-    [JCR-5054] - vfs-ext: update hadoop-hdfs-client dependency to 3.4.0
-    [JCR-5055] - update Apache parent pom to version 32
-    [JCR-5056] - Update maven-jar-plugin to 3.4.1
-    [JCR-5057] - Update pmd-plugin dependency to 3.22.0
-    [JCR-5058] - Update spotbugs-maven-plugin to 4.8.5.0
-    [JCR-5059] - set baseline comparisonVersion to latest stable (2.20.16)
-    [JCR-5060] - Update oak-jackrabbit-api.version.used in trunk and 2.20 to Oak 1.22.20
-    [JCR-5063] - Update build-helper-maven-plugin to version 3.6.0
-    [JCR-5064] - Update mockito dependency to 5.12.0
-    [JCR-5068] - update aws java sdk version to 1.12.730
-    [JCR-5069] - Update commons-cli dependency to 1.8.0
-    [JCR-5070] - Update tomcat dependency to 9.0.89
-    [JCR-5071] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.64.0
+    [JCR-5073] - core: avoid varargs related compiler warnings in tests
+    [JCR-5076] - Use correctly test scope for dependencies of type: test-jar
+    [JCR-5077] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.66.0
+    [JCR-5078] - update Apache parent pom to version 33
+    [JCR-5079] - Update tomcat dependency to 9.0.91
+    [JCR-5080] - Update easymock dependency to 5.3.0
+    [JCR-5081] - update aws java sdk version to 1.12.761
+    [JCR-5082] - update Jetty to 9.4.55.v20240627
+    [JCR-5083] - Update maven-jar-plugin to 3.4.2
+    [JCR-5084] - Update pmd-plugin dependency to 3.24.0
+    [JCR-5085] - update checkstyle-plugin dependency to 3.4.0
+    [JCR-5086] - Update spotbugs-maven-plugin to 4.8.6.2
+    [JCR-5088] - remove warnings about missing @deprecated annotations
+    [JCR-5094] - webapp: bump htmlunit to 4.4.0
+    [JCR-5096] - JcrConstants: refer to the constants in javax.jcr.Property and javax.jcr.nodetype.NodeType
+    [JCR-5097] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.68.0
+    [JCR-5099] - Update Logback version to 1.2.13
+    [JCR-5100] - Update commons-cli dependency to 1.9.0
+    [JCR-5101] - Update easymock dependency to 5.4.0
+    [JCR-5102] - Update mockito dependency to 5.14.1
+    [JCR-5103] - Update oak-jackrabbit-api.version.used to Oak 1.22.21
+    [JCR-5104] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.70.0
+    [JCR-5105] - Update commons-io dependency to 2.17.0
+    [JCR-5108] - remove commons-collections4 version-specific dependency from jackrabbit-standalone
+    [JCR-5109] - Update tomcat dependency to 9.0.95
+    [JCR-5110] - update aws java sdk version to 1.12.773
+    [JCR-5111] - update kotlin-stdlib dependency to 1.9.25
+    [JCR-5112] - update Jetty to 9.4.56.v20240826
+    [JCR-5113] - Update pmd-plugin dependency to 3.25.0
+    [JCR-5114] - update checkstyle-plugin dependency to 3.5.0
+    [JCR-5115] - Update spotbugs-maven-plugin to 4.8.6.4
+    [JCR-5118] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.72.0
 
 
 For more detailed information about all the changes in this and other
