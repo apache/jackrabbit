@@ -27,10 +27,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -44,7 +46,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
+import java.rmi.server.ExportException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -112,6 +116,28 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
         factory.setNamespaceAware(true);
         factory.setIgnoringComments(false);
         factory.setIgnoringElementContentWhitespace(true);
+        factory.setXIncludeAware(false);
+
+        // Prevent XXE attacks by disabling external entity processing
+        factory.setExpandEntityReferences(false);
+
+        String feature = null;
+
+        try {
+            feature = XMLConstants.FEATURE_SECURE_PROCESSING;
+            factory.setFeature(feature, true);
+            feature = "http://apache.org/xml/features/disallow-doctype-decl";
+            factory.setFeature(feature, true);
+            feature = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+            factory.setFeature(feature, false);
+            feature = "http://xml.org/sax/features/external-general-entities";
+            factory.setFeature(feature, false);
+            feature = "http://xml.org/sax/features/external-parameter-entities";
+            factory.setFeature(feature, false);
+        } catch (Exception ex) {
+            // abort if secure processing is not supported
+            throw new IllegalStateException("Secure processing feature '" + feature + "' not supported by the DocumentBuilderFactory: " + factory.getClass().getName(), ex);
+        }
         return factory;
     }
 
@@ -279,6 +305,10 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
      */
     private static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
         DocumentBuilder builder = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
+        // defense in depth: entity resolver that will break any document on purpose
+        EntityResolver stopMe = (publicId, systemId) -> new InputSource(
+                new StringReader("<preventing read of: " + publicId + " " + systemId + ">"));
+        builder.setEntityResolver(stopMe);
         builder.setErrorHandler(new DefaultHandler());
         return builder;
     }
