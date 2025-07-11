@@ -320,32 +320,27 @@ public class NamespaceHelper {
     private static String makeUpPrefix(String namespace, Function<String, String> lookupNamespace) {
         String prefix = namespace.toLowerCase(Locale.ENGLISH);
 
-        // https://www.w3.org/guide/editor/namespaces.html
-        if (prefix.startsWith("http://www.w3c.org/ns/")) {
-            prefix = prefix.substring(22);
-        }
-
         // strip scheme when http(s)
         if (prefix.startsWith("http://")) {
-            prefix = prefix.substring(7);
+            prefix = prefix.substring("http://".length());
         } else if (prefix.startsWith("https://")) {
-            prefix = prefix.substring(8);
+            prefix = prefix.substring("httpS://".length());
         }
 
         // strip common host name prefixes
         if (prefix.startsWith("www.")) {
-            prefix = prefix.substring(4);
+            prefix = prefix.substring("www.".length());
         } else if (prefix.startsWith("ns")) {
-            prefix = prefix.substring(3);
+            prefix = prefix.substring("ns".length());
         }
 
-        // strip trailing slash
-        if (prefix.endsWith("/")) {
+        // replace characters not allowed in prefix (here: '\' and :)
+        prefix = prefix.replaceAll("[\\/:]+", "-");
+
+        // strip trailing replacement character
+        if (prefix.endsWith("-")) {
             prefix = prefix.substring(0, prefix.length() - 1);
         }
-
-        // TODO: make sure it's really a valid JCR name prefix
-        prefix = prefix.replace("/", "-");
 
         String lookedUpNamespace = lookupNamespace.apply(prefix);
         if (lookedUpNamespace == null || lookedUpNamespace.equals(namespace)) {

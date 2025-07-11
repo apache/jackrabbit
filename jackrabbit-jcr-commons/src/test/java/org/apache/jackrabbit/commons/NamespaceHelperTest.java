@@ -213,12 +213,12 @@ public class NamespaceHelperTest extends TestCase {
 
         // register namespace (test makes assumptions about implementation)
 
-        assertEquals("ns", nsHelper.registerNamespace("", "foo:"));
-        assertEquals("ns2", nsHelper.registerNamespace("", "foo2:"));
-        assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
-        assertEquals("ns4", nsHelper.registerNamespace("123", "foo4:"));
-        assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
-        assertEquals("ns5", nsHelper.registerNamespace(null, "foo6:"));
+        assertEquals("foo", nsHelper.registerNamespace("", "foo:"));
+        assertEquals("foo2", nsHelper.registerNamespace("", "foo2:"));
+        assertEquals("foo3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+        assertEquals("foo4", nsHelper.registerNamespace("123", "foo4:"));
+        assertEquals("foo3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+        assertEquals("foo6", nsHelper.registerNamespace(null, "foo6:"));
 
         assertEquals("bar", nsHelper.registerNamespace("bar", "bar:"));
         assertEquals("bar2", nsHelper.registerNamespace("bar", "bar2:"));
