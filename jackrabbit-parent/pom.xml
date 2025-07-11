@@ -34,7 +34,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.23.2-beta-SNAPSHOT</version>
+  <version>2.23.3-beta-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <issueManagement>
@@ -54,8 +54,8 @@
     <test.opts.memory>-Xmx256m</test.opts.memory>
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
-    <!-- OAK version used in componenents that *implement* oak-jackrabbit-api -->
-    <oak-jackrabbit-api.version.implemented>1.76.0</oak-jackrabbit-api.version.implemented>
+    <!-- OAK version used in components that *implement* oak-jackrabbit-api -->
+    <oak-jackrabbit-api.version.implemented>1.82.0</oak-jackrabbit-api.version.implemented>
     <!-- OAK version used in componenents that *use* oak-jackrabbit-api -->
     <oak-jackrabbit-api.version.used>1.22.22</oak-jackrabbit-api.version.used>
     <jetty.version>9.4.56.v20240826</jetty.version>
@@ -76,7 +76,7 @@
     <minimum.branch.coverage>0.0</minimum.branch.coverage>
     <!-- build time stamp: should be updated prior to a release -->
     <!-- see https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
-    <project.build.outputTimestamp>1728379281</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1752168029</project.build.outputTimestamp>
     <minimalMavenBuildVersion>3.6.1</minimalMavenBuildVersion><!-- due to https://issues.apache.org/jira/browse/MNG-6059 -->
   </properties>
 
@@ -260,7 +260,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
+        <version>0.8.13</version>
         <executions>
           <execution>
             <id>pre-unit-test</id>
@@ -577,7 +577,7 @@
       <dependency>
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
-        <version>1.5</version>
+        <version>1.6.0</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
@@ -622,7 +622,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.14.1</version>
+        <version>5.17.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

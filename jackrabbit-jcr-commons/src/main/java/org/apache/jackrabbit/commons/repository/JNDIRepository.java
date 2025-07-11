@@ -24,9 +24,13 @@ import javax.naming.Context;
  * does not need to exist when this class is instantiated. The JNDI entry
  * can also be replaced with another repository during the lifetime of an
  * instance of this class.
+ * <p>
+ * This class is deprecated and will be removed in future releases.
  *
  * @since 1.4
+ * @deprecated use {@link ProxyRepository} instead
  */
+@Deprecated(forRemoval = true)
 public class JNDIRepository extends ProxyRepository {
 
     /**
@@ -38,5 +42,4 @@ public class JNDIRepository extends ProxyRepository {
     public JNDIRepository(Context context, String name) {
         super(new JNDIRepositoryFactory(context, name));
     }
-
 }

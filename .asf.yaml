@@ -29,3 +29,5 @@ github:
     - JCRVLT
     - SLING
     - FELIX
+  protected_branches:
+    trunk: {}
