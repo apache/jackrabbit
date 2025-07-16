@@ -122,12 +122,6 @@
               </execution>
             </executions>
           </plugin>
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <skipTests>true</skipTests>
-            </configuration>
-          </plugin>
         </plugins>
       </build>
     </profile>
@@ -146,12 +140,6 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <skipTests>true</skipTests>
-            </configuration>
           </plugin>
         </plugins>
       </build>
@@ -275,26 +263,25 @@
         <version>0.8.13</version>
         <executions>
           <execution>
-            <id>pre-unit-test</id>
+            <id>prepare-jacoco-agent</id>
             <goals>
               <goal>prepare-agent</goal>
             </goals>
             <configuration>
+              <!-- the same agent parametrization is used for both ITs/UTs -->
               <skip>${skip.coverage}</skip>
-              <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
               <propertyName>test.opts.coverage</propertyName>
+              <!-- this is default, but make it more explicit, i.e. ITs just extend the existing execution data file-->
+              <append>true</append>
             </configuration>
           </execution>
           <execution>
-            <id>post-unit-test</id>
-            <phase>test</phase>
+            <id>generate-jacoco-report</id>
             <goals>
               <goal>report</goal>
             </goals>
             <configuration>
               <skip>${skip.coverage}</skip>
-              <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-              <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
             </configuration>
           </execution>
           <execution>
@@ -303,7 +290,6 @@
               <goal>check</goal>
             </goals>
             <configuration>
-              <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
               <rules>
                 <rule>
                   <element>BUNDLE</element>
