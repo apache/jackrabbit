@@ -185,6 +185,39 @@
       <properties>
         <skip.coverage>false</skip.coverage>
       </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <!-- generates aggregate (cross-module) coverage reports, https://github.com/olamy/jacoco-aggregator-maven-plugin
+                only enable this plugin (without inheritance) in the root module, as this is an aggregator plugin
+             -->
+            <plugin>
+              <groupId>io.github.olamy.maven.plugins</groupId>
+              <artifactId>jacoco-aggregator-maven-plugin</artifactId>
+              <version>1.0.3</version>
+              <configuration>
+                <includes>
+                  <!-- exclude shaded 3rd party classes -->
+                  <include>org/apache/jackrabbit/**</include>
+                </includes>
+                <excludes>
+                  <!-- exclude classes in jackrabbit-jcr-tests -->
+                  <exclude>org/apache/jackrabbit/test/**</exclude>
+                </excludes>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>aggregate</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>report-aggregate-all</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
     </profile>
   </profiles>
 
