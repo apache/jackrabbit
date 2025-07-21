@@ -35,6 +35,11 @@
   <name>Apache Jackrabbit</name>
   <packaging>pom</packaging>
 
+  <properties>
+    <!-- this project uses cross-module reports with one aggregate, https://docs.sonarsource.com/sonarcloud/enriching/test-coverage/java-test-coverage/#add-coverage-in-a-multi-module-maven-project -->
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+  </properties>
+
   <modules>
     <module>jackrabbit-parent</module>
     <module>jackrabbit-jcr-commons</module>
@@ -87,6 +92,18 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.github.olamy.maven.plugins</groupId>
+            <artifactId>jacoco-aggregator-maven-plugin</artifactId>
+            <inherited>false</inherited><!-- only execute on root level (as aggregator)-->
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>apache-release</id>
       <properties>
