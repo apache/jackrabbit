@@ -78,7 +78,15 @@
     <!-- see https://maven.apache.org/guides/mini/guide-reproducible-builds.html -->
     <project.build.outputTimestamp>1753730328</project.build.outputTimestamp>
     <minimalMavenBuildVersion>3.6.1</minimalMavenBuildVersion><!-- due to https://issues.apache.org/jira/browse/MNG-6059 -->
+    
+    <!-- this project uses cross-module reports with one aggregate, https://docs.sonarsource.com/sonarcloud/enriching/test-coverage/java-test-coverage/#add-coverage-in-a-multi-module-maven-project -->
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <!-- this should be the same as the exclusions for jacoco, compare with https://groups.google.com/g/sonarqube/c/VwEE_ZD2KzI -->
+    <sonar.coverage.exclusions>org/apache/jackrabbit/test/**</sonar.coverage.exclusions>
+    <!-- exclude test code from analysis-->
+    <sonar.test.exclusions>src/test/**</sonar.test.exclusions>
   </properties>
+
 
   <url>http://jackrabbit.apache.org/</url>
   <inceptionYear>2004</inceptionYear>
