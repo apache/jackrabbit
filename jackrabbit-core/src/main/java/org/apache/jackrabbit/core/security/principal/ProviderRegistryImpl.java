@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -128,17 +129,11 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
         }
 
         try {
-            Class pc = Class.forName(className, true, BeanConfig.getDefaultClassLoader());
-            PrincipalProvider pp = (PrincipalProvider) pc.newInstance();
+            Class<?> pc = Class.forName(className, true, BeanConfig.getDefaultClassLoader());
+            PrincipalProvider pp = (PrincipalProvider) pc.getDeclaredConstructor().newInstance();
             pp.init(config);
             return pp;
-        } catch (ClassNotFoundException e) {
-            throw new RepositoryException("Unable to create new principal provider.", e);
-        } catch (IllegalAccessException e) {
-            throw new RepositoryException("Unable to create new principal provider.", e);
-        } catch (InstantiationException e) {
-            throw new RepositoryException("Unable to create new principal provider.", e);
-        } catch (ClassCastException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
             throw new RepositoryException("Unable to create new principal provider.", e);
         }
     }

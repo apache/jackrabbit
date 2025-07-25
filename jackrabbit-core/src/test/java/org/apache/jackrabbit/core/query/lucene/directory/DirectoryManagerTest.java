@@ -32,7 +32,7 @@ import junit.framework.TestCase;
  */
 public class DirectoryManagerTest extends TestCase {
 
-    private static final Collection IMPLEMENTATIONS = Arrays.asList(
+    private static final Collection<Class<?>> IMPLEMENTATIONS = Arrays.asList(
             new Class[]{FSDirectoryManager.class, RAMDirectoryManager.class});
 
     private static final SearchIndex INDEX = new SearchIndex();
@@ -91,9 +91,9 @@ public class DirectoryManagerTest extends TestCase {
     }
 
     private void execute(Callable callable) throws Exception {
-        for (Iterator it = IMPLEMENTATIONS.iterator(); it.hasNext(); ) {
-            Class clazz = (Class) it.next();
-            DirectoryManager dirMgr = (DirectoryManager) clazz.newInstance();
+        for (Iterator<Class<?>> it = IMPLEMENTATIONS.iterator(); it.hasNext(); ) {
+            Class<?> clazz = it.next();
+            DirectoryManager dirMgr = (DirectoryManager) clazz.getDeclaredConstructor().newInstance();
             dirMgr.init(INDEX);
             try {
                 callable.call(dirMgr);

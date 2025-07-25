@@ -69,7 +69,7 @@ public class AccessControlProviderStub {
 			try {
 				Class<?> acProviderClass = Class.forName(className);
 				if (AccessControlProvider.class.isAssignableFrom(acProviderClass)) {
-					AccessControlProvider acProvider = (AccessControlProvider) acProviderClass.newInstance();
+					AccessControlProvider acProvider = (AccessControlProvider) acProviderClass.getDeclaredConstructor().newInstance();
 					acProvider.init(config);
 					return acProvider;
 				} else {
