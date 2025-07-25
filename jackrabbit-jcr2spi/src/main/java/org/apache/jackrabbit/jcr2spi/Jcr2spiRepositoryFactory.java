@@ -191,7 +191,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
                     serviceFactoryClass = Class.forName(serviceFactoryName);
                 }
 
-                Object serviceFactory = serviceFactoryClass.newInstance();
+                Object serviceFactory = serviceFactoryClass.getDeclaredConstructor().newInstance();
 
                 if (serviceFactory instanceof RepositoryServiceFactory) {
                     log.debug("Found RepositoryServiceFactory {}", serviceFactory);
@@ -248,7 +248,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
         public <T> T getConfiguration(String name, T defaultValue) {
             if (parameters.containsKey(name)) {
                 Object value = parameters.get(name);
-                Class clazz = (defaultValue == null)
+                Class<?> clazz = (defaultValue == null)
                         ? value.getClass()
                         : defaultValue.getClass();
                 if (clazz.isAssignableFrom(value.getClass())) {

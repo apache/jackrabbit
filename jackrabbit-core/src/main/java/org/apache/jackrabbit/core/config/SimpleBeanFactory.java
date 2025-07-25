@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.config;
 
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +41,12 @@ public class SimpleBeanFactory implements BeanFactory {
             }
 
             // Instantiate the object using the default constructor
-            return objectClass.newInstance();
+            return objectClass.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(
                     "Configured bean implementation class " + cname
                             + " was not found.", e);
-        } catch (InstantiationException e) {
+        } catch (InstantiationException|IllegalArgumentException|InvocationTargetException|NoSuchMethodException|SecurityException e) {
             throw new ConfigurationException(
                     "Configured bean implementation class " + cname
                             + " can not be instantiated.", e);

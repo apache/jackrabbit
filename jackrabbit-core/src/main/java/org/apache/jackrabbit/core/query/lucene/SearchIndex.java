@@ -933,7 +933,7 @@ public class SearchIndex extends AbstractQueryHandler {
             throws IOException {
         ExcerptProvider ep;
         try {
-            ep = (ExcerptProvider) excerptProviderClass.newInstance();
+            ep = (ExcerptProvider) excerptProviderClass.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw Util.createIOException(e);
         }
@@ -1307,7 +1307,7 @@ public class SearchIndex extends AbstractQueryHandler {
         SynonymProvider sp = null;
         if (synonymProviderClass != null) {
             try {
-                sp = (SynonymProvider) synonymProviderClass.newInstance();
+                sp = (SynonymProvider) synonymProviderClass.getDeclaredConstructor().newInstance();
                 sp.initialize(createSynonymProviderConfigResource());
             } catch (Exception e) {
                 log.warn("Exception initializing synonym provider: "
@@ -1331,7 +1331,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 throw new IOException(directoryManagerClass +
                         " is not a DirectoryManager implementation");
             }
-            DirectoryManager df = (DirectoryManager) clazz.newInstance();
+            DirectoryManager df = (DirectoryManager) clazz.getDeclaredConstructor().newInstance();
             df.init(this);
             return df;
         } catch (IOException e) {
@@ -1356,7 +1356,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 throw new IOException(redoLogFactoryClass +
                         " is not a RedoLogFactory implementation");
             }
-            return (RedoLogFactory) clazz.newInstance();
+            return (RedoLogFactory) clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             IOException ex = new IOException();
             ex.initCause(e);
@@ -1420,7 +1420,7 @@ public class SearchIndex extends AbstractQueryHandler {
         SpellChecker spCheck = null;
         if (spellCheckerClass != null) {
             try {
-                spCheck = (SpellChecker) spellCheckerClass.newInstance();
+                spCheck = (SpellChecker) spellCheckerClass.getDeclaredConstructor().newInstance();
                 spCheck.init(this);
             } catch (Exception e) {
                 log.warn("Exception initializing spell checker: "
@@ -2422,7 +2422,7 @@ public class SearchIndex extends AbstractQueryHandler {
     public void setSimilarityClass(String className) {
         try {
             Class<?> similarityClass = Class.forName(className);
-            similarity = (Similarity) similarityClass.newInstance();
+            similarity = (Similarity) similarityClass.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             log.warn("Invalid Similarity class: " + className, e);
         }

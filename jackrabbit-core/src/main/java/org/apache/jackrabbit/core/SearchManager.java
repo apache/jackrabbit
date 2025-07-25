@@ -431,7 +431,7 @@ public class SearchManager implements SynchronousEventListener {
     protected AbstractQueryImpl createQueryInstance() throws RepositoryException {
         try {
             String queryImplClassName = handler.getQueryClass();
-            Object obj = Class.forName(queryImplClassName).newInstance();
+            Object obj = Class.forName(queryImplClassName).getDeclaredConstructor().newInstance();
             if (obj instanceof AbstractQueryImpl) {
                 return (AbstractQueryImpl) obj;
             } else {

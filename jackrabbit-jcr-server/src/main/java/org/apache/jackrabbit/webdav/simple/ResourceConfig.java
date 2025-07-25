@@ -351,7 +351,7 @@ public class ResourceConfig {
                 String className = DomUtil.getAttribute(classElem, "name", null);
                 if (className != null) {
                     Class<?> c = Class.forName(className);
-                    instance = c.newInstance();
+                    instance = c.getDeclaredConstructor().newInstance();
                 } else {
                     log.error("Invalid configuration: missing 'class' element");
                 }

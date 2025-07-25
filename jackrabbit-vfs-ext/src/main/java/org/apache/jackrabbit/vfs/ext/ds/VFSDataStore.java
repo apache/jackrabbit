@@ -300,7 +300,7 @@ public class VFSDataStore extends CachingDataStore {
                 fileSystemManager = new StandardFileSystemManager();
             } else {
                 final Class<?> mgrClass = Class.forName(getFileSystemManagerClassName());
-                fileSystemManager = (FileSystemManager) mgrClass.newInstance();
+                fileSystemManager = (FileSystemManager) mgrClass.getDeclaredConstructor().newInstance();
             }
 
             if (fileSystemManager instanceof DefaultFileSystemManager) {
