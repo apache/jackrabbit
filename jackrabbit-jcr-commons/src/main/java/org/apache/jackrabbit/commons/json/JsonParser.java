@@ -29,7 +29,9 @@ import java.util.Stack;
  * <code>JsonParser</code> parses and validates the JSON object passed upon 
  * {@link #parse(String)} or {@link #parse(InputStream, String)} and notifies
  * the specified <code>JsonHandler</code>
+ * @deprecated use <a href="https://jakartaee.github.io/jsonp-api/docs/api/?overview-summary.html">JSON Processing API</a> instead.
  */
+@Deprecated(since="2.24.0")
 public class JsonParser {
 
     private static final String NULL = "null";

@@ -21,7 +21,9 @@ import java.io.IOException;
 /**
  * The <code>JSONHandler</code> interface receives notifications from the
  * <code>JsonParser</code>.
+ * @deprecated use <a href="https://jakartaee.github.io/jsonp-api/docs/api/?overview-summary.html">JSON Processing API</a> instead.
  */
+@Deprecated(since="2.24.0")
 public interface JsonHandler {
 
     /**
