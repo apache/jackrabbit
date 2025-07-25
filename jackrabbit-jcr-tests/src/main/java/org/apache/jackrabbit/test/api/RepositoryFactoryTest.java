@@ -47,7 +47,7 @@ public class RepositoryFactoryTest extends AbstractJCRTest {
             fail("Property '" + RepositoryStub.REPOSITORY_FACTORY + "' is not defined.");
         } else {
             try {
-                return (RepositoryFactory) Class.forName(className).newInstance();
+                return (RepositoryFactory) Class.forName(className).getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 fail(e.toString());
             }

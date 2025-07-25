@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.util.db;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
@@ -286,7 +287,7 @@ public final class ConnectionFactory {
             Class<Context> contextClass, String name)
             throws RepositoryException {
         try {
-            Object object = contextClass.newInstance().lookup(name);
+            Object object = contextClass.getDeclaredConstructor().newInstance().lookup(name);
             if (object instanceof DataSource) {
                 return (DataSource) object;
             } else {
@@ -294,10 +295,7 @@ public final class ConnectionFactory {
                         "Object " + object + " with JNDI name "
                         + name + " is not a JDBC DataSource");
             }
-        } catch (InstantiationException e) {
-            throw new RepositoryException(
-                    "Invalid JNDI context: " + contextClass.getName(), e);
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException|IllegalAccessException|IllegalArgumentException|InvocationTargetException|NoSuchMethodException|SecurityException e) {
             throw new RepositoryException(
                     "Invalid JNDI context: " + contextClass.getName(), e);
         } catch (NamingException e) {
@@ -328,7 +326,7 @@ public final class ConnectionFactory {
                 // The JDBC specification recommends the Class.forName
                 // method without the .newInstance() method call,
                 // but it is required after a Derby 'shutdown'
-                instance = (Driver) driverClass.newInstance();
+                instance = (Driver) driverClass.getDeclaredConstructor().newInstance();
             } catch (Throwable e) {
                 // Ignore exceptions as there's no requirement for
                 // a JDBC driver class to have a public default constructor

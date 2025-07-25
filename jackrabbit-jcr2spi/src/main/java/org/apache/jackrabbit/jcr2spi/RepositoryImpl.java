@@ -243,7 +243,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
                     }
                     String repositoryConfigClassName = (String)((StringRefAddr)rclas).getContent();
 
-                    Object rof = Class.forName(configFactoryClassName).newInstance();
+                    Object rof = Class.forName(configFactoryClassName).getDeclaredConstructor().newInstance();
 
                     if (! (rof instanceof ObjectFactory)) {
                         throw new Exception(rof + " must implement ObjectFactory");

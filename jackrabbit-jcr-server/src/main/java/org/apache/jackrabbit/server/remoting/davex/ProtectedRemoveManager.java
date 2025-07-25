@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,14 +92,10 @@ class ProtectedRemoveManager {
             if (!className.isEmpty()) {
                 Class<?> irHandlerClass = Class.forName(className);
                 if (ProtectedItemRemoveHandler.class.isAssignableFrom(irHandlerClass)) {
-                    irHandler = (ProtectedItemRemoveHandler) irHandlerClass.newInstance();
+                    irHandler = (ProtectedItemRemoveHandler) irHandlerClass.getDeclaredConstructor().newInstance();
                 }
             }
-        } catch (ClassNotFoundException e) {
-            log.error(e.getMessage(), e);
-        } catch (InstantiationException e) {
-            log.error(e.getMessage(), e);
-        } catch (IllegalAccessException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
             log.error(e.getMessage(), e);
         }
         return irHandler;

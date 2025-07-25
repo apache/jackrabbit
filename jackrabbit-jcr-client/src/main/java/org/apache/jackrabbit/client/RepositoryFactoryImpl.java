@@ -65,7 +65,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
             Class<?> repositoryFactoryClass = Class.forName(repositoryFactoryName, true,
                     Thread.currentThread().getContextClassLoader());
 
-            repositoryFactory = repositoryFactoryClass.newInstance();
+            repositoryFactory = repositoryFactoryClass.getDeclaredConstructor().newInstance();
         }
         catch (Exception e) {
             throw new RepositoryException(e);
