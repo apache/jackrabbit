@@ -188,7 +188,7 @@ shell such as "bash" ("sh" will not work due to the lack of certain
 built-in commands). On Windows, use Cygwin or WSL.
 
 To check this release candidate, run in a SVN checkout of
-<https://dist.apache.org/repos/dist/dev/jackrabbit/>;
+&lt;https://dist.apache.org/repos/dist/dev/jackrabbit/&gt;:
 
     $ bash check-release.sh jackrabbit ${project.version} ${checksum}
 
