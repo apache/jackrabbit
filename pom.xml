@@ -190,7 +190,7 @@ built-in commands). On Windows, use Cygwin or WSL.
 To check this release candidate, run in a SVN checkout of
 &lt;https://dist.apache.org/repos/dist/dev/jackrabbit/&gt;:
 
-    $ bash check-release.sh jackrabbit ${project.version} ${checksum}
+    $ ./check-release.sh jackrabbit ${project.version} ${checksum}
 
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
 The vote is open for the next 72 hours and passes if a majority of at
