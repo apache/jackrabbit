@@ -183,10 +183,14 @@ A staged Maven repository is available for review at:
 
     https://repository.apache.org/
 
-The command for running automated checks against this release candidate is:
+The command for running automated checks requires the use of a *nix
+shell such as "bash" ("sh" will not work due to the lack of certain
+built-in commands). On Windows, use Cygwin or WSL.
 
-    # run in SVN checkout of https://dist.apache.org/repos/dist/dev/jackrabbit/
-    $ sh check-release.sh jackrabbit ${project.version} ${checksum}
+To check this release candidate, run in a SVN checkout of
+&lt;https://dist.apache.org/repos/dist/dev/jackrabbit/&gt;:
+
+    $ ./check-release.sh jackrabbit ${project.version} ${checksum}
 
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
 The vote is open for the next 72 hours and passes if a majority of at
