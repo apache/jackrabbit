@@ -235,10 +235,10 @@ public class NamespaceHelper {
             }
 
             if (prefix == null) {
-                prefix = suggestPrefix(uri, namespace -> {
+                prefix = suggestPrefix(uri, pref -> {
                     // prefix checker
                     try {
-                        return registry.getPrefix(namespace);
+                        return registry.getURI(pref);
                     } catch (RepositoryException e) {
                         return null;
                     }
@@ -309,8 +309,9 @@ public class NamespaceHelper {
         if (sha != null) {
             for (int i = 7; i <= sha.length(); i++) {
                 String prefix = "s-" + sha.substring(0, i);
-                if (!namespace.equals(lookupNamespace.apply(prefix))) {
-                    // prefix not in use; so we're ok
+                String lookedUpPrefix = lookupNamespace.apply(prefix);
+                if (lookedUpPrefix == null) {
+                    // unused, so go ahead with this prefix
                     return prefix;
                 }
             }

@@ -255,7 +255,13 @@ public class NamespaceHelperTest extends TestCase {
         assertEquals("example.com-foo", nsHelper.registerNamespace(null, "https://ns.example.com/foo"));
 
         // check deriving from namespace name with prefix already taken, hash used instead
-        // assertEquals("dc", nsHelper.registerNamespace(null, "http://www.example.com/foo"));
+        assertEquals("s-12a490e", nsHelper.registerNamespace(null, "http://www.example.com/foo"));
+
+        // nasty: computed hash already used as prefix
+        assertEquals("example.com-bar", nsHelper.registerNamespace(null, "http://www.example.com/bar"));
+        assertEquals("s-b2e675c", nsHelper.registerNamespace("s-b2e675c", "ouch:"));
+        // returned prefix uses the SHA, but one more character
+        assertEquals("s-b2e675c8", nsHelper.registerNamespace(null, "example.com/bar"));
 
         // register multiple namespaces
         Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
