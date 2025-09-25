@@ -272,10 +272,17 @@ public class NamespaceHelper {
 
     // non-public supporting code
 
-    // map with 'optimal' prefix mappings; hard-wired should be ok
+    // map with 'optimal' prefix mappings; hard-wired should be ok for now
     private static final Map<String, String> KNOWN_PREFIXES =
-            Map.of("http://purl.org/dc/terms/", "dc",
+            Map.of("http://creativecommons.org/ns#", "cc",
+                    "http://purl.org/dc/terms/", "dc",
+                    "http://ns.adobe.com/DICOM/", "DICOM",
                     "http://ns.adobe.com/exif/1.0/", "exif",
+                    "http://ns.adobe.com/pdf/1.3/", "pdf",
+                    "http://ns.adobe.com/pdfx/1.3/", "pdfx",
+                    "http://ns.adobe.com/photoshop/1.0/", "photoshop",
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf",
+                    "http://ns.adobe.com/tiff/1.0/", "tiff",
                     "http://ns.adobe.com/xap/1.0/", "xmp");
 
 
