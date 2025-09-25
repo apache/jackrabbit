@@ -263,6 +263,10 @@ public class NamespaceHelperTest extends TestCase {
         // returned prefix uses the SHA, but one more character
         assertEquals("s-b2e675c8", nsHelper.registerNamespace(null, "example.com/bar"));
 
+        // nasty: registering a preferred namespace prefix, fall back to namespace name based prefix generation
+        assertEquals("xmp", nsHelper.registerNamespace("xmp", "xmp-ouch:"));
+        assertEquals("adobe.com-xap-1.0", nsHelper.registerNamespace(null, "http://ns.adobe.com/xap/1.0/"));
+
         // register multiple namespaces
         Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
         nsHelper.registerNamespaces(input);

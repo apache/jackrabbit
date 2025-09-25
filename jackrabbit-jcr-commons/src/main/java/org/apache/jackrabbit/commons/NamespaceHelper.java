@@ -275,7 +275,8 @@ public class NamespaceHelper {
     // map with 'optimal' prefix mappings; hard-wired should be ok
     private static final Map<String, String> KNOWN_PREFIXES =
             Map.of("http://purl.org/dc/terms/", "dc",
-                    "http://ns.adobe.com/exif/1.0/", "exif");
+                    "http://ns.adobe.com/exif/1.0/", "exif",
+                    "http://ns.adobe.com/xap/1.0/", "xmp");
 
 
     // suggest an available prefix for the provided namespace, based on a random UUID
