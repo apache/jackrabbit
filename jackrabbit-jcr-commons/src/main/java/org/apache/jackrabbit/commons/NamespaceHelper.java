@@ -246,7 +246,12 @@ public class NamespaceHelper {
             }
 
             // Register the namespace
-            registry.registerNamespace(prefix, uri);
+            try {
+                registry.registerNamespace(prefix, uri);
+            } catch (NamespaceException ex) {
+                // likely prefix is already in use; retry with null prefix
+                return registerNamespace(null, uri);
+            }
         }
 
         return session.getNamespacePrefix(uri);
@@ -324,14 +329,14 @@ public class NamespaceHelper {
         if (prefix.startsWith("http://")) {
             prefix = prefix.substring("http://".length());
         } else if (prefix.startsWith("https://")) {
-            prefix = prefix.substring("httpS://".length());
+            prefix = prefix.substring("https://".length());
         }
 
         // strip common host name prefixes
         if (prefix.startsWith("www.")) {
             prefix = prefix.substring("www.".length());
-        } else if (prefix.startsWith("ns")) {
-            prefix = prefix.substring("ns".length());
+        } else if (prefix.startsWith("ns.")) {
+            prefix = prefix.substring("ns.".length());
         }
 
         // replace characters not allowed in prefix (here: '\' and :)

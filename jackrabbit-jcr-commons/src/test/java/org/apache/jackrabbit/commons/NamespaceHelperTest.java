@@ -163,33 +163,39 @@ public class NamespaceHelperTest extends TestCase {
 
         Mockito.doAnswer(invocation -> {
             String rpref = invocation.getArgument(0);
-            String ruri = invocation.getArgument(1);
-            if (null != uri2pref.get(ruri) || null != pref2uri.get(rpref)) {
-                throw new NamespaceException();
+            String rname = invocation.getArgument(1);
+            if (null != uri2pref.get(rname)) {
+                throw new NamespaceException("namespace name '" + rname + "' already registered");
+            } else if (null != pref2uri.get(rpref)) {
+                throw new NamespaceException("namespace prefix '" + rpref + "' already registered");
             } else {
-                pref2uri.put(rpref, ruri);
-                uri2pref.put(ruri, rpref);
+                pref2uri.put(rpref, rname);
+                uri2pref.put(rname, rpref);
                 return null;
             }
         }).when(nsReg).registerNamespace(any(), any());
 
         when(nsReg.getPrefix(any())).thenAnswer(invocation -> {
-            String found = uri2pref.get(invocation.getArgument(0));
+            String name = invocation.getArgument(0);
+            String found = uri2pref.get(name);
             if (found != null) {
                 return found;
             } else {
-                throw new NamespaceException();
+                throw new NamespaceException("namespace name '" + name + "' not registered");
             }
         });
 
         when(nsReg.getURI(any())).thenAnswer(invocation -> {
-            String found = pref2uri.get(invocation.getArgument(0));
+            String prefix = invocation.getArgument(0);
+            String found = pref2uri.get(prefix);
             if (found != null) {
                 return found;
             } else {
-                throw new NamespaceException();
+                throw new NamespaceException("namespace prefix '" + prefix + "' not registered");
             }
         });
+
+        // no session-local mappings
 
         when(session.getNamespacePrefix(any())).thenAnswer(invocation -> {
             String found = uri2pref.get(invocation.getArgument(0));
@@ -213,26 +219,56 @@ public class NamespaceHelperTest extends TestCase {
 
         // register namespace (test makes assumptions about implementation)
 
+        // simple cases
         assertEquals("foo", nsHelper.registerNamespace("", "foo:"));
         assertEquals("foo2", nsHelper.registerNamespace("", "foo2:"));
+
+        // suggested prefix will be ignored because it is illegal, so a new prefix is generated
         assertEquals("foo3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+
+        // suggested prefix will be ignored because it is illegal, so a new prefix is generated
         assertEquals("foo4", nsHelper.registerNamespace("123", "foo4:"));
+
+        // suggested prefix will be ignored because it is illegal, however the namespace name already is mapped
         assertEquals("foo3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+
+        // null prefix, handled like illegal prefix, namespace name is new thus new prefix
         assertEquals("foo6", nsHelper.registerNamespace(null, "foo6:"));
 
+        // simple case: new namespace name, new prefix
         assertEquals("bar", nsHelper.registerNamespace("bar", "bar:"));
+
+        // suggested prefix already is mapped to a different namespace, derive new one based on namespace name
         assertEquals("bar2", nsHelper.registerNamespace("bar", "bar2:"));
+
+        // repeat
         assertEquals("bar3", nsHelper.registerNamespace("bar", "bar3:"));
 
+        // attempt to register over immutable mappings returns hardwired prefix
         assertEquals("jcr", nsHelper.registerNamespace("wtf", NamespaceRegistry.NAMESPACE_JCR));
         assertEquals("xml", nsHelper.registerNamespace("", NamespaceRegistry.NAMESPACE_XML));
 
-        // register namespaces
+        // check deriving from namespace name (hardwired mappings)
+        assertEquals("dc", nsHelper.registerNamespace(null, "http://purl.org/dc/terms/"));
+
+        // check deriving from namespace name
+        assertEquals("example.com-foo", nsHelper.registerNamespace(null, "https://ns.example.com/foo"));
+
+        // check deriving from namespace name with prefix already taken, hash used instead
+        // assertEquals("dc", nsHelper.registerNamespace(null, "http://www.example.com/foo"));
+
+        // register multiple namespaces
         Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
         nsHelper.registerNamespaces(input);
+
+        // registered prefixes as suggested
         assertEquals("test1", nsReg.getPrefix("test1:"));
+
+        // test2 is invalid namespace name, but reluctantly accepted
         assertEquals("test2", nsReg.getPrefix("test2"));
-        assertEquals("ns6", nsReg.getPrefix("test3:"));
+
+        // no prefix suggested, prefix derived from namespace name
+        assertEquals("test3", nsReg.getPrefix("test3:"));
 
         // check invocation count for getNamespaceRegistry (JCR-5161)
         Mockito.verify(workspace, Mockito.times(1)).getNamespaceRegistry();
