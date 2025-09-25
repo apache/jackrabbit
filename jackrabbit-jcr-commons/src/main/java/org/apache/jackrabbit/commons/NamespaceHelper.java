@@ -288,7 +288,7 @@ public class NamespaceHelper {
 
     // suggest an available prefix for the provided namespace, based on a random UUID
     // (last resort)
-    private static String makeUpPrefixByUUID(String namespace, Function<String, String> lookupNamespace) {
+    private static String devisePrefixByUUID(String namespace, Function<String, String> lookupNamespace) {
         String prefix;
 
         do {
@@ -311,7 +311,7 @@ public class NamespaceHelper {
 
     // suggest an available prefix for the provided namespace, based on the sha-256
     // of the namespace name, and a final fallback to UUID based (while considering pre-existing mappings)
-    private static String makeUpPrefixTrySha256(String namespace, Function<String, String> lookupNamespace) {
+    private static String devisePrefixTrySha256(String namespace, Function<String, String> lookupNamespace) {
 
         String sha = getSha256(namespace);
         if (sha != null) {
@@ -326,12 +326,12 @@ public class NamespaceHelper {
         }
 
         // fallback to UUID
-        return makeUpPrefixByUUID(namespace, lookupNamespace);
+        return devisePrefixByUUID(namespace, lookupNamespace);
     }
 
     // suggest an available prefix for the provided namespace, based on the characters
     // in the namespace name (while considering pre-existing mappings)
-    private static String makeUpPrefix(String namespace, Function<String, String> lookupNamespace) {
+    private static String devisePrefix(String namespace, Function<String, String> lookupNamespace) {
         String prefix = namespace.toLowerCase(Locale.ENGLISH);
 
         // strip scheme when http(s)
@@ -360,7 +360,7 @@ public class NamespaceHelper {
         if (lookedUpNamespace == null || lookedUpNamespace.equals(namespace)) {
             return prefix;
         } else {
-            return makeUpPrefixTrySha256(namespace, lookupNamespace);
+            return devisePrefixTrySha256(namespace, lookupNamespace);
         }
     }
 
@@ -376,7 +376,7 @@ public class NamespaceHelper {
         if (known != null && (lookedUpNamespace == null || namespace.equals(lookedUpNamespace))) {
             return known;
         } else {
-            return makeUpPrefix(namespace, lookupPrefix);
+            return devisePrefix(namespace, lookupPrefix);
         }
     }
 }
