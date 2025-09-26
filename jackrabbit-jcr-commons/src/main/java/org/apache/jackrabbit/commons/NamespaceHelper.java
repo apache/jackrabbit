@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -288,7 +288,7 @@ public class NamespaceHelper {
 
     // suggest an available prefix for the provided namespace, based on a random UUID
     // (last resort)
-    private static String devisePrefixByUUID(String namespace, Function<String, String> lookupNamespace) {
+    private static String devisePrefixByUUID(String namespace, UnaryOperator<String> lookupNamespace) {
         String prefix;
 
         do {
@@ -311,7 +311,7 @@ public class NamespaceHelper {
 
     // suggest an available prefix for the provided namespace, based on the sha-256
     // of the namespace name, and a final fallback to UUID based (while considering pre-existing mappings)
-    private static String devisePrefixTrySha256(String namespace, Function<String, String> lookupNamespace) {
+    private static String devisePrefixTrySha256(String namespace, UnaryOperator<String> lookupNamespace) {
 
         String sha = getSha256(namespace);
         if (sha != null) {
@@ -331,7 +331,7 @@ public class NamespaceHelper {
 
     // suggest an available prefix for the provided namespace, based on the characters
     // in the namespace name (while considering pre-existing mappings)
-    private static String devisePrefix(String namespace, Function<String, String> lookupNamespace) {
+    private static String devisePrefix(String namespace, UnaryOperator<String> lookupNamespace) {
         String prefix = namespace.toLowerCase(Locale.ENGLISH);
 
         // strip scheme when http(s)
@@ -365,7 +365,7 @@ public class NamespaceHelper {
     }
 
     // suggest an available prefix for the provided namespace (while considering pre-existing mappings)
-    private static String suggestPrefix(String namespace, Function<String, String> lookupPrefix) {
+    private static String suggestPrefix(String namespace, UnaryOperator<String> lookupPrefix) {
         // try hard-wired map
         String known = KNOWN_PREFIXES.get(namespace);
 
