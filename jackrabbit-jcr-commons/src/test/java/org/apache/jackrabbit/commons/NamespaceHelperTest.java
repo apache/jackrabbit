@@ -267,6 +267,11 @@ public class NamespaceHelperTest extends TestCase {
         assertEquals("xmp", nsHelper.registerNamespace("xmp", "xmp-ouch:"));
         assertEquals("adobe.com-xap-1.0", nsHelper.registerNamespace(null, "http://ns.adobe.com/xap/1.0/"));
 
+        // problematic trailing chars
+        assertEquals("urn-xyz", nsHelper.registerNamespace("", "urn:xyz::"));
+        // would be same prefix after removing trailing problems, thus falling back to hash
+        assertEquals("s-98cf7c3", nsHelper.registerNamespace("", "urn:xyz:::"));
+
         // register multiple namespaces
         Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
         nsHelper.registerNamespaces(input);

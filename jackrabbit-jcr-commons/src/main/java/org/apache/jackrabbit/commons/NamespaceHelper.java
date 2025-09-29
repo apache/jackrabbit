@@ -348,11 +348,11 @@ public class NamespaceHelper {
             prefix = prefix.substring("ns.".length());
         }
 
-        // replace characters not allowed in prefix (here: '\' and :)
+        // replace characters not allowed in prefix (here: '\', '/' and :)
         prefix = prefix.replaceAll("[\\/:]+", "-");
 
         // strip trailing replacement character
-        if (prefix.endsWith("-")) {
+        while (prefix.endsWith("-")) {
             prefix = prefix.substring(0, prefix.length() - 1);
         }
 
