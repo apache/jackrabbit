@@ -143,17 +143,151 @@ public class NamespaceHelperTest extends TestCase {
         assertEquals("xyz", prefix);
     }
 
-    public void testRegisterNamespace() throws RepositoryException {
+    public void testRegisterNamespaceDeriving() throws RepositoryException {
         Workspace workspace = Mockito.mock(Workspace.class);
-        NamespaceRegistry nsReg = Mockito.mock(NamespaceRegistry.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
 
         when(session.getWorkspace()).thenReturn(workspace);
         when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
 
-        // poor man's namespace registry
+        // check deriving from namespace name
+        assertEquals("example.com-foo", nsHelper.registerNamespace(null, "https://ns.example.com/foo"));
 
-        final HashMap<String, String> pref2uri = new HashMap<>();
-        final HashMap<String, String> uri2pref = new HashMap<>();
+        // check deriving from namespace name with prefix already taken, hash used instead
+        assertEquals("s-12a490e", nsHelper.registerNamespace(null, "http://www.example.com/foo"));
+
+        // nasty: computed hash already used as prefix
+        assertEquals("example.com-bar", nsHelper.registerNamespace(null, "http://www.example.com/bar"));
+        assertEquals("s-b2e675c", nsHelper.registerNamespace("s-b2e675c", "ouch:"));
+        // returned prefix uses the SHA, but one more character
+        assertEquals("s-b2e675c8", nsHelper.registerNamespace(null, "example.com/bar"));
+    }
+
+    public void testRegisterNamespaceKnownMapping() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        // check deriving from namespace name
+        assertEquals("example.com-foo", nsHelper.registerNamespace(null, "https://ns.example.com/foo"));
+    }
+
+    public void testRegisterNamespaceSimple() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        // simple cases
+        assertEquals("foo", nsHelper.registerNamespace("", "foo:"));
+        assertEquals("foo2", nsHelper.registerNamespace("", "foo2:"));
+
+        // suggested prefix will be ignored because it is illegal, so a new prefix is generated
+        assertEquals("foo3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+
+        // suggested prefix will be ignored because it is illegal, so a new prefix is generated
+        assertEquals("foo4", nsHelper.registerNamespace("123", "foo4:"));
+
+        // suggested prefix will be ignored because it is illegal, however the namespace name already is mapped
+        assertEquals("foo3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
+
+        // null prefix, handled like illegal prefix, namespace name is new thus new prefix
+        assertEquals("foo6", nsHelper.registerNamespace(null, "foo6:"));
+
+        // simple case: new namespace name, new prefix
+        assertEquals("bar", nsHelper.registerNamespace("bar", "bar:"));
+
+        // suggested prefix already is mapped to a different namespace, derive new one based on namespace name
+        assertEquals("bar2", nsHelper.registerNamespace("bar", "bar2:"));
+
+        // repeat
+        assertEquals("bar3", nsHelper.registerNamespace("bar", "bar3:"));
+
+        // check invocation count for getNamespaceRegistry (JCR-5161)
+        Mockito.verify(workspace, Mockito.times(1)).getNamespaceRegistry();
+    }
+
+    public void testRegisterNamespacePreferredPrefixTaken() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        // nasty: registering a preferred namespace prefix, fall back to namespace name based prefix generation
+        assertEquals("xmp", nsHelper.registerNamespace("xmp", "xmp-ouch:"));
+        assertEquals("adobe.com-xap-1.0", nsHelper.registerNamespace(null, "http://ns.adobe.com/xap/1.0/"));
+    }
+
+    public void testRegisterNamespaceImmutableMappings() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        // attempt to register over immutable mappings returns hardwired prefix
+        assertEquals("jcr", nsHelper.registerNamespace("wtf", NamespaceRegistry.NAMESPACE_JCR));
+        assertEquals("xml", nsHelper.registerNamespace("", NamespaceRegistry.NAMESPACE_XML));
+    }
+
+    public void testRegisterNamespaceProblematicNames() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        // problematic trailing chars
+        assertEquals("urn-xyz", nsHelper.registerNamespace("", "urn:xyz::"));
+        // would be same prefix after removing trailing problems, thus falling back to hash
+        assertEquals("s-98cf7c3", nsHelper.registerNamespace("", "urn:xyz:::"));
+    }
+
+    public void testRegisterMultipleNamespaces() throws RepositoryException {
+        Workspace workspace = Mockito.mock(Workspace.class);
+        NamespaceRegistry nsReg = mockNamespaceRegistry();
+        Session session = mockSessionWithoutSessionMappings();
+
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(workspace.getNamespaceRegistry()).thenReturn(nsReg);
+        NamespaceHelper nsHelper = new NamespaceHelper(session);
+
+        Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
+        nsHelper.registerNamespaces(input);
+
+        // registered prefixes as suggested
+        assertEquals("test1", nsReg.getPrefix("test1:"));
+
+        // test2 is invalid namespace name, but reluctantly accepted
+        assertEquals("test2", nsReg.getPrefix("test2"));
+
+        // no prefix suggested, prefix derived from namespace name
+        assertEquals("test3", nsReg.getPrefix("test3:"));
+    }
+
+    // poor man's namespace registry
+
+    private Map<String, String> pref2uri = new HashMap<>();
+    private Map<String, String> uri2pref = new HashMap<>();
+
+    private NamespaceRegistry mockNamespaceRegistry() throws RepositoryException {
+        NamespaceRegistry result = Mockito.mock(NamespaceRegistry.class);
 
         // defaults (incomplete)
         pref2uri.put("xml", NamespaceRegistry.NAMESPACE_XML);
@@ -163,78 +297,66 @@ public class NamespaceHelperTest extends TestCase {
 
         Mockito.doAnswer(invocation -> {
             String rpref = invocation.getArgument(0);
-            String ruri = invocation.getArgument(1);
-            if (null != uri2pref.get(ruri) || null != pref2uri.get(rpref)) {
-                throw new NamespaceException();
+            String rname = invocation.getArgument(1);
+            if (null != uri2pref.get(rname)) {
+                throw new NamespaceException("namespace name '" + rname + "' already registered");
+            } else if (null != pref2uri.get(rpref)) {
+                throw new NamespaceException("namespace prefix '" + rpref + "' already registered");
             } else {
-                pref2uri.put(rpref, ruri);
-                uri2pref.put(ruri, rpref);
+                pref2uri.put(rpref, rname);
+                uri2pref.put(rname, rpref);
                 return null;
             }
-        }).when(nsReg).registerNamespace(any(), any());
+        }).when(result).registerNamespace(any(), any());
 
-        when(nsReg.getPrefix(any())).thenAnswer(invocation -> {
-            String found = uri2pref.get(invocation.getArgument(0));
+        when(result.getPrefix(any())).thenAnswer(invocation -> {
+            String name = invocation.getArgument(0);
+            String found = uri2pref.get(name);
             if (found != null) {
                 return found;
             } else {
-                throw new NamespaceException();
+                throw new NamespaceException("namespace name '" + name + "' not registered");
             }
         });
 
-        when(nsReg.getURI(any())).thenAnswer(invocation -> {
-            String found = pref2uri.get(invocation.getArgument(0));
+        when(result.getURI(any())).thenAnswer(invocation -> {
+            String prefix = invocation.getArgument(0);
+            String found = pref2uri.get(prefix);
             if (found != null) {
                 return found;
             } else {
-                throw new NamespaceException();
+                throw new NamespaceException("namespace prefix '" + prefix + "' not registered");
             }
         });
 
-        when(session.getNamespacePrefix(any())).thenAnswer(invocation -> {
-            String found = uri2pref.get(invocation.getArgument(0));
+        return result;
+    }
+
+    private Session mockSessionWithoutSessionMappings() throws RepositoryException {
+        Session result = Mockito.mock(Session.class);
+
+        // no session-local mappings
+
+        when(result.getNamespacePrefix(any())).thenAnswer(invocation -> {
+            String namespace = invocation.getArgument(0);
+            String found = uri2pref.get(namespace);
             if (found != null) {
                 return found;
             } else {
-                throw new NamespaceException();
+                throw new NamespaceException("no mapping found for namespace '" + namespace + "'");
             }
         });
 
-        when(session.getNamespaceURI(any())).thenAnswer(invocation -> {
-            String found = pref2uri.get(invocation.getArgument(0));
+        when(result.getNamespaceURI(any())).thenAnswer(invocation -> {
+            String prefix = invocation.getArgument(0);
+            String found = pref2uri.get(prefix);
             if (found != null) {
                 return found;
             } else {
-                throw new NamespaceException();
+                throw new NamespaceException("no mapping found for prefix '" + prefix + "'");
             }
         });
 
-        NamespaceHelper nsHelper = new NamespaceHelper(session);
-
-        // register namespace (test makes assumptions about implementation)
-
-        assertEquals("ns", nsHelper.registerNamespace("", "foo:"));
-        assertEquals("ns2", nsHelper.registerNamespace("", "foo2:"));
-        assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
-        assertEquals("ns4", nsHelper.registerNamespace("123", "foo4:"));
-        assertEquals("ns3", nsHelper.registerNamespace("xmlxxx", "foo3:"));
-        assertEquals("ns5", nsHelper.registerNamespace(null, "foo6:"));
-
-        assertEquals("bar", nsHelper.registerNamespace("bar", "bar:"));
-        assertEquals("bar2", nsHelper.registerNamespace("bar", "bar2:"));
-        assertEquals("bar3", nsHelper.registerNamespace("bar", "bar3:"));
-
-        assertEquals("jcr", nsHelper.registerNamespace("wtf", NamespaceRegistry.NAMESPACE_JCR));
-        assertEquals("xml", nsHelper.registerNamespace("", NamespaceRegistry.NAMESPACE_XML));
-
-        // register namespaces
-        Map<String, String> input = Map.of("test1", "test1:", "test2", "test2", "", "test3:");
-        nsHelper.registerNamespaces(input);
-        assertEquals("test1", nsReg.getPrefix("test1:"));
-        assertEquals("test2", nsReg.getPrefix("test2"));
-        assertEquals("ns6", nsReg.getPrefix("test3:"));
-
-        // check invocation count for getNamespaceRegistry (JCR-5161)
-        Mockito.verify(workspace, Mockito.times(1)).getNamespaceRegistry();
+        return result;
     }
 }
