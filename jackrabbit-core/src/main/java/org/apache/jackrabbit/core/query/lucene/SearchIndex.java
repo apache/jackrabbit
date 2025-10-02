@@ -37,9 +37,9 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.jackrabbit.commons.xml.Factory;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.cluster.ChangeLogRecord;
@@ -92,7 +92,6 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Payload;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.IndexSearcher;
@@ -1461,9 +1460,7 @@ public class SearchIndex extends AbstractQueryHandler {
             return null;
         }
         try {
-            DocumentBuilderFactory factory =
-                    DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            DocumentBuilder builder = Factory.documentBuilderFactory().newDocumentBuilder();
             builder.setEntityResolver(new IndexingConfigurationEntityResolver());
 
             if (configStream != null) {

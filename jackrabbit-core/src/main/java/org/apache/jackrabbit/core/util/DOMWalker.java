@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.util;
 
+import org.apache.jackrabbit.commons.xml.Factory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
@@ -23,15 +24,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.Properties;
 
 /**
@@ -41,36 +38,7 @@ import java.util.Properties;
 public final class DOMWalker {
 
     /** Static factory for creating stream to DOM transformers. */
-    private static final DocumentBuilderFactory factory = createFactory();
-
-    private static DocumentBuilderFactory createFactory() {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments(false);
-        factory.setIgnoringElementContentWhitespace(true);
-        factory.setXIncludeAware(false);
-
-        // Prevent XXE attacks by disabling external entity processing
-        factory.setExpandEntityReferences(false);
-
-        String feature = null;
-
-        try {
-            feature = XMLConstants.FEATURE_SECURE_PROCESSING;
-            factory.setFeature(feature, true);
-            feature = "http://apache.org/xml/features/disallow-doctype-decl";
-            factory.setFeature(feature, true);
-            feature = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
-            factory.setFeature(feature, false);
-            feature = "http://xml.org/sax/features/external-general-entities";
-            factory.setFeature(feature, false);
-            feature = "http://xml.org/sax/features/external-parameter-entities";
-            factory.setFeature(feature, false);
-        } catch (Exception ex) {
-            // abort if secure processing is not supported
-            throw new IllegalStateException("Secure processing feature '" + feature + "' not supported by the DocumentBuilderFactory: " + factory.getClass().getName(), ex);
-        }
-        return factory;
-    }
+    private static final DocumentBuilderFactory factory = Factory.documentBuilderFactory();
 
     /** The DOM document being traversed by this walker. */
     private final Document document;
@@ -90,9 +58,7 @@ public final class DOMWalker {
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
             // defense in depth: entity resolver that will break any document on purpose
-            EntityResolver stopMe = (publicId, systemId) -> new InputSource(
-                    new StringReader("<preventing read of: " + publicId + " " + systemId + ">"));
-            builder.setEntityResolver(stopMe);
+            builder.setEntityResolver(Factory.nonResolvingEntityResolver());
             document = builder.parse(xml);
             current = document.getDocumentElement();
         } catch (IOException e) {

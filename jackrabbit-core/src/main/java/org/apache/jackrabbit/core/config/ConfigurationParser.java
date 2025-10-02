@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.jackrabbit.commons.xml.Factory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -270,7 +271,7 @@ public class ConfigurationParser {
      */
     protected Element parseXML(InputSource xml, boolean validate) throws ConfigurationException {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory = Factory.documentBuilderFactory();
             factory.setValidating(validate);
             DocumentBuilder builder = factory.newDocumentBuilder();
             if (validate) {
