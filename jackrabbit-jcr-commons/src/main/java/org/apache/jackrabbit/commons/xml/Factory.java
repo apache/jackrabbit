@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.commons.xml;
 
 import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
