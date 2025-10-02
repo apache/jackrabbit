@@ -24,9 +24,9 @@ import java.util.Properties;
 import java.util.UUID;
 
 import javax.jcr.RepositoryException;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jackrabbit.commons.xml.Factory;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreFactory;
@@ -1040,7 +1040,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                                         && (PRIMARY_DATASTORE_ATTRIBUTE.equals(paramNode.getAttributes().getNamedItem("name").getNodeValue())
                                                 || ARCHIVE_DATASTORE_ATTRIBUTE.equals(paramNode.getAttributes().getNamedItem("name").getNodeValue()))) {
                                     try {
-                                        Document document = Factory.documentBuilderFactory().newDocumentBuilder().newDocument();
+                                        Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
                                         Element newParent = document.createElement("parent");
                                         document.appendChild(newParent);
                                         Element datastoreElement = document.createElement(DATA_STORE_ELEMENT);

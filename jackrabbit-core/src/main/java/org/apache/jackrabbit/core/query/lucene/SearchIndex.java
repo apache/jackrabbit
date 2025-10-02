@@ -37,9 +37,9 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.jackrabbit.commons.xml.Factory;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.cluster.ChangeLogRecord;
@@ -1460,7 +1460,9 @@ public class SearchIndex extends AbstractQueryHandler {
             return null;
         }
         try {
-            DocumentBuilder builder = Factory.documentBuilderFactory().newDocumentBuilder();
+            DocumentBuilderFactory factory =
+                    DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
             builder.setEntityResolver(new IndexingConfigurationEntityResolver());
 
             if (configStream != null) {
