@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons.privilege;
 
-import org.apache.jackrabbit.commons.xml.Factory;
+import org.apache.jackrabbit.commons.xml.Factories;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.PrivilegeDefinition;
@@ -106,7 +106,7 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
     /**
      * Constant for <code>DocumentBuilderFactory</code>.
      */
-    private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = Factory.safeDocumentBuilderFactory();
+    private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = Factories.safeDocumentBuilderFactory();
 
     /**
      * Constant for <code>TransformerFactory</code>
@@ -273,7 +273,7 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
     private static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
         DocumentBuilder builder = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
         // defense in depth: entity resolver that will break any document on purpose
-        builder.setEntityResolver(Factory.nonResolvingEntityResolver());
+        builder.setEntityResolver(Factories.nonResolvingEntityResolver());
         builder.setErrorHandler(new DefaultHandler());
         return builder;
     }

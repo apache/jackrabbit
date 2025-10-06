@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import org.apache.jackrabbit.commons.xml.Factory;
+import org.apache.jackrabbit.commons.xml.Factories;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -40,7 +40,7 @@ public final class DOMBuilder {
 
     /** Static factory for creating DOM DocumentBuilder instances. */
     private static final DocumentBuilderFactory BUILDER_FACTORY =
-            Factory.safeDocumentBuilderFactory();
+            Factories.safeDocumentBuilderFactory();
 
     /** Static factory for creating document to output stream transformers. */
     private static final TransformerFactory TRANSFORMER_FACTORY =

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.xml;
 
-import org.apache.jackrabbit.commons.xml.Factory;
+import org.apache.jackrabbit.commons.xml.Factories;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXParseException;
@@ -31,7 +31,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class FactoryTest {
+public class FactoriesTest {
 
     String randomName = UUID.randomUUID().toString();
 
@@ -62,7 +62,7 @@ public class FactoryTest {
     @Test
     // verify that utility builder is not vulnerable
     public void testParserDoesNotResolveExternalEntities() throws Exception {
-        DocumentBuilderFactory dbf = Factory.safeDocumentBuilderFactory();
+        DocumentBuilderFactory dbf = Factories.safeDocumentBuilderFactory();
 
         DocumentBuilder db = dbf.newDocumentBuilder();
 
