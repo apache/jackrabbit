@@ -19,6 +19,7 @@ package org.apache.jackrabbit.xml;
 import org.apache.jackrabbit.commons.xml.Factories;
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXParseException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -29,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class FactoriesTest {
@@ -71,5 +73,12 @@ public class FactoriesTest {
         } catch (SAXParseException expected) {
             // all good
         }
+    }
+
+    @Test
+    public void testSafeEntityResolver() {
+        EntityResolver test = Factories.nonResolvingEntityResolver();
+        assertThrows(Exception.class, () -> test.resolveEntity("-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN" ,
+                "http://jackrabbit.apache.org/dtd/repository-1.6.dtd"));
     }
 }
