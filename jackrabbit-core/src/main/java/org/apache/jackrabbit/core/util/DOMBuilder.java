@@ -40,7 +40,7 @@ public final class DOMBuilder {
 
     /** Static factory for creating DOM DocumentBuilder instances. */
     private static final DocumentBuilderFactory BUILDER_FACTORY =
-            Factory.documentBuilderFactory();
+            Factory.safeDocumentBuilderFactory();
 
     /** Static factory for creating document to output stream transformers. */
     private static final TransformerFactory TRANSFORMER_FACTORY =

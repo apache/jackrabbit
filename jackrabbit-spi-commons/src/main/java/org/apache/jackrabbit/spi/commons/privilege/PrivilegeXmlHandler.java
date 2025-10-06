@@ -106,7 +106,7 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
     /**
      * Constant for <code>DocumentBuilderFactory</code>.
      */
-    private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = Factory.documentBuilderFactory();
+    private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = Factory.safeDocumentBuilderFactory();
 
     /**
      * Constant for <code>TransformerFactory</code>

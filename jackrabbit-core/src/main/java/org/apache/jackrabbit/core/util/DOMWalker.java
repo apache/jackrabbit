@@ -38,7 +38,7 @@ import java.util.Properties;
 public final class DOMWalker {
 
     /** Static factory for creating stream to DOM transformers. */
-    private static final DocumentBuilderFactory factory = Factory.documentBuilderFactory();
+    private static final DocumentBuilderFactory factory = Factory.safeDocumentBuilderFactory();
 
     /** The DOM document being traversed by this walker. */
     private final Document document;

@@ -33,7 +33,7 @@ public class Factory {
     /**
      * @return a "safe" {@link DocumentBuilderFactory}
      */
-    public static DocumentBuilderFactory documentBuilderFactory() {
+    public static DocumentBuilderFactory safeDocumentBuilderFactory() {
         // see https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
 
         javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
