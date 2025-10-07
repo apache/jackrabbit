@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.xml;
 
-import org.apache.jackrabbit.commons.xml.Factories;
+import org.apache.jackrabbit.commons.xml.XMLFactories;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-public class FactoriesTest {
+public class XMLFactoriesTest {
 
     String randomName = UUID.randomUUID().toString();
 
@@ -64,7 +64,7 @@ public class FactoriesTest {
     @Test
     // verify that utility builder is not vulnerable
     public void testParserDoesNotResolveExternalEntities() throws Exception {
-        DocumentBuilderFactory dbf = Factories.safeDocumentBuilderFactory();
+        DocumentBuilderFactory dbf = XMLFactories.safeDocumentBuilderFactory();
 
         DocumentBuilder db = dbf.newDocumentBuilder();
 
@@ -77,7 +77,7 @@ public class FactoriesTest {
 
     @Test
     public void testSafeEntityResolver() {
-        EntityResolver test = Factories.nonResolvingEntityResolver();
+        EntityResolver test = XMLFactories.nonResolvingEntityResolver();
         assertThrows(Exception.class, () -> test.resolveEntity("-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN" ,
                 "http://jackrabbit.apache.org/dtd/repository-1.6.dtd"));
     }

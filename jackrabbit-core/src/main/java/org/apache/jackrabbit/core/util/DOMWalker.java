@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import org.apache.jackrabbit.commons.xml.Factories;
+import org.apache.jackrabbit.commons.xml.XMLFactories;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
@@ -38,7 +38,7 @@ import java.util.Properties;
 public final class DOMWalker {
 
     /** Static factory for creating stream to DOM transformers. */
-    private static final DocumentBuilderFactory factory = Factories.safeDocumentBuilderFactory();
+    private static final DocumentBuilderFactory factory = XMLFactories.safeDocumentBuilderFactory();
 
     /** The DOM document being traversed by this walker. */
     private final Document document;
@@ -58,7 +58,7 @@ public final class DOMWalker {
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
             // defense in depth: entity resolver that will break any document on purpose
-            builder.setEntityResolver(Factories.nonResolvingEntityResolver());
+            builder.setEntityResolver(XMLFactories.nonResolvingEntityResolver());
             document = builder.parse(xml);
             current = document.getDocumentElement();
         } catch (IOException e) {

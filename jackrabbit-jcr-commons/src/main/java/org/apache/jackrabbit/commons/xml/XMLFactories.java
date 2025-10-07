@@ -25,9 +25,9 @@ import java.io.IOException;
 /**
  * Factory for "safe" instances of XML parsers (wrt XXE etc.).
  */
-public class Factories {
+public class XMLFactories {
 
-    private Factories() {
+    private XMLFactories() {
     }
 
     /**
