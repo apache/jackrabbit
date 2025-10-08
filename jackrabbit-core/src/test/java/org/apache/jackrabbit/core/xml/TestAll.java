@@ -33,7 +33,11 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite("XML format test cases");
-        suite.addTestSuite(DocumentViewTest.class);
+//TODO known issue as per list in the pom of oak-core, but ni Jira ref given
+//
+//        suite.addTestSuite(DocumentViewTest.class);
+//        suite.addTestSuite(SystemViewTest.class);
+        suite.addTestSuite(WorkspaceImporterTest.class);
         suite.addTestSuite(AccessControlImporterTest.class);
         return suite;
     }

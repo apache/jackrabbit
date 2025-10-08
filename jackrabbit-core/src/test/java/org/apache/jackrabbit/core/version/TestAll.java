@@ -36,10 +36,15 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CopyFrozenUuidTest.class);
         suite.addTestSuite(InternalVersionHistoryImplTest.class);
         suite.addTestSuite(RemoveVersionLabelTest.class);
+        suite.addTestSuite(RemoveVersionTest.class);
         suite.addTestSuite(RestoreTest.class);
         suite.addTestSuite(RestoreNodeWithSNSTest.class);
         suite.addTestSuite(VersionIteratorImplTest.class);
         suite.addTestSuite(ModifyNonVersionableCheckedOutTest.class);
+//TODO fails, yet to investigate
+//
+//        suite.addTestSuite(RemoveAndAddVersionLabelXATest.class);
+        suite.addTestSuite(RemoveOrphanVersionHistoryTest.class);
         return suite;
     }
 }

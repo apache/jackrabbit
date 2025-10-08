@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(NodeTypesInContentTest.class);
         suite.addTestSuite(MixinTest.class);
+        suite.addTestSuite(CyclicNodeTypeRegistrationTest.class);
 
         return suite;
     }

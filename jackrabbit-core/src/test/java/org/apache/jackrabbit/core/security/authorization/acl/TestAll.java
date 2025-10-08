@@ -41,8 +41,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ACLTemplateEntryTest.class);
         suite.addTestSuite(EntryTest.class);
         suite.addTestSuite(EntryCollectorTest.class);
-
         suite.addTestSuite(ReadTest.class);
+        suite.addTestSuite(ReadNodeTypeTest.class);
         suite.addTestSuite(WriteTest.class);
         suite.addTestSuite(AcReadWriteTest.class);
         suite.addTestSuite(LockTest.class);

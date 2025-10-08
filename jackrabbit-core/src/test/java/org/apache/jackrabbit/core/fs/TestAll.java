@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.fs;
 
 import org.apache.jackrabbit.core.fs.db.DerbyFileSystemTest;
+import org.apache.jackrabbit.core.fs.db.OracleFileSystemTest;
+import org.apache.jackrabbit.core.fs.db.OracleRetrocompatibleFileSystemTest;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystemTest;
 import org.apache.jackrabbit.core.fs.mem.MemoryFileSystemTest;
 
@@ -39,6 +41,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(DerbyFileSystemTest.class);
         suite.addTestSuite(LocalFileSystemTest.class);
         suite.addTestSuite(MemoryFileSystemTest.class);
+// fail, yet to investigate
+//        suite.addTestSuite(OracleFileSystemTest.class);
+//        suite.addTestSuite(OracleRetrocompatibleFileSystemTest.class);
         return suite;
     }
 }

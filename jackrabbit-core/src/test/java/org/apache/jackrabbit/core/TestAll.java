@@ -22,6 +22,8 @@ import junit.framework.TestSuite;
 
 import org.apache.jackrabbit.test.ConcurrentTestSuite;
 
+import java.util.Properties;
+
 /**
  * Test suite that includes all testcases for the Core module.
  */
@@ -50,6 +52,7 @@ public class TestAll extends TestCase {
 
         // test related to NodeStateMerger
         suite.addTestSuite(ConcurrentImportTest.class);
+        suite.addTestSuite(ConcurrentAddMoveRemoveTest.class);
         suite.addTestSuite(ConcurrentAddRemoveMoveTest.class);
         suite.addTestSuite(ConcurrentAddRemovePropertyTest.class);
         suite.addTestSuite(ConcurrentMixinModificationTest.class);
@@ -57,6 +60,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConcurrentMoveTest.class);
         suite.addTestSuite(ConcurrentReorderTest.class);
         suite.addTestSuite(ConcurrentAddRemoveNodeTest.class);
+        suite.addTestSuite(ConcurrentCyclicMoveTest.class);
 
         suite.addTestSuite(LostFromCacheIssueTest.class);
 
@@ -82,6 +86,26 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConsistencyCheck.class);
         suite.addTestSuite(RemoveAddNodeWithUUIDTest.class);
         suite.addTestSuite(MoveAtRootTest.class);
+        suite.addTestSuite(MoveRemoveTest.class);
+        suite.addTestSuite(AddMoveTest.class);
+        suite.addTestSuite(MoveTest.class);
+        suite.addTestSuite(LockTest.class);
+        suite.addTestSuite(LockedWrapperTest.class);
+
+        final Properties sysProps = System.getProperties();
+        if (sysProps.containsKey("tests.oracle.url")
+                && sysProps.containsKey("tests.oracle.user")
+                && sysProps.containsKey("tests.oracle.password")
+                && sysProps.containsKey("tests.oracle.tablespace")
+                && sysProps.containsKey("tests.oracle.indexTablespace")) {
+            suite.addTestSuite(OracleRepositoryTest.class);
+            suite.addTestSuite(OracleRetrocompatibleRepositoryTest.class);
+        }
+
+        suite.addTestSuite(ReadVersionsWhileModified.class);
+        suite.addTestSuite(ReadWhileSaveTest.class);
+
+        suite.addTestSuite(RepositoryCopierTest.class);
 
         return suite;
     }

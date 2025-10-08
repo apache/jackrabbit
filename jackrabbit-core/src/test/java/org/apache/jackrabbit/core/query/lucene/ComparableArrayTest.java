@@ -20,10 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import javax.jcr.RepositoryException;
 
+import junit.framework.TestCase;
 import org.apache.jackrabbit.core.query.lucene.SharedFieldCache.ComparableArray;
 import org.junit.Test;
 
-public class ComparableArrayTest {
+public class ComparableArrayTest extends TestCase {
 
     /**
      * Test for JCR-2906 to make sure the SharedFieldCache arranges the entries

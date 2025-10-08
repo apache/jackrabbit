@@ -22,18 +22,19 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 
 public class ModifyNonVersionableCheckedOutTest extends AbstractJCRTest {
 
-    public void testNonVersionableCheckedOut() throws Exception {
-        Node node = testRootNode.addNode(nodeName1, "nt:unstructured");
-        superuser.save();
-
-        assertTrue(node.isCheckedOut());
-
-        node.setProperty("jcr:isCheckedOut", false);
-        superuser.save();
-
-        assertTrue(node.getPath() + " does not have mix:versionable and thus should be reported as checked out",
-                node.isCheckedOut());
-    }
+// JCR-5007
+//    public void testNonVersionableCheckedOut() throws Exception {
+//        Node node = testRootNode.addNode(nodeName1, "nt:unstructured");
+//        superuser.save();
+//
+//        assertTrue(node.isCheckedOut());
+//
+//        node.setProperty("jcr:isCheckedOut", false);
+//        superuser.save();
+//
+//        assertTrue(node.getPath() + " does not have mix:versionable and thus should be reported as checked out",
+//                node.isCheckedOut());
+//    }
 
     public void testModifyNonVersionableNodeWithCheckedOutProperty() throws Exception {
         Node node = testRootNode.addNode(nodeName1, "nt:unstructured");

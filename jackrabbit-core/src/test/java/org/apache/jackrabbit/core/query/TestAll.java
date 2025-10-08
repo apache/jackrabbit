@@ -68,6 +68,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQL2OffsetLimitTest.class);
         suite.addTestSuite(SQL2OrderByTest.class);
         suite.addTestSuite(DescendantSelfAxisTest.class);
+        suite.addTestSuite(LazyResultSetQueryTest.class);
+        suite.addTestSuite(QueryExtensionsTest.class);
+        suite.addTestSuite(SQL2TooManyClausesTest.class);
+        suite.addTestSuite(TextExtractorTest.class);
 
         return suite;
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.api.security;
 
+import org.apache.jackrabbit.core.cache.ConcurrentCacheTest;
+import org.apache.jackrabbit.core.cache.GrowingLRUMapTest;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;

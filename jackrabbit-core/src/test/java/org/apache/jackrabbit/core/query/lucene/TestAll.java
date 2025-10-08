@@ -53,6 +53,12 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ArrayHitsTest.class);
         suite.addTestSuite(IndexFormatVersionTest.class);
         suite.addTestSuite(SynonymProviderTest.class);
+        suite.addTestSuite(ComparableArrayTest.class);
+        suite.addTestSuite(IDFieldTest.class);
+        suite.addTestSuite(LargeResultSetTest.class);
+        suite.addTestSuite(SearchIndexTest.class);
+        suite.addTestSuite(SearchIndexConsistencyCheckTest.class);
+        suite.addTestSuite(UtilTest.class);
 
         return suite;
     }
