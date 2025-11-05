@@ -23,8 +23,8 @@ import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.GuestCredentials;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 

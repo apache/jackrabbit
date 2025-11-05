@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.server.util;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ public class RequestData {
     /**
      * Dispose resources used.
      */
-    public void dispose() {
+    public void dispose() throws IOException {
         mpReq.dispose();
     }
 
@@ -68,7 +68,7 @@ public class RequestData {
      * @return the string of the first value or <code>null</code> if the
      *         parameter does not exist
      */
-    public String getParameter(String name) {
+    public String getParameter(String name) throws IOException {
         String ret = mpReq.getParameter(name);
         return (ret == null) ? request.getParameter(name) : ret;
     }
@@ -99,7 +99,7 @@ public class RequestData {
      * @return a string array of values or <code>null</code> if the parameter
      *         does not exist.
      */
-    public String[] getParameterValues(String name) {
+    public String[] getParameterValues(String name) throws IOException {
         String[] ret = mpReq.getParameterValues(name);
         return ret == null ? request.getParameterValues(name) : ret;
     }

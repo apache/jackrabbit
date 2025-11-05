@@ -24,7 +24,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventJournal;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;

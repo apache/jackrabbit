@@ -18,8 +18,8 @@ package org.apache.jackrabbit.servlet.login;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
-import javax.servlet.FilterConfig;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Login filter that relies on container authentication to provide the

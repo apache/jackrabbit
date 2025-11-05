@@ -18,7 +18,7 @@ package org.apache.jackrabbit.servlet.login;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  *

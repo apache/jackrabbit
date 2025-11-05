@@ -24,7 +24,7 @@ import java.io.OutputStream;
 import java.net.URI;
 
 import javax.jcr.Repository;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
@@ -49,6 +49,7 @@ import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
@@ -145,14 +146,16 @@ public class WebDAVTestBase extends AbstractJCRTest {
         }
 
         if (httpsConnector == null) {
-            SslContextFactory sslContextFactory = new SslContextFactory();
+            SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
             sslContextFactory.setKeyStorePath(keystore.getPath());
             sslContextFactory.setKeyStorePassword(KEYSTOREPW);
             sslContextFactory.setKeyManagerPassword(KEYSTOREPW);
             sslContextFactory.setTrustStorePath(keystore.getPath());
             sslContextFactory.setTrustStorePassword(KEYSTOREPW);
             SslConnectionFactory cfac = new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString());
-            httpsConnector = new ServerConnector(server, cfac, new HttpConnectionFactory(new HttpConfiguration()));
+            HttpConfiguration httpConfig = new HttpConfiguration();
+            httpConfig.addCustomizer(new SecureRequestCustomizer(false));
+            httpsConnector = new ServerConnector(server, cfac, new HttpConnectionFactory(httpConfig));
             httpsConnector.setHost("localhost");
             httpsConnector.setPort(0);
             server.addConnector(httpsConnector);

@@ -40,7 +40,7 @@ import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
 import org.apache.jackrabbit.standalone.cli.CommandException;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 import org.apache.jackrabbit.standalone.cli.JcrClient;
-import org.eclipse.jetty.server.NCSARequestLog;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
@@ -312,10 +312,8 @@ public class Main {
     }
 
     private void prepareAccessLog(File log) {
-        NCSARequestLog ncsa = new NCSARequestLog(
-                new File(log, "access.log.yyyy_mm_dd").getPath());
-        ncsa.setFilenameDateFormat("yyyy-MM-dd");
-        accessLog.setRequestLog(ncsa);
+        CustomRequestLog cl = new CustomRequestLog(new File(log, "access.log.yyyy_mm_dd").getPath(), "yyyy-MM-dd");
+        accessLog.setRequestLog(cl);
     }
 
     private void prepareWebapp(File file, File repository, File tmp) {
@@ -324,12 +322,6 @@ public class Main {
         webapp.setExtractWAR(true);
         webapp.setTempDirectory(tmp);
 
-        Configuration.ClassList classlist = Configuration.ClassList
-                .setServerDefault(server);
-        classlist.addBefore(
-                "org.eclipse.jetty.webapp.JettyWebXmlConfiguration",
-                "org.eclipse.jetty.annotations.AnnotationConfiguration");
-        
         ServletHolder servlet =
             new ServletHolder(JackrabbitRepositoryServlet.class);
         servlet.setInitOrder(1);

@@ -16,24 +16,23 @@
  */
 package org.apache.jackrabbit.server.util;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileItemFactory;
+import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.commons.fileupload2.core.RequestContext;
+import org.apache.commons.fileupload2.jakarta.servlet5.JakartaServletFileUpload;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * <code>HttpMultipartPost</code>...
@@ -53,23 +52,65 @@ class HttpMultipartPost {
     }
 
     private static FileItemFactory getFileItemFactory(File tmpDir) {
-        DiskFileItemFactory fiFactory = new DiskFileItemFactory(DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD, tmpDir);
-        return fiFactory;
+        return DiskFileItemFactory.builder().setFile(tmpDir == null ? PathUtils.getTempDirectory().toFile() : tmpDir).get();
     }
 
     private void extractMultipart(HttpServletRequest request, File tmpDir)
             throws IOException {
-        if (!ServletFileUpload.isMultipartContent(request)) {
+        if (!JakartaServletFileUpload.isMultipartContent(request)) {
             log.debug("Request does not contain multipart content -> ignoring.");
             return;
         }
 
-        ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
+        JakartaServletFileUpload upload = new JakartaServletFileUpload(getFileItemFactory(tmpDir)) {
+
+            @Override
+            public List<FileItem> parseRequest(final RequestContext requestContext) throws FileUploadException {
+                final List<FileItem> itemList = new ArrayList<>();
+                var successful = false;
+                try {
+                    final var fileItemFactory = Objects.requireNonNull(getFileItemFactory(), "No FileItemFactory has been set.");
+                    final var buffer = new byte[IOUtils.DEFAULT_BUFFER_SIZE];
+                    getItemIterator(requestContext).forEachRemaining(fileItemInput -> {
+                        // Don't use getName() here to prevent an InvalidFileNameException.
+                        final FileItem fileItem = (FileItem) fileItemFactory.fileItemBuilder()
+                                .setFieldName(fileItemInput.getFieldName())
+                                .setContentType(fileItemInput.getContentType())
+                                .setFormField(fileItemInput.isFormField())
+                                .setFileItemHeaders(fileItemInput.getHeaders())
+                                .get();
+                        itemList.add((FileItem) fileItem);
+                        try (var inputStream = fileItemInput.getInputStream();
+                             var outputStream = fileItem.getOutputStream()) {
+                            IOUtils.copyLarge(inputStream, outputStream, buffer);
+                        } catch (final FileUploadException e) {
+                            throw e;
+                        } catch (final IOException e) {
+                            throw new FileUploadException(String.format("Processing of %s request failed. %s", MULTIPART_FORM_DATA, e.getMessage()), e);
+                        }
+                    });
+                    successful = true;
+                    return itemList;
+                } catch (final FileUploadException e) {
+                    throw e;
+                } catch (final IOException e) {
+                    throw new FileUploadException(e.getMessage(), e);
+                } finally {
+                    if (!successful) {
+                        for (final FileItem fileItem : itemList) {
+                            try {
+                                fileItem.delete();
+                            } catch (final Exception ignored) {}
+                        }
+                    }
+                }
+            }
+        };
         // make sure the content disposition headers are read with the charset
         // specified in the request content type (or UTF-8 if no charset is specified).
         // see JCR
         if (request.getCharacterEncoding() == null) {
-            upload.setHeaderEncoding("UTF-8");
+            upload.setHeaderCharset(StandardCharsets.UTF_8);
         }
         try {
             @SuppressWarnings("unchecked")
@@ -119,7 +160,7 @@ class HttpMultipartPost {
      * 
      * @see FileItem#delete()
      */
-    synchronized void dispose() {
+    synchronized void dispose() throws IOException {
         checkInitialized();
 
         for (List<FileItem> fileItems : nameToItems.values()) {
@@ -199,7 +240,7 @@ class HttpMultipartPost {
      * @return the string of the first value or <code>null</code> if the
      *         parameter does not exist
      */
-    String getParameter(String name) {
+    String getParameter(String name) throws IOException {
         checkInitialized();
         List<FileItem> l = nameToItems.get(name);
         if (l == null || l.isEmpty()) {
@@ -227,7 +268,7 @@ class HttpMultipartPost {
      * @return a string array of values or <code>null</code> if no entry with the
      * given name exists.
      */
-    String[] getParameterValues(String name) {
+    String[] getParameterValues(String name) throws IOException {
         checkInitialized();
         List<FileItem> l = nameToItems.get(name);
         if (l == null || l.isEmpty()) {

@@ -24,7 +24,7 @@ import java.io.OutputStream;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;

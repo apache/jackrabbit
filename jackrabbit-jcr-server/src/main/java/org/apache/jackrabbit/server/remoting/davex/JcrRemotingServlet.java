@@ -36,10 +36,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeType;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.server.util.RequestData;
@@ -624,7 +624,12 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 // need to create the node
                 // TODO: won't work for SNS
                 String nPath = parent.getPath() + "/" + nodeName;
-                String ntName = data.getParameter(nPath + "/" + JcrConstants.JCR_PRIMARYTYPE);
+                String ntName = null;
+                try {
+                    ntName = data.getParameter(nPath + "/" + JcrConstants.JCR_PRIMARYTYPE);
+                } catch (IOException e) {
+                    throw new RepositoryException(e);
+                }
                 if (ntName == null) {
                     parent = parent.addNode(nodeName);
                 } else {

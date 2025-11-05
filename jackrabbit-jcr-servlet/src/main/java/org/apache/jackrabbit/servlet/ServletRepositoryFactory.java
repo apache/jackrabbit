@@ -18,8 +18,8 @@ package org.apache.jackrabbit.servlet;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletContext;
+import jakarta.servlet.GenericServlet;
+import jakarta.servlet.ServletContext;
 
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 
