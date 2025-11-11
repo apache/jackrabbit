@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(ClusterRecordTest.class);
         suite.addTestSuite(ClusterSyncTest.class);
+        suite.addTestSuite(ClusterDescriptorTest.class);
         suite.addTestSuite(DbClusterTest.class);
         suite.addTestSuite(DbClusterTestJCR3162.class);
         suite.addTestSuite(FailUpdateOnJournalExceptionTest.class);

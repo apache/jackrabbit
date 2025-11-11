@@ -51,7 +51,7 @@
   </scm>
 
   <properties>
-    <test.opts.memory>-Xmx256m</test.opts.memory>
+    <test.opts.memory>-Xmx4g</test.opts.memory>
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <!-- OAK version used in components that *implement* oak-jackrabbit-api -->

@@ -83,6 +83,15 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RemoveAddNodeWithUUIDTest.class);
         suite.addTestSuite(MoveAtRootTest.class);
 
+        suite.addTestSuite(RepositoryCopierTest.class);
+        suite.addTestSuite(ReadWhileSaveTest.class);
+        suite.addTestSuite(MoveRemoveTest.class);
+
+//TODO? see JCR-5196
+//       suite.addTestSuite(LockedWrapperTest.class);
+//        suite.addTestSuite(MoveTest.class);
+//        suite.addTestSuite(AddMoveTest.class);
+
         return suite;
     }
 }

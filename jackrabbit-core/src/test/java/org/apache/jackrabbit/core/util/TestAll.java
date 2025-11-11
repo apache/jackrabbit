@@ -34,6 +34,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Utility tests");
         suite.addTestSuite(RepositoryLockTest.class);
         suite.addTestSuite(CooperativeFileLockTest.class);
+        suite.addTestSuite(DOMWalkerTest.class);
         return suite;
     }
 }

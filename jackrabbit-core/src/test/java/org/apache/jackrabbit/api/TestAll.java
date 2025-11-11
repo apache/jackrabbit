@@ -37,6 +37,7 @@ public class TestAll extends AbstractJCRTest {
 
         suite.addTestSuite(JackrabbitNodeTest.class);
         suite.addTestSuite(JackrabbitObservationManagerTest.class);
+        suite.addTestSuite(JackrabbitSessionTest.class);
 
         return suite;
     }

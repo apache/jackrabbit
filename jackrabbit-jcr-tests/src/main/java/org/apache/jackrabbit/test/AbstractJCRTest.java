@@ -897,7 +897,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
                     // try to remove child
                     try {
                         child.remove();
-                    } catch (ConstraintViolationException e) {
+                    } catch (RepositoryException e) {
                         log.println("unable to remove node: " + child.getPath());
                     }
                 }

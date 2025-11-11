@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("XML format test cases");
         suite.addTestSuite(DocumentViewTest.class);
         suite.addTestSuite(AccessControlImporterTest.class);
+        suite.addTestSuite(WorkspaceImporterTest.class);
         return suite;
     }
 

@@ -69,6 +69,11 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQL2OrderByTest.class);
         suite.addTestSuite(DescendantSelfAxisTest.class);
 
+        suite.addTestSuite(TextExtractorTest.class);
+        suite.addTestSuite(SQL2TooManyClausesTest.class);
+        suite.addTestSuite(QueryExtensionsTest.class);
+        suite.addTestSuite(LazyResultSetQueryTest.class);
+
         return suite;
     }
 }
