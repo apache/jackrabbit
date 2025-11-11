@@ -27,9 +27,14 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * <code>Base64</code> provides Base64 encoding/decoding of strings and streams.
+ * <p>
+ * See <a href="https://datatracker.ietf.org/doc/html/rfc4648#section-4">RFC 4648, Section 4</a>.
+ * <p>
+ * See {@link java.util.Base64} for a JDK alternative.
  */
 public class Base64 {
 
@@ -46,9 +51,7 @@ public class Base64 {
 
     static {
         // initialize decoding table
-        for (int i = 0; i < DECODETABLE.length; i++) {
-            DECODETABLE[i] = 0x7f;
-        }
+        Arrays.fill(DECODETABLE, (byte) 0x7f);
         // build decoding table
         for (int i = 0; i < BASE64CHARS.length; i++) {
             DECODETABLE[BASE64CHARS[i]] = (byte) i;
@@ -65,11 +68,10 @@ public class Base64 {
     }
 
     /**
-     * Base64-decodes or -encodes (see {@link #decodeOrEncode(String)}
+     * Base64-decodes or -encodes (see {@link #decodeOrEncode(String)})
      * all the given arguments and prints the results on separate lines
      * in standard output.
      *
-     * @since Apache Jackrabbit 2.3
      * @param args command line arguments to be decoded or encoded
      */
     public static void main(String[] args) {
@@ -80,10 +82,9 @@ public class Base64 {
 
     /**
      * Base64-decodes or -encodes the given string, depending on whether
-     * or not it contains a "{base64}" prefix. If the string gets encoded,
+     * it contains a "{base64}" prefix. If the string gets encoded,
      * the "{base64}" prefix is added to it.
      *
-     * @since Apache Jackrabbit 2.3
      * @param data string to be decoded or encoded
      * @return decoded or encoded string
      */
@@ -101,7 +102,6 @@ public class Base64 {
      * If the given string is <code>null</code>, then <code>null</code>
      * is returned.
      *
-     * @since Apache Jackrabbit 2.3
      * @param data string to be decoded, can be <code>null</code>
      * @return the given string, possibly decoded
      */
@@ -233,7 +233,6 @@ public class Base64 {
     /**
      * Returns the base64 representation of UTF-8 encoded string.
      *
-     * @since Apache Jackrabbit 2.3
      * @param data the string to be encoded
      * @return base64-encoding of the string
      */
@@ -254,7 +253,6 @@ public class Base64 {
      * The given string is returned as-is if it doesn't contain a valid
      * base64 encoding.
      *
-     * @since Apache Jackrabbit 2.3
      * @param data the base64-encoded data to be decoded
      * @return decoded string
      */
@@ -262,7 +260,7 @@ public class Base64 {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             decode(data, buffer);
-            return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+            return buffer.toString(StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
             return data;
         } catch (IOException e) { // should never happen
