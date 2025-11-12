@@ -42,10 +42,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ModifyNonVersionableCheckedOutTest.class);
 
         suite.addTestSuite(RemoveVersionTest.class);
-
-//TODO? see JCR-5196
-//        suite.addTestSuite(RemoveOrphanVersionHistoryTest.class);
-//        suite.addTestSuite(RemoveAndAddVersionLabelXATest.class);
+        suite.addTestSuite(RemoveOrphanVersionHistoryTest.class);
+        suite.addTestSuite(RemoveAndAddVersionLabelXATest.class);
 
         return suite;
     }

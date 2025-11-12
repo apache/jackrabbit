@@ -88,9 +88,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MoveRemoveTest.class);
         suite.addTestSuite(LockedWrapperTest.class);
         suite.addTestSuite(MoveTest.class);
-
-//TODO? see JCR-5196
-//        suite.addTestSuite(AddMoveTest.class);
+        suite.addTestSuite(MoveAtRootTest.class);
+        suite.addTestSuite(AddMoveTest.class);
 
         return suite;
     }

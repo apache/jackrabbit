@@ -37,9 +37,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(NodeTypesInContentTest.class);
         suite.addTestSuite(MixinTest.class);
-
-//TODO? see JCR-5196
-//suite.addTestSuite(CyclicNodeTypeRegistrationTest.class);
+        suite.addTestSuite(CyclicNodeTypeRegistrationTest.class);
 
         return suite;
     }

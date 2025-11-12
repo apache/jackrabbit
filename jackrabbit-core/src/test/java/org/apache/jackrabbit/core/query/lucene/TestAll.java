@@ -58,9 +58,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SearchIndexTest.class);
         suite.addTestSuite(IDFieldTest.class);
         suite.addTestSuite(ComparableArrayTest.class);
-
-//TODO? see JCR-5196
-//        suite.addTestSuite(SearchIndexConsistencyCheckTest.class);
+        suite.addTestSuite(SearchIndexConsistencyCheckTest.class);
 
         return suite;
     }

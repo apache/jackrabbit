@@ -81,12 +81,30 @@ public class AddMoveTest extends AbstractJCRTest {
     /**
      * Add a top level node and remove it. Exposes a bug in the {@code CachingHierarchyManager},
      * reported in JCR-3368.
+     * Also exposes a bug reported in JCR-5205.
      */
     public void testTopLevelAddRemove() throws Exception {
         Session session = getHelper().getReadWriteSession();
-        session.getRootNode().addNode("foo").addNode("bar");
+        Node rootNode = session.getRootNode();
+        Node foo = rootNode.addNode("foo");
+        //JCR-5205: note that the test doesn't fail if we add the following line
+        //foo = rootNode.getNode("foo");
+        foo.addNode("bar");
         session.save();
-        session.getNode("/foo").remove();
+        session.getNode("/foo").remove(); //JCR-5205: note that the test doesn't fail if we replace this line with the following
+        //foo.remove();
         assertFalse(session.getRootNode().hasNode("foo/bar"));
     }
+
+    public void testSecondLevelAddRemove() throws Exception {
+        Session session = getHelper().getReadWriteSession();
+        Node rootNode = session.getRootNode();
+        Node parent = rootNode.addNode("parent");
+        Node foo = parent.addNode("foo");
+        foo.addNode("bar");
+        session.save();
+        session.getNode("/parent/foo").remove();
+        assertFalse(session.getRootNode().hasNode("parent/foo/bar"));
+    }
+
 }

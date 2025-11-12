@@ -93,7 +93,7 @@ public class RemoveOrphanVersionHistoryTest extends AbstractJCRTest {
         n.checkout();
 
         Workspace defaultWorkspace = n.getSession().getWorkspace();
-        Session otherWsSession = n.getSession().getRepository().login(new SimpleCredentials("superuser", "".toCharArray()), workspaceName);
+        Session otherWsSession = getHelper().getSuperuserSession(workspaceName);
         // Clone the node in another workspace
         otherWsSession.getWorkspace().clone(defaultWorkspace.getName(), n.getPath(), n.getPath(), false);
         Node otherWsRootNode = otherWsSession.getRootNode();

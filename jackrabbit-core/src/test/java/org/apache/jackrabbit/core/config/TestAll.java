@@ -40,9 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RepositoryConfigTest.class);
         suite.addTestSuite(WorkspaceConfigTest.class);
         suite.addTestSuite(DataSourceConfigTest.class);
-
-//TODO? see JCR-5196
-//        suite.addTestSuite(SecurityConfigTest.class);
+        suite.addTestSuite(SecurityConfigTest.class);
 
         return suite;
     }
