@@ -54,6 +54,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MoveTest.class);
         suite.addTestSuite(RestrictionTest.class);
 
+        suite.addTestSuite(ReadNodeTypeTest.class);
+
         return suite;
     }
 

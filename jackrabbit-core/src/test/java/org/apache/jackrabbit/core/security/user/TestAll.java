@@ -52,9 +52,14 @@ public class TestAll extends TestCase {
         suite.addTestSuite(UserImporterTest.class);
 
         suite.addTestSuite(UserAccessControlProviderTest.class);
-        suite.addTestSuite(DefaultPrincipalProviderTest.class);        
+        suite.addTestSuite(DefaultPrincipalProviderTest.class);
 
         suite.addTestSuite(PasswordUtilityTest.class);
+
+//TODO comsume time and memory
+//        suite.addTestSuite(MembershipCacheTest.class);
+//        suite.addTestSuite(MembershipCachePerfTest.class);
+
         return suite;
     }
 }

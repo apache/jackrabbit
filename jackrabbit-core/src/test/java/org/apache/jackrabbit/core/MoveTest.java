@@ -36,7 +36,7 @@ public class MoveTest extends AbstractJCRTest {
         Session session2 = getHelper().getReadWriteSession();
 
         if (session1.itemExists("/foo")) {
-            session1.removeItem("/foo");
+            session1.getNode("/foo").remove();
             session1.save();
         }
 

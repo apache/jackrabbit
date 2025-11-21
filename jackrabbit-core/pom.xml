@@ -116,6 +116,11 @@ org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral      
 org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265 -->
 org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testNonVersionableCheckedOut <!-- JCR-5007 -->
 org.apache.jackrabbit.core.version.ModifyNonVersionableCheckedOutTest#testModifyNonVersionableNodeWithCheckedOutProperty <!-- JCR-5007 -->
+org.apache.jackrabbit.core.AddMoveTest#testTopLevelAddRemove <!-- JCR-5205 -->
+org.apache.jackrabbit.core.config.SecurityConfigTest#testInvalidConfig <!-- JCR-5206 -->
+org.apache.jackrabbit.core.nodetype.CyclicNodeTypeRegistrationTest <!-- JCR-5208 -->
+org.apache.jackrabbit.core.query.lucene.SearchIndexConsistencyCheckTest#testDoubleCheckStressTest <!-- JCR-5209 -->
+org.apache.jackrabbit.core.version.RemoveAndAddVersionLabelXATest#testVersionLabel <!-- JCR-5210 -->
               </value>
             </property>
             <property>
