@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RepositoryConfigTest.class);
         suite.addTestSuite(WorkspaceConfigTest.class);
         suite.addTestSuite(DataSourceConfigTest.class);
+        suite.addTestSuite(SecurityConfigTest.class);
 
         return suite;
     }

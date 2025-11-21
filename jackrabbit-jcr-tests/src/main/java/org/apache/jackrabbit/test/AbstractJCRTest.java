@@ -32,7 +32,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.retention.RetentionManager;
@@ -897,7 +896,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
                     // try to remove child
                     try {
                         child.remove();
-                    } catch (ConstraintViolationException e) {
+                    } catch (RepositoryException e) {
                         log.println("unable to remove node: " + child.getPath());
                     }
                 }

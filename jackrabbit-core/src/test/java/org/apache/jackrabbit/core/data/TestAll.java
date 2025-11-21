@@ -51,6 +51,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestTwoGetStreams.class);
         suite.addTestSuite(WriteWhileReadingTest.class);
         suite.addTestSuite(GCSubtreeMoveTest.class);
+        suite.addTestSuite(ConsistencyCheckerImplTest.class);
 
         return suite;
     }

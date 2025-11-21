@@ -40,6 +40,11 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RestoreNodeWithSNSTest.class);
         suite.addTestSuite(VersionIteratorImplTest.class);
         suite.addTestSuite(ModifyNonVersionableCheckedOutTest.class);
+
+        suite.addTestSuite(RemoveVersionTest.class);
+        suite.addTestSuite(RemoveOrphanVersionHistoryTest.class);
+        suite.addTestSuite(RemoveAndAddVersionLabelXATest.class);
+
         return suite;
     }
 }
