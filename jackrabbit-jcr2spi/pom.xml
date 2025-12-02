@@ -42,8 +42,8 @@
         <configuration>
           <instructions>
             <Export-Package>
-              org.apache.jackrabbit.jcr2spi;version=${project.version};include:=Jcr2spiRepositoryFactory,
-              org.apache.jackrabbit.jcr2spi.config;version=${project.version}
+              org.apache.jackrabbit.jcr2spi;include:=Jcr2spiRepositoryFactory,
+              org.apache.jackrabbit.jcr2spi.config
             </Export-Package>
           </instructions>
         </configuration>
@@ -95,6 +95,11 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.annotation</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
