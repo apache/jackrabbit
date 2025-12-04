@@ -3,54 +3,60 @@ Release Notes -- Apache Jackrabbit -- Version 2.23.2-beta
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.23.2-beta, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.23.3-beta, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.23.2-beta is an unstable release cut directly from
+Apache Jackrabbit 2.23.3-beta is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.20.x
 release.
 
-Changes in Jackrabbit 2.23.2-beta
+Changes in Jackrabbit 2.23.3-beta
 ----------------------------------
+
+Sub-task
+
+    [JCR-5160] - Create jacoco reports compliant with SonarQube Cloud
+    [JCR-5172] - Exclude test sources from SonarQube analysis
+    [JCR-5173] - Create aggregate jacoco report
+    [JCR-5174] - Exclude jackrabbit-jcr-tests from coverage calculation
+
 
 Bug
 
-    [JCR-5121] - Java 23: getSubject is supported only if a security manager is allowed
+    [JCR-5090] - Invalid href generated for 'Edit' buttons
+    [JCR-5141] - Deprecate org.apache.jackrabbit.commons.json
+    [JCR-5196] - Some test classes are not executed by default because they haven't been added to a test suite
+    [JCR-5203] - integration tests in jackrabbit-core occasionally fail to ItemNotFoundExceptions during cleanup
 
 Improvement
 
-    [JCR-5127] - Add javadoc links to JcrConstants' constants which have expanded name equivalents in the JCR API
-    [JCR-5146] - Add missing mixin values (defined in JCR 2.0 spec) to JcrConstants
-    [JCR-5150] - Add missing constant for jcr:title
-    [JCR-5152] - Add method isValidJcrLocalName(String) to o.a.j.util.Text
-    [JCR-5161] - Add variant of NamespaceHelper.registerNamespace
-
-Wish
-
-    [JCR-5157] - configure CI for PRs on github
+    [JCR-5154] - Replace deprecated call of Class.newInstance()
 
 Task
 
-    [JCR-5048] - Jackrabbit should build and test with Java 24
-    [JCR-5120] - webapp: update tomcat dependency to 9.0.97
-    [JCR-5128] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.74.0
-    [JCR-5130] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.76.0
-    [JCR-5131] - jackrabbit-jcr2spi: switch to commons-collections4 4.5.0-M3
-    [JCR-5132] - webapp: update tomcat dependency to 9.0.104
-    [JCR-5133] - Update easymock dependency to 5.5.0
-    [JCR-5134] - Update oak-jackrabbit-api.version.used to Oak 1.22.22
-    [JCR-5135] - Make JNDI support opt-in
-    [JCR-5137] - Update JCR commons to implement current jackrabbit-api
-    [JCR-5138] - Borrow JackrabbitSessionImpl tests from Oak
-    [JCR-5143] - Update Mockito dependency to 5.17.0
-    [JCR-5145] - Upgrade Commons VFS to 2.10.0
-    [JCR-5147] - remove jackrabbit 1.x compatibility and performance tests
-    [JCR-5148] - remove (comment out) mysql test profile
-    [JCR-5158] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.82.0
-    [JCR-5159] - Create coverage for NamespaceHelper
-    [JCR-5163] - Update commons file-upload dependency to 1.6.0
+    [JCR-5140] - Improve support for generating namespace prefixes
+    [JCR-5156] - webapp: update tomcat dependency to 9.0.112
+    [JCR-5175] - Update Mockito dependency to 5.20.0
+    [JCR-5176] - Update commons-io dependency to 2.21.0
+    [JCR-5177] - jackrabbit-jcr2spi: update to commons-collections4 4.5.0
+    [JCR-5178] - Update easymock dependency to 5.6.0
+    [JCR-5179] - set baseline comparisonVersion to latest stable (2.22.1)
+    [JCR-5182] - Update pax-exam test dependency to 4.14.0
+    [JCR-5183] - Vote Template should be clear about the fact that running the check script in "sh" will not work
+    [JCR-5185] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.86.0
+    [JCR-5187] - Update commons-cli dependency to 1.11.0
+    [JCR-5188] - Update h2db dependency to 2.3.232
+    [JCR-5189] - update Jetty to 9.4.58.v20250814
+    [JCR-5190] - webapp: bump htmlunit to 4.19.0
+    [JCR-5191] - remove JEXL dependency
+    [JCR-5192] - update aws java sdk version to 1.12.791
+    [JCR-5193] - update Apache parent pom to version 35
+    [JCR-5195] - Utilities for 'safe' creation of XML document builders
+    [JCR-5197] - cleanup o.a.j.util.Base64 and update Javadoc
+    [JCR-5200] - Update h2db dependency to 2.4.240
+    [JCR-5201] - Update oak-jackrabbit-api.version.implemented in trunk to Oak 1.88.0
 
 
 For more detailed information about all the changes in this and other
