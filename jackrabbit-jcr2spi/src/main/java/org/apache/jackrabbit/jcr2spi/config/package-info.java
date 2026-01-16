@@ -14,5 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@org.osgi.annotation.versioning.Version("2.22.2")
+@org.osgi.annotation.versioning.Version("2.22.4")
 package org.apache.jackrabbit.jcr2spi.config;
