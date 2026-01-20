@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.persistence.pool;
 
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.DerbyConnectionHelper;
 
@@ -245,6 +245,10 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         }
         if (getSchemaObjectPrefix() == null) {
             setSchemaObjectPrefix("");
+        }
+        if (getDataSource().getConnection().isClosed()) {
+            //may happen after a workspace shutdown
+            setConnectionFactory(new ConnectionFactory());
         }
         super.init(context);
         // set properties       

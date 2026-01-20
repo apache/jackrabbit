@@ -566,7 +566,7 @@ public class BundleDbPersistenceManager
                 
     }
 
-    private DataSource getDataSource() throws Exception {
+    protected DataSource getDataSource() throws Exception {
         if (getDataSourceName() == null || "".equals(getDataSourceName())) {
             return connectionFactory.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
         } else {
