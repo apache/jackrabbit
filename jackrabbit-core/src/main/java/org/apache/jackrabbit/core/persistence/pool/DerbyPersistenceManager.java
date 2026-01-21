@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.DerbyConnectionHelper;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -246,9 +247,11 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
         if (getSchemaObjectPrefix() == null) {
             setSchemaObjectPrefix("");
         }
-        if (getDataSource().getConnection().isClosed()) {
-            //may happen after a workspace shutdown
-            setConnectionFactory(new ConnectionFactory());
+        try (Connection test = getDataSource().getConnection()) {
+            if (test.isClosed()) {
+                //may happen after a workspace shutdown
+                setConnectionFactory(new ConnectionFactory());
+            }
         }
         super.init(context);
         // set properties       
