@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +31,9 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.dbcp.DelegatingConnection;
-import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp2.DelegatingConnection;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.jackrabbit.core.config.DataSourceConfig;
 import org.apache.jackrabbit.core.config.DataSourceConfig.DataSourceDefinition;
 import org.apache.jackrabbit.util.Base64;
@@ -102,7 +103,7 @@ public final class ConnectionFactory {
                     BasicDataSource bds =
                         getDriverDataSource(driverClass, def.getUrl(), def.getUser(), def.getPassword());
                     if (def.getMaxPoolSize() > 0) {
-                        bds.setMaxActive(def.getMaxPoolSize());
+                        bds.setMaxTotal(def.getMaxPoolSize());
                     }
                     if (def.getValidationQuery() != null && !"".equals(def.getValidationQuery().trim())) {
                         bds.setValidationQuery(def.getValidationQuery());
@@ -334,7 +335,7 @@ public final class ConnectionFactory {
             if (instance != null) {
                 if (instance.jdbcCompliant()) {
                 	// JCR-3445 At the moment the PostgreSQL isn't compliant because it doesn't implement this method...                	
-                    ds.setValidationQueryTimeout(3);
+                    ds.setValidationQueryTimeout(Duration.ofSeconds(3));
                 }
             }
             ds.setDriverClassName(driverClass.getName());
@@ -346,14 +347,16 @@ public final class ConnectionFactory {
         ds.setDefaultAutoCommit(true);
         ds.setTestOnBorrow(false);
         ds.setTestWhileIdle(true);
-        ds.setTimeBetweenEvictionRunsMillis(600000); // 10 Minutes
-        ds.setMinEvictableIdleTimeMillis(60000); // 1 Minute
-        ds.setMaxActive(-1); // unlimited
-        ds.setMaxIdle(GenericObjectPool.DEFAULT_MAX_IDLE + 10);
+        ds.setDurationBetweenEvictionRuns(Duration.ofMinutes(10));
+        ds.setMinEvictableIdle(Duration.ofMinutes(1));
+        ds.setMaxTotal(-1); // unlimited
+        ds.setMaxIdle(GenericObjectPoolConfig.DEFAULT_MAX_IDLE + 10);
         ds.setValidationQuery(guessValidationQuery(url));
         ds.setAccessToUnderlyingConnectionAllowed(true);
         ds.setPoolPreparedStatements(Boolean.valueOf(System.getProperty(SYSTEM_PROPERTY_POOL_PREPARED_STATEMENTS, "true")));
         ds.setMaxOpenPreparedStatements(-1); // unlimited
+        // this helps to discover unusable connections of a shut-down database without executing a validation query
+        ds.setCacheState(false);
         return ds;
     }
 

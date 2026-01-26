@@ -24,7 +24,7 @@ import javax.sql.DataSource;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.derby.iapi.jdbc.EngineConnection;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.DataSourceConfig;
@@ -146,7 +146,7 @@ public class ConnectionFactoryTest extends TestCase {
     }
 
     private void assertPoolDefaults(BasicDataSource ds, String validationQuery, int maxCons) {
-        assertEquals(maxCons, ds.getMaxActive());
+        assertEquals(maxCons, ds.getMaxTotal());
         assertEquals(validationQuery, ds.getValidationQuery());
         assertTrue(ds.getDefaultAutoCommit());
         assertFalse(ds.getTestOnBorrow());
