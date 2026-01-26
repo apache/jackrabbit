@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -334,7 +335,7 @@ public final class ConnectionFactory {
             if (instance != null) {
                 if (instance.jdbcCompliant()) {
                 	// JCR-3445 At the moment the PostgreSQL isn't compliant because it doesn't implement this method...                	
-                    ds.setValidationQueryTimeout(3);
+                    ds.setValidationQueryTimeout(Duration.ofSeconds(3));
                 }
             }
             ds.setDriverClassName(driverClass.getName());
@@ -346,8 +347,8 @@ public final class ConnectionFactory {
         ds.setDefaultAutoCommit(true);
         ds.setTestOnBorrow(false);
         ds.setTestWhileIdle(true);
-        ds.setTimeBetweenEvictionRunsMillis(600000); // 10 Minutes
-        ds.setMinEvictableIdleTimeMillis(60000); // 1 Minute
+        ds.setDurationBetweenEvictionRuns(Duration.ofMinutes(10));
+        ds.setMinEvictableIdle(Duration.ofMinutes(1));
         ds.setMaxTotal(-1); // unlimited
         ds.setMaxIdle(GenericObjectPoolConfig.DEFAULT_MAX_IDLE + 10);
         ds.setValidationQuery(guessValidationQuery(url));
