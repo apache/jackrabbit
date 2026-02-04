@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.util;
 
 import junit.framework.TestCase;
+import org.junit.Ignore;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -120,4 +121,9 @@ public class Base64Test extends TestCase {
         assertEquals("test", Base64.decode("dGVzdA=="));
     }
 
+    public void testStringDecodeNoPadding() throws IOException {
+        // no padding variants
+        assertEquals("test", Base64.decode("dGVzdA=="));
+        assertEquals("test", Base64.decode("dGVzdA"));
+    }
 }
