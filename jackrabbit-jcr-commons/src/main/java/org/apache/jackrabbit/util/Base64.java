@@ -375,7 +375,8 @@ public class Base64 {
             }
         }
 
-        // handle missing padding gracefully, inspired by https://datatracker.ietf.org/doc/html/rfc7515#appendix-C
+        // handle missing padding gracefully, inspired by
+        // https://datatracker.ietf.org/doc/html/rfc7515#appendix-C
         if (posChunk == 1) {
             throw new IllegalArgumentException("specified data is not base64 encoded");
         } else if (posChunk == 2) {
