@@ -374,5 +374,17 @@ public class Base64 {
                 throw new IllegalArgumentException("specified data is not base64 encoded");
             }
         }
+
+        // handle missing padding gracefully, inspired by https://datatracker.ietf.org/doc/html/rfc7515#appendix-C
+        if (posChunk == 1) {
+            throw new IllegalArgumentException("specified data is not base64 encoded");
+        } else if (posChunk == 2) {
+            chunk[2] = '=';
+            chunk[3] = '=';
+            decode(chunk, out);
+        } else if (posChunk == 3) {
+            chunk[3] = '=';
+            decode(chunk, out);
+        }
     }
 }
