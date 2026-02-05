@@ -323,6 +323,20 @@ public class Base64 {
         decode(chars, 0, chars.length, out);
     }
 
+    // utility methods to decode into 1st, 2nd and 3rd position of output
+
+    private static byte decodeFirst(int b0, int b1) {
+        return (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
+    }
+
+    private static byte decodeSecond(int b1, int b2) {
+        return (byte) (b1 << 4 & 0xf0 | b2 >> 2 & 0xf);
+    }
+
+    private static byte decodeThird(int b2, int b3) {
+        return (byte) (b2 << 6 & 0xc0 | b3 & 0x3f);
+    }
+
     /**
      * Decode base64 encoded data.
      *
@@ -356,16 +370,16 @@ public class Base64 {
                     int b2 = DECODETABLE[chunk[2]];
                     int b3 = DECODETABLE[chunk[3]];
                     if (chunk[3] == BASE64PAD && chunk[2] == BASE64PAD) {
-                        dec[0] = (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
+                        dec[0] = decodeFirst(b0, b1);
                         out.write(dec, 0, 1);
                     } else if (chunk[3] == BASE64PAD) {
-                        dec[0] = (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
-                        dec[1] = (byte) (b1 << 4 & 0xf0 | b2 >> 2 & 0xf);
+                        dec[0] = decodeFirst(b0, b1);
+                        dec[1] = decodeSecond(b1, b2);
                         out.write(dec, 0, 2);
                     } else {
-                        dec[0] = (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
-                        dec[1] = (byte) (b1 << 4 & 0xf0 | b2 >> 2 & 0xf);
-                        dec[2] = (byte) (b2 << 6 & 0xc0 | b3 & 0x3f);
+                        dec[0] = decodeFirst(b0, b1);
+                        dec[1] = decodeSecond(b1, b2);
+                        dec[2] = decodeThird(b2, b3);
                         out.write(dec, 0, 3);
                     }
                     posChunk = 0;
