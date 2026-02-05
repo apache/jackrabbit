@@ -123,9 +123,47 @@ public class Base64Test extends TestCase {
     public void testStringDecodeNoPadding() {
         // no padding variants tested in comparison to padded ones
         // https://datatracker.ietf.org/doc/html/rfc4648#section-10
+
         assertEquals("foob", Base64.decode("Zm9vYg=="));
         assertEquals("foob", Base64.decode("Zm9vYg"));
+
         assertEquals("fooba", Base64.decode("Zm9vYmE="));
         assertEquals("fooba", Base64.decode("Zm9vYmE"));
+    }
+
+    public void testStringDecodeBrokenPadding() {
+        // incorrect number of padding characters (when padding, the total
+        // length needs to be a multiple of 4)
+
+        // confirming with jdk decoder
+        try {
+            java.util.Base64.getDecoder().decode("Zm9vYg");
+        } catch (IllegalArgumentException expected) {
+        }
+
+        // Jackrabbit API is weird; for broken input, it just returns
+        // the input
+        assertEquals("Zm9vYg=", Base64.decode("Zm9vYg="));
+
+    }
+
+    public void testStringIllegalExtraChar() {
+        // last (4 byte) chunk of length 1
+        // test with pad and non-pad
+
+        // confirming with jdk decoder
+        try {
+            java.util.Base64.getDecoder().decode("extra");
+        } catch (IllegalArgumentException expected) {
+        }
+       try {
+            java.util.Base64.getDecoder().decode("extr=");
+        } catch (IllegalArgumentException expected) {
+        }
+
+        // Jackrabbit API is weird; for broken input, it just returns
+        // the input
+        assertEquals("extra", Base64.decode("extra"));
+        assertEquals("extr=", Base64.decode("extr="));
     }
 }

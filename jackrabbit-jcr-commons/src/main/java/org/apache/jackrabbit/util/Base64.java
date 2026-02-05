@@ -375,16 +375,29 @@ public class Base64 {
             }
         }
 
-        // handle missing padding gracefully, inspired by
-        // https://datatracker.ietf.org/doc/html/rfc7515#appendix-C
-        if (posChunk == 1) {
-            throw new IllegalArgumentException("specified data is not base64 encoded");
-        } else if (posChunk == 2) {
-            chunk[2] = '=';
-            chunk[3] = '=';
-            decode(chunk, out);
-        } else if (posChunk == 3) {
-            chunk[3] = '=';
+        // if there is an incomplete chunk...
+        if (posChunk != 0) {
+            boolean lastCharWasPad = chunk[posChunk - 1] == BASE64PAD;
+            if (lastCharWasPad) {
+                throw new IllegalArgumentException("specified data is not base64 encoded (input ends with unexpected pad character");
+            }
+
+            // handle missing padding gracefully, inspired by
+            // https://datatracker.ietf.org/doc/html/rfc7515#appendix-C
+
+            if (posChunk == 1) {
+                throw new IllegalArgumentException("specified data is not base64 encoded (extra non-pad character");
+            }
+
+            if (posChunk == 2) {
+                // no padding, input length == 2; add two pad characters
+                chunk[2] = BASE64PAD;
+                chunk[3] = BASE64PAD;
+            } else {
+                // no padding, input length == 3: add one pad character
+                chunk[3] = BASE64PAD;
+            }
+
             decode(chunk, out);
         }
     }
