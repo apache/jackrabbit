@@ -32,9 +32,12 @@ import java.util.Arrays;
 /**
  * <code>Base64</code> provides Base64 encoding/decoding of strings and streams.
  * <p>
+ * <em>NOTE:</em> the decoder accepts invalid input (such as non-trailing padding characters)
+ * and just returns broken output (see JCR-5227).
+ * <p>
  * See <a href="https://datatracker.ietf.org/doc/html/rfc4648#section-4">RFC 4648, Section 4</a>.
  * <p>
- * See {@link java.util.Base64} for a JDK alternative.
+ * See {@link java.util.Base64} for a better JDK alternative.
  */
 public class Base64 {
 
