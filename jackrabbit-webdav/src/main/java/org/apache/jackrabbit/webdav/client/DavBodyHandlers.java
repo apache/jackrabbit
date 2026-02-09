@@ -19,53 +19,38 @@ import org.apache.http.StatusLine;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 /**
  * Factory methods for HTTP response body handlers. Body handlers are used to process the body of an HTTP response.
+ * @see {@link BodyHandler}
  */
 public class DavBodyHandlers {
-    
-    
-    /**
-     * Returns a {@code BodyHandler<Path>} that returns a
-     * {@link BodySubscriber BodySubscriber}{@code <Path>} obtained from
-     * {@link BodySubscribers#ofFile(Path, OpenOption...)
-     * BodySubscribers.ofFile(Path,OpenOption...)}.
-     *
-     * <p> When the {@code HttpResponse} object is returned, the body has
-     * been completely written to the file, and {@link #body()} returns a
-     * reference to its {@link Path}.
-     *
-     * <p> Security manager permission checks are performed in this factory
-     * method, when the {@code BodyHandler} is created. Care must be taken
-     * that the {@code BodyHandler} is not shared with untrusted code.
-     *
-     * @param file the file to store the body in
-     * @param openOptions any options to use when opening/creating the file
-     * @return a response body handler
-     * @throws IllegalArgumentException if an invalid set of open options
-     *          are specified
-     * @throws SecurityException If a security manager has been installed
-     *          and it denies {@link SecurityManager#checkWrite(String)
-     *          write access} to the file.
-     */
+
+    private static final Logger LOG = LoggerFactory.getLogger(DavBodyHandlers.class);
+
+    private DavBodyHandlers() {
+        // prevent instantiation
+    }
+
     public static BodyHandler<String> ofLockToken() {
         return (responseInfo) -> BodySubscribers.replacing(getLockToken(responseInfo.headers()));
     }
 
-
+    // TODO: exception handling
     static String getLockToken(HttpHeaders headers) {
         List<String> ltHeader = headers.allValues(DavConstants.HEADER_LOCK_TOKEN);
-        if (ltHeader == null || ltHeader.length == 0) {
+        if (ltHeader.isEmpty()) {
             return null;
-        } else if (ltHeader.length != 1) {
-            LOG.debug("Multiple 'Lock-Token' header fields in response for " + getURI() + ": " + Arrays.asList(ltHeader));
+        } else if (ltHeader.size() != 1) {
+            LOG.debug("Multiple 'Lock-Token' header fields in response {}", ltHeader);
             return null;
         } else {
-            String v = ltHeader[0].getValue().trim();
+            String v = ltHeader.get(0).trim();
             if (!v.startsWith("<") || !v.endsWith(">")) {
-                LOG.debug("Invalid 'Lock-Token' header field in response for " + getURI() + ": " + Arrays.asList(ltHeader));
+                LOG.debug("Invalid 'Lock-Token' header field in response: {}", v);
                 return null;
             } else {
                 return v.substring(1, v.length() - 1);

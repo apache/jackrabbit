@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodySubscriber;
 import java.net.http.HttpResponse.BodySubscribers;
 import java.net.http.HttpResponse.ResponseInfo;
 import java.util.Optional;
@@ -38,24 +39,15 @@ public abstract class AbstractWebdavMethod<T> {
      * @throws MultiStatusDavResponseException in case of a multi status response
      * @throws DavResponseException in case of a non-success status code
      */
-    protected HttpResponse.BodyHandler<Void> newMultiStatusAwareBodyHandler() {
-        return newMultiStatusAwareBodyHandler(responseInfo -> {});
-    }
-
-    /**
-     * Parses the response in case of non-success status code and throws an exception.
-     * Also potentially parses multi status response bodies and wraps them in a {@link MultiStatusDavResponseException}.
-     * @throws MultiStatusDavResponseException in case of a multi status response
-     * @throws DavResponseException in case of a non-success status code
-     */
-    protected HttpResponse.BodyHandler<T> newMultiStatusAwareBodyHandler(Function<ResponseInfo, T> responseInfoConsumer) {
+    // TODO: pass subscriber (no access to response headers)?
+    protected HttpResponse.BodyHandler<T> newMultiStatusAwareBodyHandler() {
         return (responseInfo) -> {
             if (succeeded(responseInfo.statusCode())) {
-                T response = responseInfoConsumer.apply(null);
-                return BodySubscribers.replacing(response);
+                // TODO: method specific evaluation of both headers and body
+                return (BodySubscriber<T>) BodySubscribers.discarding();
             } else if (responseInfo.statusCode() == DavServletResponse.SC_MULTI_STATUS) {
                 // TODO: evaluate multi status response body also for successful status codes?
-                return BodySubscribers.ofByteArrayConsumer(AbstractWebdavMethod::evaluateMultiStatusResponseBody);
+                return (BodySubscriber<T>) BodySubscribers.ofByteArrayConsumer(AbstractWebdavMethod::evaluateMultiStatusResponseBody);
             } else {
                 throw new DavResponseException(responseInfo.statusCode(), "Unexpected status code: "); 
             }

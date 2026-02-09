@@ -16,7 +16,7 @@
  */
 
 /**
- * Provides classes for use with the Java HttpClient, supporting WebDAV
+ * Provides classes for use with the Java {@link HttpClient}, supporting WebDAV
  * request methods.
  * <p>
  * The classes in this package are used to create and execute WebDAV requests like this
