@@ -32,9 +32,12 @@ import java.util.Arrays;
 /**
  * <code>Base64</code> provides Base64 encoding/decoding of strings and streams.
  * <p>
+ * <em>NOTE:</em> the decoder accepts invalid input (such as non-trailing padding characters)
+ * and just returns broken output (see JCR-5227).
+ * <p>
  * See <a href="https://datatracker.ietf.org/doc/html/rfc4648#section-4">RFC 4648, Section 4</a>.
  * <p>
- * See {@link java.util.Base64} for a JDK alternative.
+ * See {@link java.util.Base64} for a better JDK alternative.
  */
 public class Base64 {
 
@@ -323,6 +326,20 @@ public class Base64 {
         decode(chars, 0, chars.length, out);
     }
 
+    // utility methods to decode into 1st, 2nd and 3rd position of output
+
+    private static byte decodeFirst(int b0, int b1) {
+        return (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
+    }
+
+    private static byte decodeSecond(int b1, int b2) {
+        return (byte) (b1 << 4 & 0xf0 | b2 >> 2 & 0xf);
+    }
+
+    private static byte decodeThird(int b2, int b3) {
+        return (byte) (b2 << 6 & 0xc0 | b3 & 0x3f);
+    }
+
     /**
      * Decode base64 encoded data.
      *
@@ -356,16 +373,16 @@ public class Base64 {
                     int b2 = DECODETABLE[chunk[2]];
                     int b3 = DECODETABLE[chunk[3]];
                     if (chunk[3] == BASE64PAD && chunk[2] == BASE64PAD) {
-                        dec[0] = (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
+                        dec[0] = decodeFirst(b0, b1);
                         out.write(dec, 0, 1);
                     } else if (chunk[3] == BASE64PAD) {
-                        dec[0] = (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
-                        dec[1] = (byte) (b1 << 4 & 0xf0 | b2 >> 2 & 0xf);
+                        dec[0] = decodeFirst(b0, b1);
+                        dec[1] = decodeSecond(b1, b2);
                         out.write(dec, 0, 2);
                     } else {
-                        dec[0] = (byte) (b0 << 2 & 0xfc | b1 >> 4 & 0x3);
-                        dec[1] = (byte) (b1 << 4 & 0xf0 | b2 >> 2 & 0xf);
-                        dec[2] = (byte) (b2 << 6 & 0xc0 | b3 & 0x3f);
+                        dec[0] = decodeFirst(b0, b1);
+                        dec[1] = decodeSecond(b1, b2);
+                        dec[2] = decodeThird(b2, b3);
                         out.write(dec, 0, 3);
                     }
                     posChunk = 0;
@@ -373,6 +390,32 @@ public class Base64 {
             } else if (!Character.isWhitespace(c)) {
                 throw new IllegalArgumentException("specified data is not base64 encoded");
             }
+        }
+
+        // if there is an incomplete chunk...
+        if (posChunk != 0) {
+            boolean lastCharWasPad = chunk[posChunk - 1] == BASE64PAD;
+            if (lastCharWasPad) {
+                throw new IllegalArgumentException("specified data is not base64 encoded (input ends with unexpected pad character");
+            }
+
+            // handle missing padding gracefully, inspired by
+            // https://datatracker.ietf.org/doc/html/rfc7515#appendix-C
+
+            if (posChunk == 1) {
+                throw new IllegalArgumentException("specified data is not base64 encoded (extra non-pad character");
+            }
+
+            if (posChunk == 2) {
+                // no padding, input length == 2; add two pad characters
+                chunk[2] = BASE64PAD;
+                chunk[3] = BASE64PAD;
+            } else {
+                // no padding, input length == 3: add one pad character
+                chunk[3] = BASE64PAD;
+            }
+
+            decode(chunk, out);
         }
     }
 }
