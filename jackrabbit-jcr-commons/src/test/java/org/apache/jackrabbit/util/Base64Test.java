@@ -18,19 +18,20 @@ package org.apache.jackrabbit.util;
 
 import junit.framework.TestCase;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
-import java.util.Arrays;
+
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Test cases for Base64 encode / decode.
  */
 public class Base64Test extends TestCase {
 
-    private Random _random = new Random();
+    private final Random _random = new Random();
 
     /**
      * @return Returns the _random.
@@ -45,8 +46,7 @@ public class Base64Test extends TestCase {
     public void testWhitespace() throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Base64.decode(" d G\tV \tzdA\n= =\n", buffer);
-        byte[] data = buffer.toByteArray();
-        assertEquals("test", new String(data, "US-ASCII"));
+        assertEquals("test", buffer.toString(StandardCharsets.US_ASCII));
     }
 
     /**
@@ -71,7 +71,7 @@ public class Base64Test extends TestCase {
         baos = new ByteArrayOutputStream();
         Base64.decode(new ByteArrayInputStream(encData), baos);
         byte[] decData = baos.toByteArray();
-        assertTrue(Arrays.equals(data, decData));       
+        assertArrayEquals(data, decData);
     }
 
     private void base64RoundTrip() throws Exception {
@@ -98,26 +98,71 @@ public class Base64Test extends TestCase {
         }
     }
 
-    public void testDecodeOrEncode() throws IOException {
+    public void testDecodeOrEncode() {
         assertEquals("", Base64.decodeOrEncode(Base64.decodeOrEncode("")));
         assertEquals("test", Base64.decodeOrEncode(Base64.decodeOrEncode("test")));
         assertEquals("{base64}dGVzdA==", Base64.decodeOrEncode("test"));
         assertEquals("test", Base64.decodeOrEncode("{base64}dGVzdA=="));
     }
 
-    public void testDecodeIfEncoded() throws IOException {
-        assertEquals(null, Base64.decodeIfEncoded(null));
+    public void testDecodeIfEncoded() {
+        assertNull(Base64.decodeIfEncoded(null));
         assertEquals("", Base64.decodeIfEncoded(""));
         assertEquals("", Base64.decodeIfEncoded("{base64}"));
         assertEquals("test", Base64.decodeIfEncoded("test"));
         assertEquals("test", Base64.decodeIfEncoded("{base64}dGVzdA=="));
     }
 
-    public void testStringEncodeDecode() throws IOException {
+    public void testStringEncodeDecode() {
         assertEquals("", Base64.decode(Base64.encode("")));
         assertEquals("test", Base64.decode(Base64.encode("test")));
         assertEquals("dGVzdA==", Base64.encode("test"));
         assertEquals("test", Base64.decode("dGVzdA=="));
     }
 
+    public void testStringDecodeNoPadding() {
+        // no padding variants tested in comparison to padded ones
+        // https://datatracker.ietf.org/doc/html/rfc4648#section-10
+
+        assertEquals("foob", Base64.decode("Zm9vYg=="));
+        assertEquals("foob", Base64.decode("Zm9vYg"));
+
+        assertEquals("fooba", Base64.decode("Zm9vYmE="));
+        assertEquals("fooba", Base64.decode("Zm9vYmE"));
+    }
+
+    public void testStringDecodeBrokenPadding() {
+        // incorrect number of padding characters (when padding, the total
+        // length needs to be a multiple of 4)
+
+        // confirming with jdk decoder
+        try {
+            java.util.Base64.getDecoder().decode("Zm9vYg");
+        } catch (IllegalArgumentException expected) {
+        }
+
+        // Jackrabbit API is weird; for broken input, it just returns
+        // the input
+        assertEquals("Zm9vYg=", Base64.decode("Zm9vYg="));
+    }
+
+    public void testStringIllegalExtraChar() {
+        // last (4 byte) chunk of length 1
+        // test with pad and non-pad
+
+        // confirming with jdk decoder
+        try {
+            java.util.Base64.getDecoder().decode("extra");
+        } catch (IllegalArgumentException expected) {
+        }
+       try {
+            java.util.Base64.getDecoder().decode("extr=");
+        } catch (IllegalArgumentException expected) {
+        }
+
+        // Jackrabbit API is weird; for broken input, it just returns
+        // the input
+        assertEquals("extra", Base64.decode("extra"));
+        assertEquals("extr=", Base64.decode("extr="));
+    }
 }
