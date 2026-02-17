@@ -59,6 +59,7 @@ public class TransientFileFactoryTest extends TestCase {
     public void testOutputStreamAfterFactoryCleanup() throws IOException {
         File tmp = tff.createTransientFile("foo", "bar", null);
         OutputStream os = new FileOutputStream(tmp);
+        tmp = null;
         tff.deleteTransientFiles();
         os.write(new byte[12345]);
         os.close();
