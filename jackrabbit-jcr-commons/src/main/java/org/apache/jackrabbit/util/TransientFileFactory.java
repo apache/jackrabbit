@@ -141,15 +141,9 @@ public class TransientFileFactory {
      * Shutdown hook is removed.
      */
     private synchronized void doShutdown() {
-        // synchronize on the list before iterating over it in order
-        // to avoid ConcurrentModificationException (JCR-549)
-        // @see java.lang.util.Collections.synchronizedList(java.util.List)
-        synchronized(trackedRefs) {
-            for (MoribundFileReference trackedRef : trackedRefs) {
-                trackedRef.delete();
-            }
 
-        }
+        deleteTransientFiles();
+
         if (shutdownHook != null) {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
@@ -161,6 +155,21 @@ public class TransientFileFactory {
             shutdownHook = null;
         }
         reaper.stopWorking();
+    }
+
+    /**
+     * Deletes all transient files unconditionally.
+     * Only present for unit test.
+     */
+    protected synchronized void deleteTransientFiles() {
+        // synchronize on the list before iterating over it in order
+        // to avoid ConcurrentModificationException (JCR-549)
+        // @see java.lang.util.Collections.synchronizedList(java.util.List)
+        synchronized(trackedRefs) {
+            for (MoribundFileReference trackedRef : trackedRefs) {
+                trackedRef.delete();
+            }
+        }
     }
 
     //--------------------------------------------------------< inner classes >
