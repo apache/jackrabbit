@@ -36,7 +36,6 @@
         <include>org.apache.jackrabbit:jackrabbit-jcr-commons</include>
         <include>org.apache.jackrabbit:jackrabbit-spi</include>
         <include>org.apache.jackrabbit:jackrabbit-spi-commons</include>
-        <include>org.apache.tika:tika-core</include>
         <include>org.apache.httpcomponents:httpclient-osgi</include>
         <include>org.apache.httpcomponents:httpcore-osgi</include>
         <include>org.apache.jackrabbit:jackrabbit-webdav</include>

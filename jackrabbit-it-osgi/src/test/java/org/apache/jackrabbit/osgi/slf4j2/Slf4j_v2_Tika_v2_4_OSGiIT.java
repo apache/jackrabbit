@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.osgi;
+package org.apache.jackrabbit.osgi.slf4j2;
 
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
@@ -52,7 +52,7 @@ import org.osgi.framework.Version;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class OSGiIT {
+public class Slf4j_v2_Tika_v2_4_OSGiIT {
 
     @Configuration
     public Option[] configuration() throws IOException, URISyntaxException {
@@ -64,11 +64,23 @@ public class OSGiIT {
                 mavenBundle("org.osgi", "org.osgi.dto", "1.0.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.16"),
                 mavenBundle("org.apache.felix", "org.apache.felix.fileinstall", "3.2.6"),
-                mavenBundle("org.slf4j", "slf4j-api", "1.7.36"),
+
+                //slf4j-api-2.0.7 requirement:
+                //[slf4j.api [24](R 24.0)] osgi.extender; (&(osgi.extender=osgi.serviceloader.processor)(version>=1.0.0)(!(version>=2.0.0)))
+                mavenBundle("org.ow2.asm", "asm", "9.5"),
+                mavenBundle("org.ow2.asm", "asm-tree", "9.5"),
+                mavenBundle("org.ow2.asm", "asm-analysis", "9.5"),
+                mavenBundle("org.ow2.asm", "asm-commons", "9.5"),
+                mavenBundle("org.ow2.asm", "asm-util", "9.5"),
+                mavenBundle("org.apache.aries.spifly", "org.apache.aries.spifly.dynamic.bundle", "1.3.6"),
+
+                mavenBundle("org.slf4j", "slf4j-api", "2.0.7"),
+                mavenBundle("ch.qos.logback", "logback-core", "1.3.5"),
+                mavenBundle("ch.qos.logback", "logback-classic", "1.3.5"),
+
                 mavenBundle("commons-logging", "commons-logging", "1.2"),
                 mavenBundle("org.apache.tika", "tika-core", "2.4.1"),
-                mavenBundle("ch.qos.logback", "logback-core", "1.2.13"),
-                mavenBundle("ch.qos.logback", "logback-classic", "1.2.13"),
+
                 frameworkProperty("repository.home").value("target"),
                 systemProperties(
                         systemProperty("logback.configurationFile")
@@ -120,8 +132,8 @@ public class OSGiIT {
     public void bundleStates() {
         for (Bundle bundle : context.getBundles()) {
             assertEquals(
-                String.format("Bundle %s not active. have a look at the logs", bundle.toString()), 
-                Bundle.ACTIVE, bundle.getState());
+                    String.format("Bundle %s not active. have a look at the logs", bundle.toString()),
+                    Bundle.ACTIVE, bundle.getState());
         }
     }
 
