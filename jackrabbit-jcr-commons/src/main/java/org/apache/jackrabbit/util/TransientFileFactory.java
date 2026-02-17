@@ -39,7 +39,7 @@ import java.util.Collections;
  * <p>
  * @deprecated manage transient files properly without relying on this class
  */
-@Deprecated
+@Deprecated(since="2.22.4")
 public class TransientFileFactory {
 
     /**
