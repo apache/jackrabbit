@@ -136,7 +136,8 @@ public class TransientFileFactory {
      * the webapp classloader. This must be called after all repositories had
      * been stopped, so use with great care!
      * <p>
-     * See <a href="http://issues.apache.org/jira/browse/JCR-1636">...</a> for details.
+     * See <a href="http://issues.apache.org/jira/browse/JCR-1636"
+     * >http://issues.apache.org/jira/browse/JCR-1636</a> for details.
      */
     public static void shutdown() {
         getInstance().doShutdown();
