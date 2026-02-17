@@ -32,7 +32,14 @@ import java.util.Collections;
  * <p>
  * File deletion is handled by a low-priority background thread.
  * <p>
+ * <b>WARNING:</b> depending on GC and VM implementation details, file removal
+ * can not only happen "late" but also "early". It is not safe to rely on
+ * the file being present once the {@linkplain File} object is not referenced
+ * anymore.
+ * <p>
+ * @deprecated manage transient files properly without relying on this class
  */
+@Deprecated
 public class TransientFileFactory {
 
     /**
