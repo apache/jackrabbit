@@ -150,7 +150,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         try {
             FileUtil.delete(indexDir);
         } catch (IOException e) {
-            fail("Unable to delete index directory");
+            fail("Unable to delete index directory '" + indexDir + "': " + e.getMessage());
         }
 
         BlockingParser.unblock();
