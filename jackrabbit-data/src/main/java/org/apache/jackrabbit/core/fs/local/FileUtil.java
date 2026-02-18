@@ -93,7 +93,7 @@ public final class FileUtil {
             }
         }
         if (!f.delete()) {
-            throw new IOException("Unable to delete " + f.getPath());
+            throw new IOException("Unable to delete '" + f.getPath() + "'");
         }
     }
 }
