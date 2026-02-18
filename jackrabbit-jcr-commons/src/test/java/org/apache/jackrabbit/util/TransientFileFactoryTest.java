@@ -23,7 +23,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class TransientFileFactoryTest extends TestCase {
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class TransientFileFactoryTest /* extends TestCase - see JCR-5207*/ {
 
     private final TransientFileFactory tff = TransientFileFactory.getInstance();
 
