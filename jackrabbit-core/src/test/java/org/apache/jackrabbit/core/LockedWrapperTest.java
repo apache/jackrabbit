@@ -305,22 +305,25 @@ public class LockedWrapperTest extends AbstractJCRTest {
                     }
                     Node n = s.getNode(counterPath);
 
-                    long value = new LockedWrapper<Long>() {
+                    long value = 0;
+                    synchronized (counter) {
+                        value = new LockedWrapper<Long>() {
 
-                        @Override
-                        protected Long run(Node node)
-                                throws RepositoryException {
+                            @Override
+                            protected Long run(Node node)
+                                    throws RepositoryException {
 
-                            Property seqProp = node.getProperty("value");
-                            long value = seqProp.getLong();
-                            seqProp.setValue(++value);
-                            s.save();
-                            return value;
-                        }
-                    }.with(n, false);
+                                Property seqProp = node.getProperty("value");
+                                long value = seqProp.getLong();
+                                seqProp.setValue(++value);
+                                s.save();
+                                return value;
+                            }
+                        }.with(n, false);
 
-                    // check that the sequence is ok
-                    assertEquals(counter.getAndIncrement(), value);
+                        // check that the sequence is ok
+                        assertEquals(counter.getAndIncrement(), value);
+                    }
 
                     // do a random wait
                     Thread.sleep(random.nextInt(100));
