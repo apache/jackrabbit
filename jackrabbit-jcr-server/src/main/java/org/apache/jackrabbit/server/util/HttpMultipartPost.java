@@ -65,6 +65,8 @@ class HttpMultipartPost {
         }
 
         ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
+        upload.setPartHeaderSizeMax(10 * 1024);
+        upload.setFileCountMax(1024);
         // make sure the content disposition headers are read with the charset
         // specified in the request content type (or UTF-8 if no charset is specified).
         // see JCR
