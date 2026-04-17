@@ -696,7 +696,7 @@ public class ValueHelper {
      *                     as <code>"_x0020_"</code> within he output string.
      * @return a string representation of the given value.
      * @throws IllegalStateException if the given value is in an illegal state
-     * @throws RepositoryException   if an error occured during the serialization.
+     * @throws RepositoryException   if an error occurred during the serialization.
      */
     public static String serialize(Value value, boolean encodeBlanks)
             throws IllegalStateException, RepositoryException {
@@ -722,9 +722,9 @@ public class ValueHelper {
      * @param enforceBase64 if <code>true</code>, base64 encoding will always be used
      * @param writer       writer to output the encoded data
      * @throws IllegalStateException if the given value is in an illegal state
-     * @throws IOException           if an i/o error occured during the
+     * @throws IOException           if an i/o error occurred during the
      *                               serialization
-     * @throws RepositoryException   if an error occured during the serialization.
+     * @throws RepositoryException   if an error occurred during the serialization.
      */
     public static void serialize(Value value, boolean encodeBlanks, boolean enforceBase64,
                                  Writer writer)

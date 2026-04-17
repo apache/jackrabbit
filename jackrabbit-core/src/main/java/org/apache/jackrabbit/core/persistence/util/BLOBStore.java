@@ -48,7 +48,7 @@ public interface BLOBStore {
      *               {@link #createId(PropertyId, int)}
      * @param in     stream containing the BLOB data
      * @param size   size of the BLOB data
-     * @throws Exception if an error occured
+     * @throws Exception if an error occurred
      */
     void put(String blobId, InputStream in, long size) throws Exception;
 
@@ -58,7 +58,7 @@ public interface BLOBStore {
      * @param blobId identifier of the BLOB data as returned by
      *               {@link #createId(PropertyId, int)}
      * @return an input stream that delivers the BLOB data
-     * @throws Exception if an error occured
+     * @throws Exception if an error occurred
      */
     InputStream get(String blobId) throws Exception;
 
@@ -70,7 +70,7 @@ public interface BLOBStore {
      * @return <code>true</code> if BLOB data with the given id exists and has
      *         been successfully removed, <code>false</code> if there's no BLOB
      *         data with the given id.
-     * @throws Exception if an error occured
+     * @throws Exception if an error occurred
      */
     boolean remove(String blobId) throws Exception;
 }
