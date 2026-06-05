@@ -247,18 +247,6 @@ class HttpMultipartPost {
     }
 
     /**
-     * Returns a set of the file parameter names. An empty set if
-     * no file parameters were present in the request.
-     *
-     * @return an set of file item names representing the file
-     * parameters available with the request.
-     */
-    Set<String> getFileParameterNames() {
-        checkInitialized();
-        return fileParamNames;
-    }
-
-    /**
      * Returns an array of input streams for uploaded file parameters.
      *
      * @param name the name of the file parameter(s)
