@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
 
 import javax.servlet.ServletInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -128,11 +129,19 @@ public class RequestDataTest {
         try {
             assertEquals("textValue", requestData.getParameter("textField"));
             assertNotNull("Multipart file field must map", requestData.getParameter("fileField"));
-            assertNull("Multipart file field must map", requestData.getParameter("foobar"));
             assertEquals(Set.of("fileField", "textField"), IteratorUtils.toSet(requestData.getParameterNames()));
             assertEquals(List.of("text/plain"), Arrays.asList(requestData.getParameterTypes("fileField")));
-            assertEquals(null, requestData.getParameterTypes("textField")[0]);
+            assertNull(requestData.getParameterTypes("textField")[0]);
             assertEquals(1, requestData.getParameterTypes("textField").length);
+
+            InputStream[] streams = requestData.getFileParameters("fileField");
+            assertEquals(1, streams.length);
+            assertEquals("Hello World Item Data", new String(streams[0].readAllBytes(), StandardCharsets.UTF_8));
+
+            assertNull("Multipart file field must map", requestData.getParameter("x"));
+            assertNull(requestData.getFileParameters("x"));
+            assertNull(requestData.getParameterTypes("x"));
+            assertNull(requestData.getParameterValues("x"));
         } finally {
             requestData.dispose();
         }
@@ -174,9 +183,7 @@ public class RequestDataTest {
         File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
         String boundary = "----MockBoundaryLongFilename";
 
-        StringBuilder longFilenameSB = new StringBuilder();
-        longFilenameSB.append("verylongfilenamechunk".repeat(40));
-        String longFilename = longFilenameSB + ".tmp";
+        String longFilename = "verylongfilenamechunk".repeat(40) + ".tmp";
 
         String body = "--" + boundary + "\r\n" +
                 "Content-Disposition: form-data; name=\"fileUpload\"; filename=\"" + longFilename + "\"\r\n" +
