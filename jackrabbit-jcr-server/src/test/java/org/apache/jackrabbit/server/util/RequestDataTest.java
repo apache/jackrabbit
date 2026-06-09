@@ -18,6 +18,7 @@ package org.apache.jackrabbit.server.util;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections4.IteratorUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -29,12 +30,16 @@ import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 
 import javax.servlet.ServletInputStream;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RequestDataTest {
@@ -123,6 +128,11 @@ public class RequestDataTest {
         try {
             assertEquals("textValue", requestData.getParameter("textField"));
             assertNotNull("Multipart file field must map", requestData.getParameter("fileField"));
+            assertNull("Multipart file field must map", requestData.getParameter("foobar"));
+            assertEquals(Set.of("fileField", "textField"), IteratorUtils.toSet(requestData.getParameterNames()));
+            assertEquals(List.of("text/plain"), Arrays.asList(requestData.getParameterTypes("fileField")));
+            assertEquals(null, requestData.getParameterTypes("textField")[0]);
+            assertEquals(1, requestData.getParameterTypes("textField").length);
         } finally {
             requestData.dispose();
         }
