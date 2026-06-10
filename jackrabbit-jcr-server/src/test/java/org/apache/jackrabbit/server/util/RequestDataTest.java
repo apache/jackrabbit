@@ -31,11 +31,13 @@ import java.io.File;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 
 import javax.servlet.ServletInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -175,15 +177,10 @@ public class RequestDataTest {
         }
     }
 
-    /**
-     * Checks if long file naming arrays break lookahead allocation inside Jackrabbit.
-     */
-    // @Test
-    public void testMultipartPostWithExtremelyLongFilename() throws Exception {
-        File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
+    private void buildRequestWithFilenameOfVaryingLength(int length) throws IOException {
         String boundary = "----MockBoundaryLongFilename";
 
-        String longFilename = "verylongfilenamechunk".repeat(40) + ".tmp";
+        String longFilename = "0123456789".repeat(length / 10) + ".tmp";
 
         String body = "--" + boundary + "\r\n" +
                 "Content-Disposition: form-data; name=\"fileUpload\"; filename=\"" + longFilename + "\"\r\n" +
@@ -196,11 +193,31 @@ public class RequestDataTest {
         when(mockRequest.getContentType()).thenReturn("multipart/form-data; boundary=" + boundary);
         lenient().when(mockRequest.getCharacterEncoding()).thenReturn("UTF-8");
         when(mockRequest.getInputStream()).thenReturn(createServletInputStream(payloadBytes));
+    }
 
+    // test default limits in commons-fileuploads
+
+    @Test
+    public void testMultipartPostWithShorterFilename() throws Exception {
+        buildRequestWithFilenameOfVaryingLength(400);
+        File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
         RequestData requestData = new RequestData(mockRequest, testTmpDir);
         try {
-            assertNotNull("Long filename parsing should execute without out-of-bounds corruption",
-                    requestData.getParameter("fileUpload"));
+            assertTrue(
+                    requestData.getParameter("fileUpload").length() > 350);
+        } finally {
+            requestData.dispose();
+        }
+    }
+
+    @Test(expected = IOException.class)
+    public void testMultipartPostWithExtremelyLongFilename() throws Exception {
+        buildRequestWithFilenameOfVaryingLength(1000);
+        File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
+        RequestData requestData = new RequestData(mockRequest, testTmpDir);
+        try {
+            assertTrue(
+                    requestData.getParameter("fileUpload").length() > 950);
         } finally {
             requestData.dispose();
         }
