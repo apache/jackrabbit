@@ -210,7 +210,7 @@ public class RequestDataTest {
         }
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected=IOException.class)
     public void testMultipartPostWithExtremelyLongFilename() throws Exception {
         buildRequestWithFilenameOfVaryingLength(1000);
         File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
@@ -220,6 +220,24 @@ public class RequestDataTest {
                     requestData.getParameter("fileUpload").length() > 950);
         } finally {
             requestData.dispose();
+        }
+    }
+
+    @Test
+    public void testMultipartPostWithExtremelyLongFilenameNButHigherConfig() throws Exception {
+        try {
+            System.setProperty("jackrabbit-server-PartHeaderSizeMax", "2048");
+            buildRequestWithFilenameOfVaryingLength(1000);
+            File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
+            RequestData requestData = new RequestData(mockRequest, testTmpDir);
+            try {
+                assertTrue(
+                        requestData.getParameter("fileUpload").length() > 950);
+            } finally {
+                requestData.dispose();
+            }
+        } finally {
+            System.clearProperty("jackrabbit-server-PartHeaderSizeMax");
         }
     }
 

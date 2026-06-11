@@ -45,6 +45,8 @@ class HttpMultipartPost {
     private final Map<String, List<FileItem>> nameToItems = new LinkedHashMap<String, List<FileItem>>();
     private final Set<String> fileParamNames = new HashSet<String>();
 
+    private final int PARTHEADERSIZEMAX = Integer.getInteger("jackrabbit-server-PartHeaderSizeMax", -1);
+
     private boolean initialized;
 
     HttpMultipartPost(HttpServletRequest request, File tmpDir) throws IOException {
@@ -65,6 +67,9 @@ class HttpMultipartPost {
         }
 
         ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
+        if (PARTHEADERSIZEMAX > 0) {
+            upload.setPartHeaderSizeMax(PARTHEADERSIZEMAX);
+        }
         // make sure the content disposition headers are read with the charset
         // specified in the request content type (or UTF-8 if no charset is specified).
         // see JCR
