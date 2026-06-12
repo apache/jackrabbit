@@ -34,7 +34,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
-
 import javax.servlet.ServletInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -212,12 +211,13 @@ public class RequestDataTest {
 
     @Test(expected=IOException.class)
     public void testMultipartPostWithExtremelyLongFilename() throws Exception {
-        buildRequestWithFilenameOfVaryingLength(1000);
+        // tests against the new default value of 4096
+        buildRequestWithFilenameOfVaryingLength(5000);
         File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
         RequestData requestData = new RequestData(mockRequest, testTmpDir);
         try {
             assertTrue(
-                    requestData.getParameter("fileUpload").length() > 950);
+                    requestData.getParameter("fileUpload").length() > 4900);
         } finally {
             requestData.dispose();
         }
@@ -226,13 +226,13 @@ public class RequestDataTest {
     @Test
     public void testMultipartPostWithExtremelyLongFilenameNButHigherConfig() throws Exception {
         try {
-            System.setProperty("jackrabbit-server-PartHeaderSizeMax", "2048");
-            buildRequestWithFilenameOfVaryingLength(1000);
+            System.setProperty("jackrabbit-server-PartHeaderSizeMax", "8192");
+            buildRequestWithFilenameOfVaryingLength(7500);
             File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
             RequestData requestData = new RequestData(mockRequest, testTmpDir);
             try {
                 assertTrue(
-                        requestData.getParameter("fileUpload").length() > 950);
+                        requestData.getParameter("fileUpload").length() > 7500);
             } finally {
                 requestData.dispose();
             }

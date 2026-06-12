@@ -69,6 +69,9 @@ class HttpMultipartPost {
         ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
         if (PARTHEADERSIZEMAX > 0) {
             upload.setPartHeaderSizeMax(PARTHEADERSIZEMAX);
+        } else {
+            // override the default limit of 512 in commons-fileupload 1.6
+            upload.setPartHeaderSizeMax(4096);
         }
         // make sure the content disposition headers are read with the charset
         // specified in the request content type (or UTF-8 if no charset is specified).
