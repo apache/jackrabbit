@@ -45,6 +45,8 @@ import java.util.Stack;
 {
   ( selector: "authorizable" | "user" | "group" )?        // Defaults to "authorizable", see QueryBuilder#setSelector()
 
+  ( indexHint: /* index tag (String) * / ) ?              // Forces the index tag, see QueryBuilder#setIndexTag()
+
   (
     scope:                                                // See QueryBuilder#setScope()
     {
@@ -108,6 +110,10 @@ RELOP       ::= neq | eq | lt | le | gt | ge              // See QueryBuilder#ne
  * character (\) must be escaped with a backslash character. The pattern is matched against
  * Authorizable#getID() and Authorizable#getPrincipal().</li>
  * <li>The syntax of 'expression' is [-]value { [OR] [-]value }.</li>
+ * <li>The 'indexHint' is the name of an index tag. If set, the underlying query is augmented with an
+ * {@code option(index tag <indexHint>)} clause to force the query engine to use one of the indexes marked with
+ * that tag (see {@link org.apache.jackrabbit.api.security.user.QueryBuilder#setIndexTag(String)}). Support for
+ * index tags depends on the {@code QueryBuilder} implementation; implementations without such support ignore it.</li>
  * </ul>
  */
 public class AuthorizableQueryManager {
@@ -298,6 +304,8 @@ public class AuthorizableQueryManager {
             public void value(String s) throws IOException {
                 if ("selector".equals(currentKey)) {
                     queryBuilder.setSelector(selectorFor(s));
+                } else if ("indexHint".equals(currentKey)) {
+                    queryBuilder.setIndexTag(s);
                 } else {
                     throw new IOException("String value '" + s + "' is invalid for '" + currentKey + '\'');
                 }
