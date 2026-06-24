@@ -110,7 +110,7 @@ class SessionInfoImpl implements SessionInfo {
                 }
                 catch (RepositoryException e) {
                     // should never get here...
-                    throw new NamespaceException("internal error: failed to resolve namespace prefix: '" + prefix + "'", e);
+                    throw new NamespaceException("internal error: failed to resolve namespace prefix", e);
                 }
             }
         };
