@@ -45,6 +45,8 @@ class HttpMultipartPost {
     private final Map<String, List<FileItem>> nameToItems = new LinkedHashMap<String, List<FileItem>>();
     private final Set<String> fileParamNames = new HashSet<String>();
 
+    // <= 0 (default -1) -> Jackrabbit applies 4096 (overrides cfup 1.6's current 512-byte default);
+    // positive -> exact value in bytes. Set to 512 to restore the library's own default.
     private final int PARTHEADERSIZEMAX = Integer.getInteger("jackrabbit-server-PartHeaderSizeMax", -1);
 
     private boolean initialized;
