@@ -47,7 +47,7 @@ public class SessionNamespaceResolver implements NamespaceResolver {
             return session.getNamespacePrefix(uri);
         } catch (RepositoryException e) {
             // should never get here...
-            throw new NamespaceException("internal error: failed to resolve namespace uri", e);
+            throw new NamespaceException("internal error: failed to resolve namespace uri: '" + uri + "'", e);
         }
     }
 
@@ -59,7 +59,7 @@ public class SessionNamespaceResolver implements NamespaceResolver {
             return session.getNamespaceURI(prefix);
         } catch (RepositoryException e) {
             // should never get here...
-            throw new NamespaceException("internal error: failed to resolve namespace prefix", e);
+            throw new NamespaceException("internal error: failed to resolve namespace prefix: '" + prefix + "'", e);
         }
     }
 }
