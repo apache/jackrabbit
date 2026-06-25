@@ -45,6 +45,8 @@ class HttpMultipartPost {
     private final Map<String, List<FileItem>> nameToItems = new LinkedHashMap<String, List<FileItem>>();
     private final Set<String> fileParamNames = new HashSet<String>();
 
+    // <= 0 (default -1) -> Jackrabbit applies 4096 (overrides cfup 1.6's current 512-byte default);
+    // positive -> exact value in bytes. Set to 512 to restore the library's own default.
     private final int PARTHEADERSIZEMAX = Integer.getInteger("jackrabbit-server-PartHeaderSizeMax", -1);
 
     private boolean initialized;
@@ -69,6 +71,9 @@ class HttpMultipartPost {
         ServletFileUpload upload = new ServletFileUpload(getFileItemFactory(tmpDir));
         if (PARTHEADERSIZEMAX > 0) {
             upload.setPartHeaderSizeMax(PARTHEADERSIZEMAX);
+        } else {
+            // override the default limit of 512 in commons-fileupload 1.6
+            upload.setPartHeaderSizeMax(4096);
         }
         // make sure the content disposition headers are read with the charset
         // specified in the request content type (or UTF-8 if no charset is specified).

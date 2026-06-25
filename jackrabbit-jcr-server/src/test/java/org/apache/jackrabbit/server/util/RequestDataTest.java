@@ -34,7 +34,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
-
 import javax.servlet.ServletInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -210,70 +209,41 @@ public class RequestDataTest {
         }
     }
 
-    @Test(expected=IOException.class)
+    @Test(expected = IOException.class)
     public void testMultipartPostWithExtremelyLongFilename() throws Exception {
-        buildRequestWithFilenameOfVaryingLength(1000);
+        // header bytes ~= filename length + ~107; at 5000 chars this far exceeds the 4096 default
+        buildRequestWithFilenameOfVaryingLength(5000);
         File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
+        new RequestData(mockRequest, testTmpDir); // must throw IOException
+    }
+
+    @Test
+    public void testMultipartPostWithLongFilenameUnderNewDefault() throws Exception {
+        buildRequestWithFilenameOfVaryingLength(3800); // above 512, below 4096
+        File testTmpDir = tempFolder.newFolder("jackrabbit_medium_filename");
         RequestData requestData = new RequestData(mockRequest, testTmpDir);
         try {
-            assertTrue(
-                    requestData.getParameter("fileUpload").length() > 950);
+            assertTrue(requestData.getParameter("fileUpload").length() > 3800);
         } finally {
             requestData.dispose();
         }
     }
 
     @Test
-    public void testMultipartPostWithExtremelyLongFilenameNButHigherConfig() throws Exception {
+    public void testMultipartPostWithExtremelyLongFilenameWithHigherConfig() throws Exception {
         try {
-            System.setProperty("jackrabbit-server-PartHeaderSizeMax", "2048");
-            buildRequestWithFilenameOfVaryingLength(1000);
+            System.setProperty("jackrabbit-server-PartHeaderSizeMax", "8192");
+            buildRequestWithFilenameOfVaryingLength(7500);
             File testTmpDir = tempFolder.newFolder("jackrabbit_long_filename");
             RequestData requestData = new RequestData(mockRequest, testTmpDir);
             try {
                 assertTrue(
-                        requestData.getParameter("fileUpload").length() > 950);
+                        requestData.getParameter("fileUpload").length() > 7500);
             } finally {
                 requestData.dispose();
             }
         } finally {
             System.clearProperty("jackrabbit-server-PartHeaderSizeMax");
-        }
-    }
-
-    /**
-     * Assures special Unicode (Non-ASCII) symbols preserve structural state during text decoding.
-     */
-    // @Test
-    public void testMultipartPostWithNonAsciiCharacters() throws Exception {
-        File testTmpDir = tempFolder.newFolder("jackrabbit_non_ascii");
-        String boundary = "----MockBoundaryNonAscii";
-        String nonAsciiValue = "テスト_ü_é_ñ_value";
-        String nonAsciiFilename = "マニュアル_doc.pdf";
-
-        String body = "--" + boundary + "\r\n" +
-                "Content-Disposition: form-data; name=\"unicodeField\"\r\n\r\n" +
-                nonAsciiValue + "\r\n" +
-                "--" + boundary + "\r\n" +
-                "Content-Disposition: form-data; name=\"unicodeFile\"; filename=\"" + nonAsciiFilename + "\"\r\n" +
-                "Content-Type: application/pdf\r\n\r\n" +
-                "%PDF-Mock-Bytes\r\n" +
-                "--" + boundary + "--\r\n";
-
-        byte[] payloadBytes = body.getBytes(StandardCharsets.UTF_8);
-
-        when(mockRequest.getMethod()).thenReturn("POST");
-        when(mockRequest.getContentType()).thenReturn("multipart/form-data; boundary=" + boundary);
-        lenient().when(mockRequest.getCharacterEncoding()).thenReturn("UTF-8");
-        when(mockRequest.getInputStream()).thenReturn(createServletInputStream(payloadBytes));
-
-        RequestData requestData = new RequestData(mockRequest, testTmpDir);
-        try {
-            String parsedValue = requestData.getParameter("unicodeField");
-            assertEquals("Unicode decoding was corrupted inside the parsing sequence", nonAsciiValue, parsedValue);
-            assertNotNull("Non-ASCII file part metadata parsing must complete successfully", requestData.getParameter("unicodeFile"));
-        } finally {
-            requestData.dispose();
         }
     }
 }
