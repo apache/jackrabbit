@@ -19,6 +19,7 @@ Changes in Jackrabbit 2.23.5-beta
     * [JCR-5244] - improve test coverage for HttpMultipartPost
 
 ** Improvement
+    * [JCR-5249] - jackrabbit-spi-commons: add broken namepace names / prefixes to exception message
 
 ** Task
     * [JCR-5233] - commons-fileupload (1.6) restricts header size in upload parts
@@ -73,4 +74,3 @@ Trademarks
 
 Apache Jackrabbit, Jackrabbit, Apache, the Apache feather logo, and the Apache
 Jackrabbit project logo are trademarks of The Apache Software Foundation.
-
