@@ -84,10 +84,9 @@ implementation. The repository hosts:
 - **jackrabbit-spi** + **jackrabbit-spi-commons** + **jackrabbit-spi2dav** +
   **jackrabbit-spi2jcr** — the SPI layer used as a bridge between
   client and server when WebDAV is involved;
-- **jackrabbit-jcr-commons**, **jackrabbit-jcr-rmi**,
-  **jackrabbit-jcr-server**, **jackrabbit-jcr-tests**,
-  **jackrabbit-jcr-client** — the JCR client / server / RMI bindings
-  and the JCR TCK harness;
+- **jackrabbit-jcr-commons**, **jackrabbit-jcr-server**,
+  **jackrabbit-jcr-tests**, **jackrabbit-jcr-client** — the JCR
+  client / server bindings and the JCR TCK harness;
 - **jackrabbit-webdav** + **jackrabbit-jcr2dav** — WebDAV-over-JCR;
 - **examples/jackrabbit-firsthops** — sample code.
 
@@ -102,7 +101,7 @@ forward-looking effort is on Oak *(inferred — §14 Q2)*.
 
 - **In-process JCR 2.0 (JSR 283) repository implementation** embedded
   by a host application, *or* exposed through one of jackrabbit-
-  webdav / jackrabbit-jcr-server / jackrabbit-jcr-rmi as a network
+  webdav / jackrabbit-jcr-server as a network
   service *(documented: `README.txt`; module presence)*. Unlike Oak,
   Jackrabbit *does* ship network bindings.
 - **The JCR API artefacts and SPI layer** are reusable on their own
@@ -117,12 +116,11 @@ Jackrabbit covers two distinct deployment shapes:
 1. **In-process JCR library** — same shape as Oak: a host application
    instantiates a `Repository`, logs in, gets a `Session`, reads/writes.
 2. **Network-exposed via jackrabbit-webdav + jackrabbit-jcr-server +
-   jackrabbit-jcr2dav** — the repository is fronted by a WebDAV (or
-   RMI) servlet; HTTP/WebDAV clients authenticate (usually via HTTP
-   Basic or Digest) and the servlet translates WebDAV verbs into JCR
-   operations *(inferred — §14 Q3)*. This brings authentication,
-   HTTP parsing, and (in 2.x) XML parsing for WebDAV bodies onto the
-   in-model surface.
+   jackrabbit-jcr2dav** — the repository is fronted by a WebDAV
+   servlet; HTTP/WebDAV clients authenticate (usually via HTTP Basic
+   or Digest) and the servlet translates WebDAV verbs into JCR
+   operations. This brings authentication, HTTP parsing, and (in
+   2.x) XML parsing for WebDAV bodies onto the in-model surface.
 
 This split is the most consequential modelling decision: the
 in-process and the network-exposed deployments have different
@@ -135,11 +133,11 @@ different downstream responsibilities (§10).
 | --- | --- | --- |
 | **Host application code (embedded mode)** | trusted | Holds the JCR `Repository` handle; chooses the security configuration. |
 | **JCR session principal** | untrusted but authenticated | Identified via `Repository.login(Credentials)` against the configured `LoginModule`. |
-| **System principal / admin user** | trusted | Default `admin`/`admin` ships with jackrabbit-core; widely cited as the "first thing to change in production" *(inferred — §14 Q4)*. |
-| **WebDAV / RMI / HTTP client (network-exposed mode)** | untrusted | Reaches Jackrabbit through jackrabbit-webdav / jackrabbit-jcr-server. Carries HTTP Basic or Digest credentials. |
+| **System principal / admin user** | trusted | Default `admin`/`admin` ships with jackrabbit-core; widely cited as the "first thing to change in production" *(inferred — §14 Q3)*. |
+| **WebDAV / HTTP client (network-exposed mode)** | untrusted | Reaches Jackrabbit through jackrabbit-webdav / jackrabbit-jcr-server. Carries HTTP Basic or Digest credentials. |
 | **WebDAV operator / servlet container** | trusted | Configures Tomcat/Jetty, TLS, authentication realm, and chooses which JCR repository the servlet exposes. |
-| **External resource referenced by WebDAV body (XML entities, etc.)** | untrusted control plane | jackrabbit-webdav historically parses XML bodies for `PROPFIND`, `LOCK`, `REPORT`; XXE-class concerns are in-model here *(inferred — §14 Q5)*. |
-| **Persistence manager backend (filesystem / JDBC database)** | trusted | jackrabbit-core's persistence managers write to disk or to a relational DB the operator configures *(inferred — §14 Q6)*. |
+| **External resource referenced by WebDAV body (XML entities, etc.)** | untrusted control plane | jackrabbit-webdav historically parses XML bodies for `PROPFIND`, `LOCK`, `REPORT`; XXE-class concerns are in-model here *(inferred — §14 Q4)*. |
+| **Persistence manager backend (filesystem / JDBC database)** | trusted | jackrabbit-core's persistence managers write to disk or to a relational DB the operator configures *(inferred — §14 Q5)*. |
 
 ### Component-family table
 
@@ -149,15 +147,14 @@ different downstream responsibilities (§10).
 | **jackrabbit-core** — repository implementation, JR2 persistence | `RepositoryImpl.login` | filesystem (PM, search index, data store) | **yes** |
 | **jackrabbit-spi**, **jackrabbit-spi-commons**, **jackrabbit-spi2jcr**, **jackrabbit-spi2dav** | SPI bridge | depends on the SPI impl | **yes** |
 | **jackrabbit-jcr-commons** | utilities | no | **yes** |
-| **jackrabbit-jcr-rmi** | RMI bindings *(inferred — §14 Q3)* | **yes — RMI** | **yes** (network surface) |
 | **jackrabbit-jcr-server** | server-side glue | **yes — HTTP** | **yes** (network surface) |
-| **jackrabbit-jcr-client** | client-side glue | **yes — HTTP / RMI** | **yes** for the client posture |
+| **jackrabbit-jcr-client** | client-side glue | **yes — HTTP** | **yes** for the client posture |
 | **jackrabbit-webdav** | WebDAV protocol + XML handling | **yes — HTTP + XML parse** | **yes** (high security weight, XML / XXE-class) |
 | **jackrabbit-jcr2dav** | WebDAV ↔ JCR adaptation | **yes — HTTP** | **yes** |
 | **jackrabbit-jcr-tests** | JCR TCK | none | **out of model** — test harness *(§3)* |
 | **examples/jackrabbit-firsthops** | sample app | varies | **out of model** *(§3)* |
-| **jackrabbit-standalone** / **jackrabbit-standalone-components** *(inferred — §14 Q7)* | standalone server launcher | filesystem + HTTP | in-model only as a runner, not a security boundary |
-| **jackrabbit-aws-ext** *(inferred — §14 Q7)* | S3 data-store extension | **yes — S3** | in-model for in-Jackrabbit code; cloud APIs trusted (§3) |
+| **jackrabbit-standalone** / **jackrabbit-standalone-components** *(inferred — §14 Q6)* | standalone server launcher | filesystem + HTTP | in-model only as a runner, not a security boundary |
+| **jackrabbit-aws-ext** *(inferred — §14 Q6)* | S3 data-store extension | **yes — S3** | in-model for in-Jackrabbit code; cloud APIs trusted (§3) |
 
 A finding is in-model only if it lands in a row marked **yes**; see
 §4 for per-component reachability tests.
@@ -170,14 +167,14 @@ disposition:
 1. **Host application correctness (embedded mode) / servlet
    container configuration (network mode).** Tomcat / Jetty
    misconfiguration, missing TLS, missing HTTP-Basic realm — those are
-   operator / host issues *(inferred — §14 Q8)*. → `OUT-OF-MODEL:
+   operator / host issues *(inferred — §14 Q7)*. → `OUT-OF-MODEL:
    adversary-not-in-scope`.
 2. **Underlying persistence-manager correctness.** Jackrabbit-core's
    PMs delegate to filesystem or JDBC; a hostile filesystem / hostile
-   database is not Jackrabbit's threat *(inferred — §14 Q6)*. →
+   database is not Jackrabbit's threat *(inferred — §14 Q5)*. →
    `OUT-OF-MODEL: trusted-input`.
 3. **Failing to rotate the default `admin`/`admin` user.** Documented
-   convention; operator responsibility *(inferred — §14 Q4)*. →
+   convention; operator responsibility *(inferred — §14 Q3)*. →
    `OUT-OF-MODEL: non-default-build`.
 4. **Code that ships but is not part of the supported product:**
    `jackrabbit-jcr-tests/` (TCK harness),
@@ -190,7 +187,7 @@ disposition:
 7. **Build / release / SDLC hygiene.** Out of model per the SKILL.
 8. **Java EE / J2EE container vulnerabilities** when jackrabbit-jcr-
    server / jackrabbit-webdav is hosted under one. The container is
-   the operator's choice *(inferred — §14 Q9)*. → `OUT-OF-MODEL:
+   the operator's choice *(inferred — §14 Q8)*. → `OUT-OF-MODEL:
    adversary-not-in-scope`.
 9. **Maintenance-mode reality.** This repository is in active
    maintenance for **bug** and **security** fixes but is not under
@@ -207,35 +204,30 @@ disposition:
 
 ## §4 Trust boundaries and data flow
 
-Jackrabbit has up to seven trust transitions a finding must land
+Jackrabbit has up to six trust transitions a finding must land
 inside to be in-model:
 
 | # | Transition | Authentication | Authorisation |
 | --- | --- | --- | --- |
-| B1 | Host code → `Repository.login(Credentials)` (embedded mode) | configured `LoginModule` chain via JAAS | `AccessManager` returned by the security configuration *(inferred — §14 Q10)* |
+| B1 | Host code → `Repository.login(Credentials)` (embedded mode) | configured `LoginModule` chain via JAAS | `AccessManager` returned by the security configuration *(inferred — §14 Q9)* |
 | B2 | HTTP client → jackrabbit-webdav (network mode) | HTTP Basic / Digest at the servlet layer | per-JCR-session, post-translation |
-| B3 | RMI client → jackrabbit-jcr-rmi (network mode) | configured server-side login | per-JCR-session *(inferred — §14 Q3)* |
-| B4 | JCR session principal → tree read | `Subject` established at B1/B2/B3 | jackrabbit-core's `AccessManager` |
-| B5 | JCR session principal → tree write | same | `AccessManager` evaluated on `Session.save()` |
-| B6 | Jackrabbit → persistence manager (filesystem / JDBC) | backend-configured | backend ACLs |
-| B7 | jackrabbit-webdav body parse | none (request body bytes) | n/a; the XML parser must be configured safely (XXE-class) *(inferred — §14 Q5)* |
+| B3 | JCR session principal → tree read | `Subject` established at B1/B2 | jackrabbit-core's `AccessManager` |
+| B4 | JCR session principal → tree write | same | `AccessManager` evaluated on `Session.save()` |
+| B5 | Jackrabbit → persistence manager (filesystem / JDBC) | backend-configured | backend ACLs |
+| B6 | jackrabbit-webdav body parse | none (request body bytes) | n/a; the XML parser must be configured safely (XXE-class) *(inferred — §14 Q4)* |
 
 ### Reachability preconditions per family
 
 A finding is in-model only if it meets the family's reachability test:
 
-- **jackrabbit-core**: reachable from a JCR session at B1 / B2 / B3
+- **jackrabbit-core**: reachable from a JCR session at B1 / B2
   with the principal carrying *less than* admin authority.
 - **jackrabbit-webdav**: reachable from an HTTP request body or
   header. XML-parse vulnerabilities (XXE, XML entity expansion,
   DTDs) are in-model here; the WebDAV bodies are the highest-
-  blast-radius input on the network surface *(inferred — §14 Q5)*.
+  blast-radius input on the network surface *(inferred — §14 Q4)*.
 - **jackrabbit-jcr-server**: in-model for the request-routing and
   authentication glue.
-- **jackrabbit-jcr-rmi**: in-model for the deserialisation of RMI
-  arguments. **Java RMI deserialisation** has its own well-known
-  attack class; in-model only when the RMI server is exposed
-  *(inferred — §14 Q11)*.
 - **jackrabbit-spi**: in-model for the SPI bridge's own logic; the
   underlying SPI implementation is per-deployment trusted.
 - **jackrabbit-aws-ext** (S3 data store): in-model for in-Jackrabbit
@@ -252,19 +244,18 @@ A finding is in-model only if it meets the family's reachability test:
 - **Persistence**. jackrabbit-core uses one of several PMs (bundle
   PM, ObjectPersistenceManager, database PMs); each writes to a
   filesystem directory or a JDBC database the operator configures
-  *(inferred — §14 Q6)*.
+  *(inferred — §14 Q5)*.
 - **Data store**. jackrabbit-core can use the FileDataStore (local
   files) or extensions (jackrabbit-aws-ext for S3); operator-
-  configured trusted *(inferred — §14 Q6)*.
+  configured trusted *(inferred — §14 Q5)*.
 - **Search**. Lucene-based search index on the filesystem under the
   repository home.
 - **Time** — `System.currentTimeMillis` for lock timeouts and
   observation event timestamps; clock skew internal-only.
 - **What Jackrabbit does NOT do to its host** *(predominantly
-  negative — §14 Q12)*:
-  - opens listening sockets *only* through jackrabbit-jcr-server /
-    jackrabbit-jcr-rmi when those are deployed (in pure-library mode,
-    none);
+  negative — §14 Q10)*:
+  - opens listening sockets *only* through jackrabbit-jcr-server
+    when it is deployed (in pure-library mode, none);
   - installs **no** process-wide signal handlers;
   - spawns **no** child processes from the core;
   - reads system properties (`jackrabbit.*`, etc.) but not
@@ -275,21 +266,20 @@ A finding is in-model only if it meets the family's reachability test:
 
 | Knob / configuration | Default | Maintainer stance | Effect |
 | --- | --- | --- | --- |
-| `repository.xml` `Security` element — `LoginModule`, `AccessManager`, `WorkspaceAccessManager` | jackrabbit defaults (e.g. `SimpleSecurityManager` + `DefaultLoginModule` + `AccessManagerImpl`) *(inferred — §14 Q10)* | required for any meaningful security; misconfiguration voids §8 P1–P3 | what auth + authz Jackrabbit applies |
-| Default `admin`/`admin` user | exists, full repository access *(inferred — §14 Q4)* | operator must rotate before production | `BY-DESIGN`; see §3 item 3 |
-| jackrabbit-webdav exposure | not exposed unless the operator deploys it | deploying it brings network attack surface in-scope (B2/B7) | network mode trades library posture for service posture |
-| jackrabbit-jcr-rmi exposure | not exposed unless deployed | RMI deserialisation considerations *(inferred — §14 Q11)* | strongly discouraged on untrusted networks |
-| XML parser configuration in jackrabbit-webdav | depends on JAXP defaults at the JVM level | **maintainer ruling required**: does jackrabbit-webdav harden its `DocumentBuilderFactory` against XXE / DTD / external-entity expansion, or does it rely on JVM defaults? *(inferred — §14 Q5)* | XXE-class behaviour |
+| `repository.xml` `Security` element — `LoginModule`, `AccessManager`, `WorkspaceAccessManager` | jackrabbit defaults (e.g. `SimpleSecurityManager` + `DefaultLoginModule` + `AccessManagerImpl`) *(inferred — §14 Q9)* | required for any meaningful security; misconfiguration voids §8 P1–P3 | what auth + authz Jackrabbit applies |
+| Default `admin`/`admin` user | exists, full repository access *(inferred — §14 Q3)* | operator must rotate before production | `BY-DESIGN`; see §3 item 3 |
+| jackrabbit-webdav exposure | not exposed unless the operator deploys it | deploying it brings network attack surface in-scope (B2/B6) | network mode trades library posture for service posture |
+| XML parser configuration in jackrabbit-webdav | depends on JAXP defaults at the JVM level | **maintainer ruling required**: does jackrabbit-webdav harden its `DocumentBuilderFactory` against XXE / DTD / external-entity expansion, or does it rely on JVM defaults? *(inferred — §14 Q4)* | XXE-class behaviour |
 | HTTP Basic vs Digest in jackrabbit-jcr-server | configurable | Digest preferred; Basic-without-TLS is a §11 misuse | which auth mechanism is on the WebDAV port |
 | FileDataStore directory permissions | operator-controlled | operator responsibility | binary content readability |
-| Persistence manager (bundle / object / database) | bundle PM is the common default *(inferred — §14 Q6)* | operator choice; all are trusted as backends | the choice changes nothing in the security envelope |
+| Persistence manager (bundle / object / database) | bundle PM is the common default *(inferred — §14 Q5)* | operator choice; all are trusted as backends | the choice changes nothing in the security envelope |
 | `jackrabbit-aws-ext` S3 data store | optional | when enabled, S3 backend trust applies (§3 item 2) | cloud blob storage |
-| Anonymous read (some `JCRRepositoryFactory` configs allow guest login) | configurable | maintainer ruling: is anonymous read a supported posture or a dev-time default? *(inferred — §14 Q13)* | whether `Repository.login(null, ws)` succeeds |
+| Anonymous read (some `JCRRepositoryFactory` configs allow guest login) | configurable | maintainer ruling: is anonymous read a supported posture or a dev-time default? *(inferred — §14 Q11)* | whether `Repository.login(null, ws)` succeeds |
 
 **The insecure-default case.** The single most load-bearing knob is the
 default `admin`/`admin` user. The model assumes the operator's posture
 is "rotate or remove before production" — i.e. failing to rotate is
-`OUT-OF-MODEL: non-default-build`. PMC must ratify this in §14 Q4.
+`OUT-OF-MODEL: non-default-build`. PMC must ratify this in §14 Q3.
 
 ## §6 Assumptions about inputs
 
@@ -302,23 +292,22 @@ is "rotate or remove before production" — i.e. failing to rotate is
 | `Session.save()` | accumulated transient changes | **yes** via the authenticated user | nothing |
 | `QueryManager.createQuery(stmt, lang)` | SQL2 / XPath / SQL1 | **yes** | Jackrabbit parses + plans + filters |
 | `AccessControlManager.setPolicy` | policy bytes | only by callers with the right privileges | Jackrabbit gates |
-| WebDAV `PROPFIND` request body | XML | **yes** (HTTP-network input) | per §5a, the XML parser must be hardened (XXE) *(inferred — §14 Q5)* |
+| WebDAV `PROPFIND` request body | XML | **yes** (HTTP-network input) | per §5a, the XML parser must be hardened (XXE) *(inferred — §14 Q4)* |
 | WebDAV `LOCK`, `REPORT` request bodies | XML | **yes** | same |
 | WebDAV `PUT` body | bytes | **yes** | binary into a JCR property/binary value |
 | WebDAV `MOVE`, `COPY` Destination header | URL | **yes** | parsed; URL-decoded path may not contain `..` after decode |
 | WebDAV `If` header | conditional state | **yes** | parsed |
 | HTTP Basic / Digest credentials | bytes | **yes** | configured by `jackrabbit-jcr-server` |
-| RMI invocation arguments | serialised Java objects | **yes** | Java RMI deserialisation considerations *(inferred — §14 Q11)* |
 | Persistence-manager bytes | DB rows / filesystem bytes | **no** — backend is trusted | none |
 
 ### Size / shape / rate
 
 - WebDAV / JCR-server accept arbitrary-length request bodies subject to
-  the servlet container's limits *(inferred — §14 Q14)*.
+  the servlet container's limits *(inferred — §14 Q12)*.
 - Jackrabbit core imposes no enforced cap on tree depth, child
-  count, or query complexity *(inferred — §14 Q14)*.
+  count, or query complexity *(inferred — §14 Q12)*.
 - Lucene full-text query parsing is unbounded by default; a
-  pathological query can burn CPU *(inferred — §14 Q14)*. **No DoS
+  pathological query can burn CPU *(inferred — §14 Q12)*. **No DoS
   protection by default.**
 
 ## §7 Adversary model
@@ -331,13 +320,12 @@ is "rotate or remove before production" — i.e. failing to rotate is
 | Authenticated end-user session (broad privileges, non-admin) | partial | only privilege-envelope escapes are in scope |
 | Unauthenticated HTTP / WebDAV peer reaching the network port | **yes** (when deployed) | TCP connect; HTTP requests; XML body parse; HTTP Basic/Digest auth attempts |
 | Authenticated WebDAV client (HTTP Basic/Digest) | **yes** | same as authenticated JCR session via WebDAV translation |
-| Authenticated RMI client | **yes** (when deployed) | RMI deserialisation surface |
 | Cross-session adversary (one JCR session influencing another) | **yes** | through `AccessManager` cache or commit-hook side effects |
 | Hostile persistence-manager backend (DB, FS) | **out of scope** — §3 item 2 |
 | Hostile servlet container / operator | **out of scope** — §3 item 1 |
 | Hostile XXE-supplying WebDAV body | **yes** (when WebDAV exposed) — *the* main XML-parse adversary |
-| Same-JVM attacker code | **partial** — host's container is the boundary *(inferred — §14 Q15)* |
-| Side-channel observer | **out of scope** *(§14 Q16)* |
+| Same-JVM attacker code | **partial** — host's container is the boundary *(inferred — §14 Q13)* |
+| Side-channel observer | **out of scope** *(§14 Q14)* |
 | Quantum adversary | **out of scope** |
 
 The model does **not** include "authenticated-but-Byzantine peer"
@@ -352,7 +340,7 @@ The model does **not** include "authenticated-but-Byzantine peer"
 - **Violation symptom.** A `Repository.login` call returns a `Session`
   for credentials the configured chain should have rejected.
 - **Severity.** Security-critical (`VALID`).
-- *(inferred — §14 Q10)*
+- *(inferred — §14 Q9)*
 
 ### P2 — Authorisation of reads through `AccessManager`
 
@@ -361,7 +349,7 @@ The model does **not** include "authenticated-but-Byzantine peer"
 - **Violation symptom.** `Session.getNode(path)` returns an item the
   configured ACLs do not license.
 - **Severity.** Security-critical (`VALID`).
-- *(inferred — §14 Q10)*
+- *(inferred — §14 Q9)*
 
 ### P3 — Authorisation of writes through `AccessManager` on commit
 
@@ -369,7 +357,7 @@ The model does **not** include "authenticated-but-Byzantine peer"
 - **Violation symptom.** A `Session.save()` commits a change the
   ACLs do not license.
 - **Severity.** Security-critical (`VALID`).
-- *(inferred — §14 Q10)*
+- *(inferred — §14 Q9)*
 
 ### P4 — HTTP Basic / Digest authentication at the WebDAV servlet boundary (network mode)
 
@@ -378,7 +366,6 @@ The model does **not** include "authenticated-but-Byzantine peer"
 - **Violation symptom.** A WebDAV request without valid credentials
   reaches B2 trust transitions.
 - **Severity.** Security-critical (`VALID`).
-- *(inferred — §14 Q3)*
 
 ### P5 — TLS confidentiality / integrity at the network surface (when configured)
 
@@ -387,7 +374,7 @@ The model does **not** include "authenticated-but-Byzantine peer"
 - **Violation symptom.** Cleartext on the wire after TLS is
   configured.
 - **Severity.** Security-critical (`VALID`).
-- *(inferred — §14 Q17)*
+- *(inferred — §14 Q15)*
 
 ### P6 — XML safety of jackrabbit-webdav body parses
 
@@ -398,7 +385,7 @@ The model does **not** include "authenticated-but-Byzantine peer"
   SSRF), Billion-Laughs, or DTD-based remote-fetch.
 - **Severity.** Security-critical (`VALID`) when reachable from an
   unauthenticated or low-privilege HTTP peer.
-- *(inferred — §14 Q5; this is the single highest-confidence-required
+- *(inferred — §14 Q4; this is the single highest-confidence-required
   property for the network-exposed deployment)*
 
 ### P7 — `Session` per-thread isolation and MVCC-like read consistency
@@ -409,26 +396,15 @@ The model does **not** include "authenticated-but-Byzantine peer"
   data committed after its login without an intentional refresh.
 - **Severity.** Correctness by default; security-critical iff
   cross-session leakage crosses an ACL boundary.
-- *(inferred — §14 Q18)*
+- *(inferred — §14 Q16)*
 
-### P8 — RMI deserialisation safety (when jackrabbit-jcr-rmi deployed)
-
-- **Condition.** jackrabbit-jcr-rmi has an
-  `ObjectInputFilter` / serialFilter that constrains the
-  deserialisation class list.
-- **Violation symptom.** RMI deserialisation of attacker-supplied
-  bytes reaches a gadget chain.
-- **Severity.** Security-critical (`VALID`) — RMI deserialisation is
-  a well-known attack class.
-- *(inferred — §14 Q11)*
-
-### P9 — Memory safety of safe-Java core
+### P8 — Memory safety of safe-Java core
 
 - **Condition.** JVM semantics; no `Unsafe` use in the core security
   paths.
 - **Violation symptom.** OOB / UAF / data race observable.
 - **Severity.** Security-critical when reachable from §6 input.
-- *(inferred — §14 Q19)*
+- *(inferred — §14 Q17)*
 
 ## §9 Security properties the project does NOT provide
 
@@ -436,12 +412,12 @@ The model does **not** include "authenticated-but-Byzantine peer"
 
 `SimpleCredentials("admin","admin")` always works against default
 config. If the host hands those out, the host has lost. *(inferred —
-§14 Q4)*
+§14 Q3)*
 
 ### 9.2 No defence against a malicious persistence-manager backend
 
 JDBC / FileDataStore / FS / S3 are all trusted. *(inferred —
-§14 Q6)*
+§14 Q5)*
 
 ### 9.3 No defence against a malicious servlet-container operator
 
@@ -452,29 +428,23 @@ deployment descriptor. *(inferred — §14 Q1)*
 
 No enforced cap on query complexity, tree depth, child count,
 transient state per session, or WebDAV body size. *(inferred —
-§14 Q14)*
+§14 Q12)*
 
-### 9.5 No protection against RMI deserialisation by default
+### 9.5 No XXE / DTD / external-entity protection in WebDAV bodies (subject to confirmation)
 
-`jackrabbit-jcr-rmi` (when deployed) inherits the JVM's
-`ObjectInputStream` posture. Operators must constrain via JVM-level
-`serialFilter` *(inferred — §14 Q11)*.
-
-### 9.6 No XXE / DTD / external-entity protection in WebDAV bodies (subject to confirmation)
-
-§8 P6 is the inverse — this is the disclaimer if §14 Q5 reveals
+§8 P6 is the inverse — this is the disclaimer if §14 Q4 reveals
 that jackrabbit-webdav does *not* harden its parser.
 
-### 9.7 No data-at-rest encryption at the Jackrabbit layer
+### 9.6 No data-at-rest encryption at the Jackrabbit layer
 
 Delegated to PM / data-store backend.
 
-### 9.8 No constant-time comparison of authentication secrets
+### 9.7 No constant-time comparison of authentication secrets
 
 Beyond what `LoginModule` / JCA helpers provide. *(inferred —
-§14 Q20)*
+§14 Q18)*
 
-### 9.9 No defender stance against `loginAdministrative`-equivalent host paths
+### 9.8 No defender stance against `loginAdministrative`-equivalent host paths
 
 If jackrabbit's `SimpleSecurityManager` was configured to grant
 admin to any subject, that's the configuration speaking, not a bug.
@@ -484,29 +454,25 @@ admin to any subject, that's the configuration speaking, not a bug.
 - **Default `admin`/`admin` is *not* a deployed-by-default backdoor
   — it is documented; the operator is expected to rotate.** Whether
   failing to do so is `VALID` Jackrabbit or `OUT-OF-MODEL`
-  operator-config is §14 Q4.
+  operator-config is §14 Q3.
 - **HTTP Basic without TLS is *not* secure authentication.**
   Credentials are base64 in cleartext.
 - **HTTP Digest is *not* TLS substitute.** It protects the password
   in transit, not the *content*.
 - **WebDAV `LOCK` is an advisory locking primitive, not access
   control.** A holder of `LOCK` does not become an authoriser.
-- **`jackrabbit-jcr-rmi` is a transport, not a security layer.**
-  The remote bytes are deserialised; an `ObjectInputFilter` is
-  essential.
 
 ### Well-known attack classes the project does not defend against
 
 - **XXE / Billion-Laughs / DTD-fetch via WebDAV bodies** — *(inferred
-  — §14 Q5)*.
-- **RMI Java deserialisation gadgets** — *(inferred — §14 Q11)*.
+  — §14 Q4)*.
 - **Authenticated-DoS** (pathological queries / tree shapes) —
   §9.4.
 - **HTTP Basic over plaintext** when `jackrabbit-jcr-server` is
   exposed without TLS — `OUT-OF-MODEL: non-default-build` or
   operator misconfiguration.
 - **TOCTOU between ACL evaluation and tree write** — *(inferred —
-  §14 Q18)*.
+  §14 Q16)*.
 
 ## §10 Downstream responsibilities
 
@@ -514,28 +480,25 @@ The host application (and, in network mode, the operator) MUST:
 
 1. **Rotate or remove the default `admin`/`admin` user** before
    exposing the repository to any non-trusted caller *(inferred —
-   §14 Q4)*.
+   §14 Q3)*.
 2. **Configure a `LoginModule` and an `AccessManager`** that match
    the production trust posture. The shipped defaults are intended
    for demos.
 3. **Wrap `jackrabbit-jcr-server` / jackrabbit-webdav with TLS**
    (servlet container HTTPS). HTTP Basic over plaintext is not
-   acceptable production posture *(inferred — §14 Q17)*.
-4. **Constrain RMI deserialisation** when `jackrabbit-jcr-rmi` is
-   exposed — JVM-level `ObjectInputFilter` / `jdk.serialFilter`
-   appropriate to the running JVM *(inferred — §14 Q11)*.
-5. **Harden the XML parser configuration** if `jackrabbit-webdav` is
+   acceptable production posture *(inferred — §14 Q15)*.
+4. **Harden the XML parser configuration** if `jackrabbit-webdav` is
    exposed (XXE, DTD, external-entity, billion-laughs)
-   *(inferred — §14 Q5)*.
-6. **Apply admission control / rate limits** at the servlet
+   *(inferred — §14 Q4)*.
+5. **Apply admission control / rate limits** at the servlet
    container / reverse-proxy layer; Jackrabbit does not.
-7. **Restrict OS filesystem permissions** on `repository.home`,
+6. **Restrict OS filesystem permissions** on `repository.home`,
    persistence-manager directories, data-store directories, search
    index, and any keystores.
-8. **Track CVE advisories on this repo.** Maintenance-mode posture
+7. **Track CVE advisories on this repo.** Maintenance-mode posture
    means the security mailing list is the right channel for
    reports; binary patches are not produced per Apache convention.
-9. **Plan migration to Oak** if the deployment is greenfield or if
+8. **Plan migration to Oak** if the deployment is greenfield or if
    bug-fixes diverge — Oak is the active codebase *(inferred —
    §14 Q2)*.
 
@@ -545,8 +508,6 @@ The host application (and, in network mode, the operator) MUST:
 - **Deploying jackrabbit-jcr-server / jackrabbit-webdav without
   TLS.** HTTP Basic over plaintext is the default if the operator
   does not flip a switch.
-- **Deploying jackrabbit-jcr-rmi to a public network without a
-  `serialFilter`.**
 - **Exposing the WebDAV port directly without an authentication
   realm.** WebDAV has no built-in auth; the servlet container does.
 - **Treating Jackrabbit as the active codebase and not Oak.** For
@@ -555,7 +516,7 @@ The host application (and, in network mode, the operator) MUST:
   submit.** SQL1 is more permissive than SQL2 / XPath.
 - **WebDAV `PROPFIND` `Depth: infinity` against the root** — a
   documented amplification vector for any WebDAV-fronted store
-  *(inferred — §14 Q14)*.
+  *(inferred — §14 Q12)*.
 - **WebDAV `MOVE` / `COPY` with a `Destination` header pointing
   outside the configured workspace.** ACL-bounded; the configured
   ACL is the gate.
@@ -564,16 +525,13 @@ The host application (and, in network mode, the operator) MUST:
 
 - **"Default `admin`/`admin` user exists in the shipped
   configuration."** Documented; operator must rotate per §10. →
-  `OUT-OF-MODEL: non-default-build` (subject to §14 Q4).
+  `OUT-OF-MODEL: non-default-build` (subject to §14 Q3).
 - **"HTTP Basic credentials sent in cleartext when
   `jackrabbit-jcr-server` is exposed over HTTP."** Operator must
-  enable TLS *(inferred — §14 Q17)*. → `OUT-OF-MODEL:
+  enable TLS *(inferred — §14 Q15)*. → `OUT-OF-MODEL:
   non-default-build`.
-- **"`jackrabbit-jcr-rmi` deserialises arbitrary classes."** Operator
-  must configure `jdk.serialFilter` *(inferred — §14 Q11)*. →
-  `OUT-OF-MODEL: non-default-build`.
 - **"DoS via pathological SQL2 / XPath query."** No engine-level
-  cap *(inferred — §14 Q14)*. → `BY-DESIGN: property-disclaimed`.
+  cap *(inferred — §14 Q12)*. → `BY-DESIGN: property-disclaimed`.
 - **"Hardcoded test password / keystore in
   `examples/jackrabbit-firsthops/`, `jackrabbit-jcr-tests/`."**
   Unsupported components. → `OUT-OF-MODEL: unsupported-component`.
@@ -594,14 +552,11 @@ The host application (and, in network mode, the operator) MUST:
 ## §12 Conditions that would change this model
 
 - A new network listener in jackrabbit (currently only via
-  jackrabbit-jcr-server / jackrabbit-webdav / jackrabbit-jcr-rmi
-  when deployed).
+  jackrabbit-jcr-server / jackrabbit-webdav when deployed).
 - A change in the shipped default `LoginModule` / `AccessManager`.
 - A change in the shipped default `admin`/`admin` posture
   (e.g. randomised on first start).
 - A change in jackrabbit-webdav's XML parser default hardening.
-- Promotion of jackrabbit-jcr-rmi to a recommended deployment
-  shape (currently strongly discouraged on untrusted networks).
 - A change in the project's maintenance posture (return to active
   feature development).
 - A vulnerability report that cannot be cleanly routed to one of the
@@ -618,7 +573,7 @@ A report against Jackrabbit receives exactly one of:
 | `OUT-OF-MODEL: trusted-input` | Requires attacker control of a §6 parameter the model marks trusted. | §6 |
 | `OUT-OF-MODEL: adversary-not-in-scope` | Requires a §7 actor the model excludes. | §7 |
 | `OUT-OF-MODEL: unsupported-component` | Lands in `jackrabbit-jcr-tests/`, `examples/`, or in Oak / filevault. | §3 |
-| `OUT-OF-MODEL: non-default-build` | Manifests only under a discouraged or non-default §5a value (un-rotated `admin`, HTTP Basic without TLS, RMI without `serialFilter`). | §5a |
+| `OUT-OF-MODEL: non-default-build` | Manifests only under a discouraged or non-default §5a value (un-rotated `admin`, HTTP Basic without TLS). | §5a |
 | `BY-DESIGN: property-disclaimed` | Concerns a §9 property the project explicitly does not provide. | §9 |
 | `KNOWN-NON-FINDING` | Matches a §11a recurring false positive. | §11a |
 | `MODEL-GAP` | Cannot be cleanly routed to any of the above — triggers §12 model revision. | §12 |
@@ -631,87 +586,74 @@ A report against Jackrabbit receives exactly one of:
 disclosure history page at
 `https://jackrabbit.apache.org/jcr/jackrabbit-security-reports.html`.
 Specifically: what CVEs have been issued against jackrabbit-core /
-jackrabbit-webdav / jackrabbit-jcr-rmi in the last 5 years, and
-which patterns recur in inbound reports that you close as not-a-bug?
+jackrabbit-webdav in the last 5 years, and which patterns recur in
+inbound reports that you close as not-a-bug?
 *(maps to §1 reporting, §11a)*
 
 **Q2.** Maintenance posture. Proposed: "active for bug + security
 fixes; not active for feature development; Oak is the recommended
 codebase for new deployments". Confirm or correct. *(maps to
-§3 item 9, §10 item 9)*
+§3 item 9, §10 item 8)*
 
-**Q3.** Is jackrabbit-jcr-rmi still a supported deployment shape?
-Proposed: yes but strongly discouraged on untrusted networks
-because of Java deserialisation considerations. Should §13 add a
-"deployed-on-untrusted-network" axis for `jackrabbit-jcr-rmi`
-specifically? *(maps to §2, §3, §5a)*
-
-**Q4.** The default `admin`/`admin` user. Proposed disposition for
+**Q3.** The default `admin`/`admin` user. Proposed disposition for
 "deployment X has not rotated the default `admin`":
 `OUT-OF-MODEL: non-default-build`. Confirm — or has the project
 moved to randomised first-start? *(maps to §5a, §10 item 1,
 §11a)*
 
-**Q5.** **The XXE question.** Does `jackrabbit-webdav` ship
+**Q4.** **The XXE question.** Does `jackrabbit-webdav` ship
 hardened XML parser configuration (disable external entities,
 disallow DOCTYPE, cap entity expansion) for `PROPFIND`, `LOCK`,
 `REPORT` body parsing? This is the highest-leverage single question
 for the network-exposed deployment. If not, §8 P6 collapses into
-§9.6 and §10 item 5 becomes a hard production requirement.
-*(maps to §4 B7, §6 WebDAV rows, §8 P6, §9.6)*
+§9.5 and §10 item 4 becomes a hard production requirement.
+*(maps to §4 B6, §6 WebDAV rows, §8 P6, §9.5)*
 
 ### Wave 2 — backends, environment
 
-**Q6.** Are persistence-manager backends (FileDataStore, bundle PM,
+**Q5.** Are persistence-manager backends (FileDataStore, bundle PM,
 database PMs, S3 via jackrabbit-aws-ext) all modelled as trusted
 backends — i.e. Jackrabbit does not defend against a malicious
 backend? Proposed: yes. *(maps to §3 item 2, §9.2)*
 
-**Q7.** Module inventory: confirm or correct the list of supported
+**Q6.** Module inventory: confirm or correct the list of supported
 modules vs unsupported / sample / TCK / extension modules. In
 particular: is `jackrabbit-standalone` / `jackrabbit-standalone-components`
 still part of the repo (the README didn't reach it); is
 `jackrabbit-aws-ext` an in-tree module or a separate artefact? *(maps
 to §2 component family)*
 
-**Q8.** Servlet-container responsibility: confirmed that Tomcat /
+**Q7.** Servlet-container responsibility: confirmed that Tomcat /
 Jetty configuration (TLS, HTTP Basic / Digest realm, request body
 size caps, request timeouts) is out-of-model and the operator's
 responsibility? *(maps to §3 item 1)*
 
-**Q9.** Java EE container vulnerabilities: confirmed out-of-model?
+**Q8.** Java EE container vulnerabilities: confirmed out-of-model?
 *(maps to §3 item 8)*
 
 ### Wave 3 — `AccessManager`, login
 
-**Q10.** What is the *default* `LoginModule` / `AccessManager` in
+**Q9.** What is the *default* `LoginModule` / `AccessManager` in
 the shipped `repository.xml` of jackrabbit-core? The §8 P1–P3
 properties hinge on this configuration; this draft uses generic
 "configured `LoginModule` / `AccessManager`" placeholders. Please
 state the concrete default class names and the JAAS app-name they
 register under. *(maps to §5a, §8 P1–P3)*
 
-**Q11.** `jackrabbit-jcr-rmi` deserialisation. Does the module
-ship its own `ObjectInputFilter` to constrain the deserialisation
-class allowlist? If not, is "operator must configure
-`jdk.serialFilter`" the documented production posture, and how is
-that surfaced in the deployment docs? *(maps to §4 B3, §6 RMI
-row, §8 P8, §9.5, §10 item 4, §11a)*
-
 ### Wave 4 — environment, MVCC, memory safety
 
-**Q12.** "What Jackrabbit does NOT do to its host" inventory: no
+**Q10.** "What Jackrabbit does NOT do to its host" inventory: no
 process-wide signal handlers, no child process spawn (outside
 network-mode servlet container), no arbitrary `LD_*` consumption,
 no on-disk persistence outside `repository.home`. Confirm any
 inaccuracies. *(maps to §5)*
 
-**Q13.** Anonymous read posture. Is `Repository.login(null, ws)`
+**Q11.** Anonymous read posture. Is `Repository.login(null, ws)`
 (guest login without credentials) supported in any default
 configuration, or is it always disabled by default? *(maps to
 §5a, §6, §7 unauthenticated row)*
 
-**Q14.** WebDAV / JCR / Lucene resource bounds. Confirmed that
+**Q12.** WebDAV / JCR / Lucene resource bounds. Confirmed that
 Jackrabbit imposes **no** enforced cap on:
 - WebDAV request body size beyond servlet container limits;
 - JCR query complexity (Lucene-based);
@@ -722,48 +664,47 @@ Jackrabbit imposes **no** enforced cap on:
 If correct, all of these belong in §9.4 / §11a as `BY-DESIGN:
 property-disclaimed`. *(maps to §6, §9.4)*
 
-**Q15.** Same-JVM attacker code (co-installed servlet, OSGi bundle,
+**Q13.** Same-JVM attacker code (co-installed servlet, OSGi bundle,
 servlet container's other webapps): confirmed out-of-model? The
 host container is the security boundary. *(maps to §7, §9)*
 
-**Q16.** Side-channel adversaries: confirmed out-of-model? *(maps
+**Q14.** Side-channel adversaries: confirmed out-of-model? *(maps
 to §3 item 10, §7, §9)*
 
-**Q17.** TLS: confirmed that TLS is **always** the servlet
+**Q15.** TLS: confirmed that TLS is **always** the servlet
 container's job in network mode, never Jackrabbit's? *(maps to
 §8 P5)*
 
-**Q18.** MVCC visibility: how does jackrabbit-core handle
+**Q16.** MVCC visibility: how does jackrabbit-core handle
 cross-session refresh? Proposed: session reads the revision
 captured at login, refreshable via `Session.refresh`. Confirm.
 *(maps to §8 P7)*
 
-**Q19.** Memory safety of safe-Java: confirmed that the core
-security paths use no `Unsafe` / JNI? *(maps to §8 P9)*
+**Q17.** Memory safety of safe-Java: confirmed that the core
+security paths use no `Unsafe` / JNI? *(maps to §8 P8)*
 
-**Q20.** Constant-time comparison of authentication secrets:
+**Q18.** Constant-time comparison of authentication secrets:
 confirmed all delegated to JAAS / `LoginModule` / JCA, with no
-Jackrabbit-internal `equals` on secrets? *(maps to §9.8)*
+Jackrabbit-internal `equals` on secrets? *(maps to §9.7)*
 
 ### Wave 5 — meta
 
-**Q21.** Should this document live as `docs/threat-model.md` or
+**Q19.** Should this document live as `docs/threat-model.md` or
 under `jackrabbit-jcr-commons/src/site/markdown/`? *(meta)*
 
-**Q22.** Is there an existing Jackrabbit threat-model document
+**Q20.** Is there an existing Jackrabbit threat-model document
 (Confluence, JIRA, mailing-list summary, prior PMC discussion) that
 this should reconcile with rather than supersede? *(meta — §3.1a)*
 
-**Q23.** §11a known-non-findings is currently 10 entries, mostly
+**Q21.** §11a known-non-findings is currently 9 entries, mostly
 operator-misconfiguration-shaped. Could the PMC contribute 3–5
 patterns the Jackrabbit triage queue sees recur in inbound reports
 that you close as not-a-bug? Patterns like "WebDAV exposed without
-TLS — operator misconfig, not Jackrabbit", "RMI deserialisation
-gadget — JVM serialFilter is the fix", "DoS via huge PROPFIND
-Depth-infinity — WebDAV semantics" would harden §11a substantially.
-*(meta — §11a)*
+TLS — operator misconfig, not Jackrabbit" and "DoS via huge
+PROPFIND Depth-infinity — WebDAV semantics" would harden §11a
+substantially. *(meta — §11a)*
 
-**Q24.** Should this Jackrabbit model cross-reference the (still-to-
+**Q22.** Should this Jackrabbit model cross-reference the (still-to-
 be-drafted) `jackrabbit-oak` and `jackrabbit-filevault` models for
 items §3 items 5–6? *(meta)*
 
