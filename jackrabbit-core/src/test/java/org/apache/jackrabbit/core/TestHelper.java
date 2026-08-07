@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.lucene.ConsistencyCheck;
+import org.apache.jackrabbit.core.query.lucene.ConsistencyCheckInterface;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -78,7 +79,7 @@ public class TestHelper {
         }
     }
 
-    public static ConsistencyCheck checkIndexConsistency(Session session) throws RepositoryException, NotExecutableException, IOException {
+    public static ConsistencyCheckInterface checkIndexConsistency(Session session) throws RepositoryException, NotExecutableException, IOException {
         Repository r = session.getRepository();
         if (!(r instanceof RepositoryImpl)) {
             throw new NotExecutableException();
@@ -90,7 +91,7 @@ public class TestHelper {
             throw new NotExecutableException("No search index");
         }
         SearchIndex si = (SearchIndex) qh;
-        return si.runConsistencyCheck();
+        return si.doConsistencyCheck();
     }
 
     /**
