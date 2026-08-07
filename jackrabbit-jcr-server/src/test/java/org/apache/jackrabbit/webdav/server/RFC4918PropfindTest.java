@@ -18,9 +18,9 @@ package org.apache.jackrabbit.webdav.server;
 
 import java.io.IOException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
@@ -40,7 +40,7 @@ public class RFC4918PropfindTest extends WebDAVTestBase {
 
     public void testOptions() throws IOException {
         HttpOptions options = new HttpOptions(this.root);
-        HttpResponse response = this.client.execute(options, this.context);
+        ClassicHttpResponse response = this.client.executeOpen(null, options, this.context);
         assertTrue(options.getDavComplianceClasses(response).contains("3"));
     }
 
@@ -52,14 +52,14 @@ public class RFC4918PropfindTest extends WebDAVTestBase {
         try {
             HttpPut put = new HttpPut(testuri);
             put.setEntity(new StringEntity("1"));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals("status: " + status, 201, status);
 
             DavPropertyNameSet names = new DavPropertyNameSet();
             names.add(DeltaVConstants.COMMENT);
             HttpPropfind propfind = new HttpPropfind(testuri, DavConstants.PROPFIND_ALL_PROP_INCLUDE, names, 0);
-            HttpResponse resp = this.client.execute(propfind, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            ClassicHttpResponse resp = this.client.executeOpen(null, propfind, this.context);
+            status = resp.getCode();
             assertEquals(207, status);
 
             MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus(resp);

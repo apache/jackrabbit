@@ -18,8 +18,8 @@ package org.apache.jackrabbit.spi2dav;
 
 import javax.jcr.SimpleCredentials;
 
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 
 /**
  * <code>CredentialsWrapper</code>...
@@ -38,10 +38,19 @@ class CredentialsWrapper {
         } else if (creds instanceof SimpleCredentials) {
             SimpleCredentials sCred = (SimpleCredentials) creds;
             userId = sCred.getUserID();
-            this.credentials = new UsernamePasswordCredentials(userId, String.valueOf(sCred.getPassword()));
+            this.credentials = new UsernamePasswordCredentials(userId, sCred.getPassword());
         } else {
             userId = "";
-            this.credentials = new UsernamePasswordCredentials(creds.toString());
+            // HttpClient 5 dropped the single-argument "username:password"
+            // constructor, so split the pair here instead
+            String usernamePassword = creds.toString();
+            int colon = usernamePassword.indexOf(':');
+            if (colon < 0) {
+                this.credentials = new UsernamePasswordCredentials(usernamePassword, new char[0]);
+            } else {
+                this.credentials = new UsernamePasswordCredentials(usernamePassword.substring(0, colon),
+                        usernamePassword.substring(colon + 1).toCharArray());
+            }
         }
     }
 

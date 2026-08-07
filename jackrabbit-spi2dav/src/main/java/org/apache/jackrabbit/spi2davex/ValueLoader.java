@@ -25,12 +25,13 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
 import org.apache.jackrabbit.spi2dav.ItemResourceConstants;
@@ -59,15 +60,15 @@ class ValueLoader {
     void loadBinary(String uri, int index, Target target) throws RepositoryException, IOException {
         HttpGet request = new HttpGet(uri);
         try {
-            HttpResponse response = client.execute(request, context);
-            int statusCode = response.getStatusLine().getStatusCode();
+            ClassicHttpResponse response = client.executeOpen(null, request, context);
+            int statusCode = response.getCode();
             if (statusCode == DavServletResponse.SC_OK) {
                 target.setStream(response.getEntity().getContent());
             } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary at " + uri + " - Status line = " + response.getStatusLine())));
+                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary at " + uri + " - Status line = " + new StatusLine(response))));
             }
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -75,8 +76,8 @@ class ValueLoader {
             RepositoryException {
         HttpHead request = new HttpHead(uri);
         try {
-            HttpResponse response = client.execute(request, context);
-            int statusCode = response.getStatusLine().getStatusCode();
+            ClassicHttpResponse response = client.executeOpen(null, request, context);
+            int statusCode = response.getCode();
             if (statusCode == DavServletResponse.SC_OK) {
                 Map<String, String> headers = new HashMap<String, String>();
                 for (String name : headerNames) {
@@ -87,10 +88,10 @@ class ValueLoader {
                 }
                 return headers;
             } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load headers at " + uri + " - Status line = " + response.getStatusLine().toString())));
+                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load headers at " + uri + " - Status line = " + new StatusLine(response))));
             }
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -101,7 +102,7 @@ class ValueLoader {
         HttpPropfind request = null;
         try {
             request = new HttpPropfind(uri, nameSet, DavConstants.DEPTH_0);
-            HttpResponse response = client.execute(request, context);
+            ClassicHttpResponse response = client.executeOpen(null, request, context);
             request.checkSuccess(response);
 
             MultiStatusResponse[] responses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -120,7 +121,7 @@ class ValueLoader {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }

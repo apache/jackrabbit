@@ -36,8 +36,8 @@
         <include>org.apache.jackrabbit:jackrabbit-jcr-commons</include>
         <include>org.apache.jackrabbit:jackrabbit-spi</include>
         <include>org.apache.jackrabbit:jackrabbit-spi-commons</include>
-        <include>org.apache.httpcomponents:httpclient-osgi</include>
-        <include>org.apache.httpcomponents:httpcore-osgi</include>
+        <include>org.apache.httpcomponents.client5:httpclient5</include>
+        <include>org.apache.httpcomponents.core5:httpcore5</include>
         <include>org.apache.jackrabbit:jackrabbit-webdav</include>
         <include>org.apache.jackrabbit:jackrabbit-jcr-server</include>
       </includes>

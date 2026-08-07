@@ -19,13 +19,17 @@
  * Provides classes for use with the Apache HttpClient, supporting WebDAV
  * request methods.
  * <p>
- * This version also contains classes for use with the obsolete "Commons
- * HttpClient"; they have been marked "deprecated" and will be removed in the
- * next major release.
- * 
+ * As of package version 3.0.0 these classes are built on Apache HttpClient 5. This is a
+ * breaking change: {@link org.apache.jackrabbit.webdav.client.methods.BaseDavRequest}
+ * now extends
+ * {@code org.apache.hc.client5.http.classic.methods.HttpUriRequestBase} and takes
+ * the request method as its first constructor argument, and the response
+ * accessors take {@code org.apache.hc.core5.http.ClassicHttpResponse} in place of
+ * the HttpClient 4 {@code HttpResponse}.
+ *
  * @see <a href="https://issues.apache.org/jira/browse/JCR-2406">JCR-2406</a>
  * @see <a href=
- *      "https://hc.apache.org/httpcomponents-client-4.5.x/">https://hc.apache.org/httpcomponents-client-4.5.x/</a>
+ *      "https://hc.apache.org/httpcomponents-client-5.6.x/">https://hc.apache.org/httpcomponents-client-5.6.x/</a>
  */
-@org.osgi.annotation.versioning.Version("2.0.0")
+@org.osgi.annotation.versioning.Version("3.0.0")
 package org.apache.jackrabbit.webdav.client.methods;

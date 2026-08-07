@@ -26,8 +26,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicHeaderValueParser;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicHeaderValueParser;
+import org.apache.hc.core5.http.message.ParserCursor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,7 +162,9 @@ public class LinkHeaderFieldParser {
             target = m.group(1);
 
             // pass the remainder to the generic parameter parser
-            NameValuePair[] params = BasicHeaderValueParser.parseParameters(m.group(2), null);
+            String paramStr = m.group(2);
+            NameValuePair[] params = BasicHeaderValueParser.INSTANCE.parseParameters(
+                    paramStr, new ParserCursor(0, paramStr.length()));
 
             if (params.length == 0) {
                 parameters = Collections.emptyMap();

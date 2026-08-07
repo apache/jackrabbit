@@ -19,7 +19,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -37,7 +37,7 @@ public class HttpReport extends BaseDavRequest {
     private final boolean isDeep;
 
     public HttpReport(URI uri, ReportInfo reportInfo) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_REPORT, uri);
         DepthHeader dh = new DepthHeader(reportInfo.getDepth());
         isDeep = reportInfo.getDepth() > DavConstants.DEPTH_0;
         super.setHeader(dh.getHeaderName(), dh.getHeaderValue());
@@ -49,13 +49,8 @@ public class HttpReport extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_REPORT;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         if (isDeep) {
             return statusCode == DavServletResponse.SC_MULTI_STATUS;
         } else {

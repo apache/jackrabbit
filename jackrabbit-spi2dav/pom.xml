@@ -41,6 +41,8 @@
           <includes>
             <include>**/ConnectionOptionsTest.java</include>
             <include>**/spi2dav/ConnectionTest.java</include>
+            <include>**/spi2dav/GetHeadRedirectStrategyTest.java</include>
+            <include>**/spi2davex/Rfc6532MultipartEntityTest.java</include>
             <!-- https://issues.apache.org/jira/browse/JCR-4610 -->
             <!-- <include>**/TestAll.java</include> -->
           </includes>
@@ -175,9 +177,8 @@
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-      <version>4.5.14</version>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

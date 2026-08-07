@@ -19,8 +19,8 @@ package org.apache.jackrabbit.spi2dav;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

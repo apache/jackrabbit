@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
@@ -39,7 +39,7 @@ public class HttpProppatch extends BaseDavRequest {
     // private DavPropertyNameSet propertyNames;
 
     public HttpProppatch(URI uri, ProppatchInfo info) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_PROPPATCH, uri);
         super.setEntity(XmlEntity.create(info));
         // this.propertyNames = info.getAffectedProperties();
     }
@@ -61,13 +61,8 @@ public class HttpProppatch extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_PROPPATCH;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        return response.getStatusLine().getStatusCode() == DavServletResponse.SC_MULTI_STATUS;
+    public boolean succeeded(ClassicHttpResponse response) {
+        return response.getCode() == DavServletResponse.SC_MULTI_STATUS;
 
         // disabled code that fails for current PROPPATCH behavior of Jackrabbit
 //        MultiStatusResponse responses[] = super.getResponseBodyAsMultiStatus(response).getResponses();

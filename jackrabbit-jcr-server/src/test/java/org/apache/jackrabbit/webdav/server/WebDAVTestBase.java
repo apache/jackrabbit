@@ -27,19 +27,21 @@ import javax.jcr.Repository;
 import javax.servlet.ServletException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.util.Timeout;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.CredentialsStore;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
@@ -82,6 +84,9 @@ public class WebDAVTestBase extends AbstractJCRTest {
 
     public HttpClient client;
     public HttpClientContext context;
+
+    // see the comment on the HTTPS connector below
+    private static final String LOOPBACK = "127.0.0.1";
 
     private static final String KEYSTORE = "keystore";
     private static final String KEYSTOREPW = "geheimer";
@@ -153,7 +158,12 @@ public class WebDAVTestBase extends AbstractJCRTest {
             sslContextFactory.setTrustStorePassword(KEYSTOREPW);
             SslConnectionFactory cfac = new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString());
             httpsConnector = new ServerConnector(server, cfac, new HttpConnectionFactory(new HttpConfiguration()));
-            httpsConnector.setHost("localhost");
+            // Bind to a literal address rather than "localhost": where localhost
+            // resolves to both 127.0.0.1 and ::1, HttpClient 5 treats a TLS handshake
+            // failure on the first address as a reason to try the next one, so the
+            // SSLHandshakeException that HttpsSelfSignedTest asserts on would be
+            // replaced by a connection failure against the unbound address.
+            httpsConnector.setHost(LOOPBACK);
             httpsConnector.setPort(0);
             server.addConnector(httpsConnector);
         }
@@ -168,21 +178,30 @@ public class WebDAVTestBase extends AbstractJCRTest {
 
         this.uri = new URI("http", null, "localhost", httpConnector.getLocalPort(), "/default/", null, null);
         this.remotingUri = new URI("http", null, "localhost", httpConnector.getLocalPort(), REMOTING_PREFIX + "/", null, null);
-        this.httpsUri = new URI("https", null, "localhost", httpsConnector.getLocalPort(), "/default/", null, null);
+        this.httpsUri = new URI("https", null, LOOPBACK, httpsConnector.getLocalPort(), "/default/", null, null);
         this.root = this.uri.toASCIIString();
 
+        // HttpClient 5 keeps a pooled connection leased until the response is closed or
+        // its entity consumed, including for status-only responses that HttpClient 4
+        // released automatically. These tests read status codes without closing the
+        // response, so the default pool of 5 per route is exhausted quickly; size the
+        // pool for the busiest test class and fail fast rather than block for the
+        // default three minutes if it is ever exhausted anyway.
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        //cm.setMaxTotal(100);
+        cm.setDefaultMaxPerRoute(100);
+        cm.setMaxTotal(100);
         HttpHost targetHost = new HttpHost(uri.getHost(), uri.getPort());
 
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(targetHost.getHostName(), targetHost.getPort()),
-                new UsernamePasswordCredentials("admin", "admin"));
+        UsernamePasswordCredentials credentials =
+                new UsernamePasswordCredentials("admin", "admin".toCharArray());
+        CredentialsStore credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(new AuthScope(targetHost), credentials);
 
         AuthCache authCache = new BasicAuthCache();
-        // Generate BASIC scheme object and add it to the local auth cache
+        // Generate BASIC scheme object and add it to the local auth cache;
+        // HttpClient 5 only pre-authenticates from a primed scheme
         BasicScheme basicAuth = new BasicScheme();
+        basicAuth.initPreemptive(credentials);
         authCache.put(targetHost, basicAuth);
 
         // Add AuthCache to the execution context
@@ -190,14 +209,19 @@ public class WebDAVTestBase extends AbstractJCRTest {
         this.context.setCredentialsProvider(credsProvider);
         this.context.setAuthCache(authCache);
 
-        this.client = HttpClients.custom().setConnectionManager(cm).build();
+        this.client = HttpClients.custom()
+                .setConnectionManager(cm)
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setConnectionRequestTimeout(Timeout.ofSeconds(10))
+                        .build())
+                .build();
 
         super.setUp();
     }
 
     protected void delete(String uri) throws IOException {
         HttpDelete delete = new HttpDelete(uri);
-        int status = this.client.execute(delete, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, delete, this.context).getCode();
         assertTrue("status: " + status, status == 200 || status == 204);
     }
 

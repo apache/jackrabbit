@@ -29,15 +29,11 @@ import org.apache.jackrabbit.webdav.DavMethods;
 public class HttpDelete extends BaseDavRequest {
 
     public HttpDelete(URI uri){
-        super(uri);
+        super(DavMethods.METHOD_DELETE, uri);
     }
 
     public HttpDelete(String uri) {
         this(URI.create(uri));
     }
 
-    @Override
-    public String getMethod() {
-        return DavMethods.METHOD_DELETE;
-    }
 }

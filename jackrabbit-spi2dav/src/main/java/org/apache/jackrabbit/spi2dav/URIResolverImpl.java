@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -122,7 +122,7 @@ class URIResolverImpl implements URIResolver {
                         String wspUri = getWorkspaceUri(workspaceName);
                         request = new HttpReport(wspUri, rInfo);
 
-                        HttpResponse response = service.executeRequest(sessionInfo, request);
+                        ClassicHttpResponse response = service.executeRequest(sessionInfo, request);
                         request.checkSuccess(response);
 
                         MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
@@ -141,7 +141,7 @@ class URIResolverImpl implements URIResolver {
                         throw ExceptionConverter.generate(e);
                     } finally {
                         if (request != null) {
-                            request.releaseConnection();
+                            request.reset();
                         }
                     }
                 }
@@ -282,10 +282,10 @@ class URIResolverImpl implements URIResolver {
         try {
             request = new HttpPropfind(uri, nameSet, DavConstants.DEPTH_0);
 
-            HttpResponse response = service.executeRequest(sessionInfo, request);
-            if (response.getStatusLine().getStatusCode() != DavServletResponse.SC_MULTI_STATUS) {
+            ClassicHttpResponse response = service.executeRequest(sessionInfo, request);
+            if (response.getCode() != DavServletResponse.SC_MULTI_STATUS) {
                 throw new ItemNotFoundException("Unable to retrieve the node with id " + uri + ", response status was: "
-                        + response.getStatusLine().getStatusCode());
+                        + response.getCode());
             }
             MultiStatusResponse[] responses = request.getResponseBodyAsMultiStatus(response).getResponses();
             if (responses.length != 1) {
@@ -298,7 +298,7 @@ class URIResolverImpl implements URIResolver {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }

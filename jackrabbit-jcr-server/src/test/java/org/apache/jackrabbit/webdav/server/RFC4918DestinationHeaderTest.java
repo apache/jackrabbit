@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.jackrabbit.webdav.client.methods.HttpMove;
 
 /**
@@ -40,48 +40,48 @@ public class RFC4918DestinationHeaderTest extends WebDAVTestBase {
         // make sure the scheme is removed
         assertFalse(destinationpath.contains(":"));
 
-        HttpRequestBase requestBase = null;
+        HttpUriRequestBase requestBase = null;
         try {
             requestBase = new HttpPut(testuri);
-            int status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            int status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
-            requestBase.releaseConnection();
+            requestBase.reset();
 
             // try to move outside the servlet's name space
             requestBase = new HttpMove(testuri, "/foobar", true);
-            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 502);
-            requestBase.releaseConnection();
+            requestBase.reset();
 
             // try a relative path
             requestBase = new HttpMove(testuri, "foobar", true);
-            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 400);
-            requestBase.releaseConnection();
+            requestBase.reset();
 
             requestBase = new HttpMove(testuri, destinationpath, true);
-            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
-            requestBase.releaseConnection();
+            requestBase.reset();
 
             requestBase = new HttpHead(destinationuri);
-            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 200);
-            requestBase.releaseConnection();
+            requestBase.reset();
 
             requestBase = new HttpHead(testuri);
-            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 404);
         } finally {
-            requestBase.releaseConnection();
+            requestBase.reset();
             requestBase = new HttpDelete(testuri);
-            int status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            int status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
-            requestBase.releaseConnection();
+            requestBase.reset();
             requestBase = new HttpDelete(destinationuri);
-            status = this.client.execute(requestBase, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, requestBase, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
-            requestBase.releaseConnection();
+            requestBase.reset();
         }
     }
 }

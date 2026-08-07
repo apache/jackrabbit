@@ -19,7 +19,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
@@ -33,7 +33,7 @@ import org.apache.jackrabbit.webdav.search.SearchInfo;
 public class HttpSearch extends BaseDavRequest {
 
     public HttpSearch(URI uri, SearchInfo searchInfo) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_SEARCH, uri);
         super.setEntity(XmlEntity.create(searchInfo));
     }
 
@@ -42,13 +42,8 @@ public class HttpSearch extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_SEARCH;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         return statusCode == DavServletResponse.SC_MULTI_STATUS;
     }
 }

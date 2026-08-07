@@ -19,7 +19,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -36,7 +36,7 @@ import org.apache.jackrabbit.webdav.property.PropfindInfo;
 public class HttpPropfind extends BaseDavRequest {
 
     public HttpPropfind(URI uri, int propfindType, DavPropertyNameSet names, int depth) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_PROPFIND, uri);
 
         DepthHeader dh = new DepthHeader(depth);
         super.setHeader(dh.getHeaderName(), dh.getHeaderValue());
@@ -66,12 +66,7 @@ public class HttpPropfind extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_PROPFIND;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        return response.getStatusLine().getStatusCode() == DavServletResponse.SC_MULTI_STATUS;
+    public boolean succeeded(ClassicHttpResponse response) {
+        return response.getCode() == DavServletResponse.SC_MULTI_STATUS;
     }
 }

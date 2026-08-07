@@ -27,22 +27,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.jcr.Credentials;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.FormBodyPart;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.client5.http.entity.mime.FormBodyPart;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.commons.json.JsonUtil;
@@ -337,10 +337,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             int depth = batchReadConfig.getDepth(path, this.getNamePathResolver(sessionInfo));
 
             HttpGet request = new HttpGet(uri + "." + depth + ".json");
-            HttpResponse response = null;
+            ClassicHttpResponse response = null;
             try {
                 response = executeRequest(sessionInfo, request);
-                int statusCode = response.getStatusLine().getStatusCode();
+                int statusCode = response.getCode();
                 if (statusCode == DavServletResponse.SC_OK) {
                     HttpEntity entity = response.getEntity();
                     if (entity.getContentLength() == 0) {
@@ -353,7 +353,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
                     ItemInfoJsonHandler handler = new ItemInfoJsonHandler(resolver, nInfo, getRootURI(sessionInfo), getQValueFactory(sessionInfo), getPathFactory(), getIdFactory());
                     JsonParser ps = new JsonParser(handler);
-                    ps.parse(entity.getContent(), ContentType.get(entity).getCharset().name());
+                    ps.parse(entity.getContent(), ContentType.parse(entity.getContentType()).getCharset().name());
 
                     Iterator<? extends ItemInfo> it = handler.getItemInfos();
                     if (!it.hasNext()) {
@@ -367,7 +367,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 log.error("Internal error while retrieving NodeInfo for " + uri + ".", e);
                 throw new RepositoryException(e.getMessage(), e);
             } finally {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -382,7 +382,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         HttpPropfind request = null;
         try {
             request = new HttpPropfind(uri, LAZY_PROPERTY_NAME_SET, DavConstants.DEPTH_0);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -428,7 +428,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -467,7 +467,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         HttpPost request = null;
         try {
             request = new HttpPost(getWorkspaceURI(sessionInfo));
-            request.setHeader("Referer", request.getURI().toASCIIString());
+            request.setHeader("Referer", request.getRequestUri());
             addIfHeader(sessionInfo, request);
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
@@ -485,7 +485,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             List<BasicNameValuePair> nvps = Collections.singletonList(new BasicNameValuePair(PARAM_COPY, args.toString()));
             HttpEntity entity = new UrlEncodedFormEntity(nvps, Charset.forName("UTF-8"));
             request.setEntity(entity);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -493,7 +493,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             throw ExceptionConverter.generate(e, request);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -503,7 +503,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         HttpPost request = null;
         try {
             request = new HttpPost(getWorkspaceURI(sessionInfo));
-            request.setHeader("Referer", request.getURI().toASCIIString());
+            request.setHeader("Referer", request.getRequestUri());
             addIfHeader(sessionInfo, request);
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
@@ -522,7 +522,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             List<BasicNameValuePair> nvps = Collections.singletonList(new BasicNameValuePair(PARAM_CLONE, args.toString()));
             HttpEntity entity = new UrlEncodedFormEntity(nvps, Charset.forName("UTF-8"));
             request.setEntity(entity);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
             if (removeExisting) {
                 clearItemUriCache(sessionInfo);
@@ -533,7 +533,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             throw ExceptionConverter.generate(e, request);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -580,7 +580,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         private void start() throws RepositoryException {
             checkConsumed();
 
-            request.setHeader("Referer", request.getURI().toASCIIString());
+            request.setHeader("Referer", request.getRequestUri());
 
             // add lock tokens
             addIfHeader(sessionInfo, request);
@@ -599,16 +599,13 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             // engine has a form-size restriction (JCR-3726)
             Utils.addPart(PARAM_DIFF, buf.toString(), parts);
 
-            // JCR-4317: need RFC6532 mode so that values are encoded in UTF-8
-            MultipartEntityBuilder b = MultipartEntityBuilder.create().setMode(HttpMultipartMode.RFC6532);
-            for (FormBodyPart p : parts) {
-                b.addPart(p.getName(), p.getBody());
-            }
-            request.setEntity(b.build());
+            // JCR-4317: part names carry the JCR path and must survive as UTF-8,
+            // which MultipartEntityBuilder cannot do in HttpClient 5
+            request.setEntity(new Rfc6532MultipartEntity(parts, "----=_Part_" + UUID.randomUUID()));
 
-            org.apache.http.client.HttpClient client = getClient(sessionInfo);
+            HttpClient client = getClient(sessionInfo);
             try {
-                HttpResponse response = client.execute(request, getContext(sessionInfo));
+                ClassicHttpResponse response = client.executeOpen(null, request, getContext(sessionInfo));
                 request.checkSuccess(response);
                 if (clear) {
                     RepositoryServiceImpl.super.clearItemUriCache(sessionInfo);
@@ -618,7 +615,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             } catch (DavException e) {
                 throw ExceptionConverter.generate(e, request);
             } finally {
-                request.releaseConnection();
+                request.reset();
             }
         }
 

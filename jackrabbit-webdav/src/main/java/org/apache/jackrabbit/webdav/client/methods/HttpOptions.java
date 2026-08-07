@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.header.FieldValueParser;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
@@ -33,7 +33,7 @@ import org.apache.jackrabbit.webdav.search.SearchConstants;
  * @see <a href="http://webdav.org/specs/rfc7231.html#rfc.section.4.3.7">RFC 7231, Section 4.3.7</a>
  * @since 2.13.6
  */
-public class HttpOptions extends org.apache.http.client.methods.HttpOptions {
+public class HttpOptions extends org.apache.hc.client5.http.classic.methods.HttpOptions {
 
     public HttpOptions(URI uri) {
         super(uri);
@@ -46,7 +46,7 @@ public class HttpOptions extends org.apache.http.client.methods.HttpOptions {
     /**
      * Compute the set of compliance classes returned in the "dav" header field
      */
-    public Set<String> getDavComplianceClasses(HttpResponse response) {
+    public Set<String> getDavComplianceClasses(ClassicHttpResponse response) {
         Header[] headers = response.getHeaders(DavConstants.HEADER_DAV);
         return parseTokenOrCodedUrlheaderField(headers, false);
     }
@@ -54,7 +54,7 @@ public class HttpOptions extends org.apache.http.client.methods.HttpOptions {
     /**
      * Compute set of search grammars returned in the "dasl" header field
      */
-    public Set<String> getSearchGrammars(HttpResponse response) {
+    public Set<String> getSearchGrammars(ClassicHttpResponse response) {
         Header[] headers = response.getHeaders(SearchConstants.HEADER_DASL);
         return parseTokenOrCodedUrlheaderField(headers, true);
     }

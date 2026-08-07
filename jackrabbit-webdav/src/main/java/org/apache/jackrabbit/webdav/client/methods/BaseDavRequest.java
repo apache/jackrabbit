@@ -22,10 +22,9 @@ import java.net.URI;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
@@ -44,13 +43,12 @@ import org.xml.sax.SAXException;
 /**
  * Base class for HTTP request classes defined in this package.
  */
-public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
+public abstract class BaseDavRequest extends HttpUriRequestBase {
 
     private static Logger log = LoggerFactory.getLogger(BaseDavRequest.class);
 
-    public BaseDavRequest(URI uri) {
-        super();
-        super.setURI(uri);
+    public BaseDavRequest(String method, URI uri) {
+        super(method, uri);
     }
 
     /**
@@ -82,15 +80,15 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
      * @throws IllegalStateException when response does not represent a {@link MultiStatus}
      * @throws DavException for failures in obtaining/parsing the response body
      */
-    public MultiStatus getResponseBodyAsMultiStatus(HttpResponse response) throws DavException {
+    public MultiStatus getResponseBodyAsMultiStatus(ClassicHttpResponse response) throws DavException {
         try {
             Document doc = getResponseBodyAsDocument(response.getEntity());
             if (doc == null) {
-                throw new DavException(response.getStatusLine().getStatusCode(), "no response body");
+                throw new DavException(response.getCode(), "no response body");
             }
             return MultiStatus.createFromXml(doc.getDocumentElement());
         } catch (IOException ex) {
-            throw new DavException(response.getStatusLine().getStatusCode(), ex);
+            throw new DavException(response.getCode(), ex);
         }
     }
 
@@ -99,29 +97,29 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
      * @throws IllegalStateException when response does not represent a {@link LockDiscovery}
      * @throws DavException for failures in obtaining/parsing the response body
      */
-    public LockDiscovery getResponseBodyAsLockDiscovery(HttpResponse response) throws DavException {
+    public LockDiscovery getResponseBodyAsLockDiscovery(ClassicHttpResponse response) throws DavException {
         try {
             Document doc = getResponseBodyAsDocument(response.getEntity());
             if (doc == null) {
-                throw new DavException(response.getStatusLine().getStatusCode(), "no response body");
+                throw new DavException(response.getCode(), "no response body");
             }
             Element root = doc.getDocumentElement();
 
             if (!DomUtil.matches(root, DavConstants.XML_PROP, DavConstants.NAMESPACE)
                     && DomUtil.hasChildElement(root, DavConstants.PROPERTY_LOCKDISCOVERY, DavConstants.NAMESPACE)) {
-                throw new DavException(response.getStatusLine().getStatusCode(),
+                throw new DavException(response.getCode(),
                         "Missing DAV:prop response body in LOCK response.");
             }
 
             Element lde = DomUtil.getChildElement(root, DavConstants.PROPERTY_LOCKDISCOVERY, DavConstants.NAMESPACE);
             if (!DomUtil.hasChildElement(lde, DavConstants.XML_ACTIVELOCK, DavConstants.NAMESPACE)) {
-                throw new DavException(response.getStatusLine().getStatusCode(),
+                throw new DavException(response.getCode(),
                         "The DAV:lockdiscovery must contain a least a single DAV:activelock in response to a successful LOCK request.");
             }
 
             return LockDiscovery.createFromXml(lde);
         } catch (IOException ex) {
-            throw new DavException(response.getStatusLine().getStatusCode(), ex);
+            throw new DavException(response.getCode(), ex);
         }
     }
 
@@ -130,18 +128,18 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
      * @throws IllegalStateException when response does not represent a {@link SubscriptionDiscovery}
      * @throws DavException for failures in obtaining/parsing the response body
      */
-    public SubscriptionDiscovery getResponseBodyAsSubscriptionDiscovery(HttpResponse response) throws DavException {
+    public SubscriptionDiscovery getResponseBodyAsSubscriptionDiscovery(ClassicHttpResponse response) throws DavException {
         try {
             Document doc = getResponseBodyAsDocument(response.getEntity());
             if (doc == null) {
-                throw new DavException(response.getStatusLine().getStatusCode(), "no response body");
+                throw new DavException(response.getCode(), "no response body");
             }
             Element root = doc.getDocumentElement();
 
             if (!DomUtil.matches(root, DavConstants.XML_PROP, DavConstants.NAMESPACE)
                     && DomUtil.hasChildElement(root, ObservationConstants.SUBSCRIPTIONDISCOVERY.getName(),
                             ObservationConstants.SUBSCRIPTIONDISCOVERY.getNamespace())) {
-                throw new DavException(response.getStatusLine().getStatusCode(),
+                throw new DavException(response.getCode(),
                         "Missing DAV:prop response body in SUBSCRIBE response.");
             }
 
@@ -151,11 +149,11 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
             if (((Subscription[]) sd.getValue()).length > 0) {
                 return sd;
             } else {
-                throw new DavException(response.getStatusLine().getStatusCode(),
+                throw new DavException(response.getCode(),
                         "Missing 'subscription' elements in SUBSCRIBE response body. At least a single subscription must be present if SUBSCRIBE was successful.");
             }
         } catch (IOException ex) {
-            throw new DavException(response.getStatusLine().getStatusCode(), ex);
+            throw new DavException(response.getCode(), ex);
         }
     }
 
@@ -164,22 +162,22 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
      * @throws IllegalStateException when response does not represent a {@link EventDiscovery}
      * @throws DavException for failures in obtaining/parsing the response body
      */
-    public EventDiscovery getResponseBodyAsEventDiscovery(HttpResponse response) throws DavException {
+    public EventDiscovery getResponseBodyAsEventDiscovery(ClassicHttpResponse response) throws DavException {
         try {
             Document doc = getResponseBodyAsDocument(response.getEntity());
             if (doc == null) {
-                throw new DavException(response.getStatusLine().getStatusCode(), "no response body");
+                throw new DavException(response.getCode(), "no response body");
             }
             return EventDiscovery.createFromXml(doc.getDocumentElement());
         } catch (IOException ex) {
-            throw new DavException(response.getStatusLine().getStatusCode(), ex);
+            throw new DavException(response.getCode(), ex);
         }
     }
 
     /**
      * Check the response and throw when it is considered to represent a failure.
      */
-    public void checkSuccess(HttpResponse response) throws DavException {
+    public void checkSuccess(ClassicHttpResponse response) throws DavException {
         if (!succeeded(response)) {
             throw getResponseException(response);
         }
@@ -189,14 +187,13 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
      * Obtain a {@link DavException} representing the response.
      * @throws IllegalStateException when the response is considered to be successful
      */
-    public DavException getResponseException(HttpResponse response) {
+    public DavException getResponseException(ClassicHttpResponse response) {
         if (succeeded(response)) {
             String msg = "Cannot retrieve exception from successful response.";
             log.warn(msg);
             throw new IllegalStateException(msg);
         }
 
-        StatusLine st = response.getStatusLine();
         Element responseRoot = null;
         try {
             responseRoot = getResponseBodyAsDocument(response.getEntity()).getDocumentElement();
@@ -204,16 +201,16 @@ public abstract class BaseDavRequest extends HttpEntityEnclosingRequestBase {
             // non-parseable body -> use null element
         }
 
-        return new DavException(st.getStatusCode(), st.getReasonPhrase(), null, responseRoot);
+        return new DavException(response.getCode(), response.getReasonPhrase(), null, responseRoot);
     }
 
     /**
-     * Check the provided {@link HttpResponse} for successful execution. The default implementation treats all
+     * Check the provided {@link ClassicHttpResponse} for successful execution. The default implementation treats all
      * 2xx status codes (<a href="http://webdav.org/specs/rfc7231.html#rfc.section.6.3">RFC 7231, Section 6.3</a>).
      * Implementations can further restrict the accepted range of responses (or even check the response body).
      */
-    public boolean succeeded(HttpResponse response) {
-        int status = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int status = response.getCode();
         return status >= 200 && status <= 299;
     }
 }

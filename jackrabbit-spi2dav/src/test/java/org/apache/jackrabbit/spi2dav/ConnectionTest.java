@@ -27,7 +27,7 @@ import javax.jcr.SimpleCredentials;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.hc.client5.http.ConnectTimeoutException;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory;
 import org.apache.jackrabbit.webdav.server.WebDAVTestBase;
@@ -48,7 +48,10 @@ public class ConnectionTest extends WebDAVTestBase {
         Map<String, String> parameters = new HashMap<>();
         if (isViaHttps) {
             parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI,
-                    new URI("https", null, remotingUri.getHost(), httpsUri.getPort(), remotingUri.getPath(), null, null).toString());
+                    // take the host from httpsUri, which the test base pins to a single address:
+                    // where localhost resolves to both 127.0.0.1 and ::1, HttpClient 5 retries
+                    // the next address after a TLS failure and reports a connection error instead
+                    new URI("https", null, httpsUri.getHost(), httpsUri.getPort(), remotingUri.getPath(), null, null).toString());
         } else {
             parameters.put(Spi2davexRepositoryServiceFactory.PARAM_REPOSITORY_URI, remotingUri.toString());
         }

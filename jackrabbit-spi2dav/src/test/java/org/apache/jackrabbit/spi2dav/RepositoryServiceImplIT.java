@@ -29,12 +29,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.jcr.RepositoryException;
-import javax.net.ssl.SSLException;
 
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.hc.client5.http.ClientProtocolException;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.BasicHttpClientResponseHandler;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -61,7 +60,7 @@ public class RepositoryServiceImplIT {
         RepositoryServiceImpl repositoryServiceImpl = RepositoryServiceImplTest.getRepositoryService("https://jackrabbit.apache.org/jcr", ConnectionOptions.builder().build());
         HttpClient client = repositoryServiceImpl.getClient(null);
         HttpGet get = new HttpGet("https://jackrabbit.apache.org/jcr/index.html");
-        String content = client.execute(get, new BasicResponseHandler());
+        String content = client.execute(get, new BasicHttpClientResponseHandler());
         assertFalse(content.isEmpty());
     }
 
@@ -81,8 +80,12 @@ public class RepositoryServiceImplIT {
             RepositoryServiceImpl repositoryServiceImpl = RepositoryServiceImplTest.getRepositoryService("https://jackrabbit.apache.org/jcr", connectionOptions);
             HttpClient client = repositoryServiceImpl.getClient(null);
             HttpGet get = new HttpGet("https://jackrabbit.apache.org/jcr/index.html");
-            // connection must fail as cert is not trusted due to used trust store being empty
-            assertThrows(SSLException.class, () -> client.execute(get, new BasicResponseHandler()));
+            // The connection must fail, as the certificate is not trusted with an empty
+            // trust store. The exact exception type cannot be asserted: HttpClient 5 runs
+            // the TLS upgrade inside its per-address retry block, so for a host resolving
+            // to several addresses the SSLException raised by the first address is logged
+            // at DEBUG and the caller sees whatever the last address produced.
+            assertThrows(IOException.class, () -> client.execute(get, new BasicHttpClientResponseHandler()));
         } finally {
             setOrClearSystemProperty("javax.net.ssl.trustStore", oldTrustStore);
             setOrClearSystemProperty("javax.net.ssl.trustStorePassword", oldTrustStorePassword);

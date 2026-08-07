@@ -26,13 +26,14 @@ import java.util.Locale;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHeader;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
@@ -45,7 +46,7 @@ public class ContentCodingTest extends WebDAVTestBase {
         try {
             HttpPut put = new HttpPut(testUri);
             put.setEntity(new StringEntity("foobar"));
-            int status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            int status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
         } finally {
             delete(testUri);
@@ -57,10 +58,9 @@ public class ContentCodingTest extends WebDAVTestBase {
         int status = -1;
         try {
             HttpPut put = new HttpPut(testUri);
-            StringEntity entity = new StringEntity("foobarfoobarfoobar");
-            entity.setContentEncoding(new BasicHeader("Content-Encoding", "qux"));
+            StringEntity entity = new StringEntity("foobarfoobarfoobar", ContentType.TEXT_PLAIN, "qux", false);
             put.setEntity(entity);
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertTrue("server must signal error for unknown content coding, got: " + status, status == 415);
         } finally {
             if (status / 2 == 100) {
@@ -77,16 +77,15 @@ public class ContentCodingTest extends WebDAVTestBase {
             HttpPut put = new HttpPut(testUri);
             byte gzbytes[] = asGzipOctets(bytes);
             assertTrue(gzbytes.length != bytes.length);
-            ByteArrayEntity entity = new ByteArrayEntity(gzbytes);
-            entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
+            ByteArrayEntity entity = new ByteArrayEntity(gzbytes, null, "gzip");
             put.setEntity(entity);
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertTrue("server create or signal error, got: " + status, status == 201 || status == 415);
             if (status / 2 == 100) {
                 // check length
                 HttpHead head = new HttpHead(testUri);
-                HttpResponse response = this.client.execute(head, this.context);
-                assertEquals(200, response.getStatusLine().getStatusCode());
+                ClassicHttpResponse response = this.client.executeOpen(null, head, this.context);
+                assertEquals(200, response.getCode());
                 assertEquals(bytes.length, Integer.parseInt(response.getFirstHeader("Content-Length").getValue()));
             }
         } finally {
@@ -98,8 +97,8 @@ public class ContentCodingTest extends WebDAVTestBase {
 
     public void testPropfindNoContentCoding() throws IOException, DavException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        HttpResponse response = this.client.execute(propfind, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, propfind, this.context);
+        int status = response.getCode();
         assertEquals(207, status);
         List<String> encodings = getContentCodings(response);
         assertTrue("Accept should list 'gzip' but did not: " + encodings, encodings.contains("gzip"));
@@ -109,8 +108,8 @@ public class ContentCodingTest extends WebDAVTestBase {
     public void testPropfindAcceptReponseEncoding() throws IOException, DavException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
         propfind.setHeader(new BasicHeader("Accept-Encoding", "gzip;q=0.555"));
-        HttpResponse response = this.client.execute(propfind, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, propfind, this.context);
+        int status = response.getCode();
         assertEquals(207, status);
         MultiStatusResponse[] responses = propfind.getResponseBodyAsMultiStatus(response).getResponses();
         assertEquals(1, responses.length);
@@ -120,11 +119,10 @@ public class ContentCodingTest extends WebDAVTestBase {
 
     public void testPropfindUnknownContentCoding() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        StringEntity entity = new StringEntity(PF);
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "qux"));
+        StringEntity entity = new StringEntity(PF, ContentType.TEXT_PLAIN, "qux", false);
         propfind.setEntity(entity);
-        HttpResponse response = this.client.execute(propfind, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, propfind, this.context);
+        int status = response.getCode();
         assertTrue("server must signal error for unknown content coding, got: " + status, status == 415);
         List<String> encodings = getContentCodings(response);
         assertTrue("Accept should list 'gzip' but did not: " + encodings, encodings.contains("gzip"));
@@ -133,10 +131,9 @@ public class ContentCodingTest extends WebDAVTestBase {
 
     public void testPropfindGzipContentCoding() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(PF));
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
+        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(PF), null, "gzip");
         propfind.setEntity(entity);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, propfind, this.context).getCode();
         assertEquals(207, status);
     }
 
@@ -144,47 +141,42 @@ public class ContentCodingTest extends WebDAVTestBase {
     // coding name
     public void testPropfindGzipContentCodingTwice() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(asGzipOctets(PF)));
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gziP,, Gzip"));
+        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(asGzipOctets(PF)), null, "gziP,, Gzip");
         propfind.setEntity(entity);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, propfind, this.context).getCode();
         assertEquals(207, status);
     }
 
     // double encoded, but only when encoding in header field
     public void testPropfindGzipContentCodingBadSpec() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(asGzipOctets(PF)));
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
+        ByteArrayEntity entity = new ByteArrayEntity(asGzipOctets(asGzipOctets(PF)), null, "gzip");
         propfind.setEntity(entity);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, propfind, this.context).getCode();
         assertEquals(400, status);
     }
 
     public void testPropfindDeflateContentCoding() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(PF));
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "deflate"));
+        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(PF), null, "deflate");
         propfind.setEntity(entity);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, propfind, this.context).getCode();
         assertEquals(207, status);
     }
 
     public void testPropfindGzipDeflateContentCoding() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(asGzipOctets(PF)));
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip, deflate"));
+        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(asGzipOctets(PF)), null, "gzip, deflate");
         propfind.setEntity(entity);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, propfind, this.context).getCode();
         assertEquals(207, status);
     }
 
     public void testPropfindGzipDeflateContentCodingMislabeled() throws IOException {
         HttpPropfind propfind = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, 0);
-        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(asGzipOctets(PF)));
-        entity.setContentEncoding(new BasicHeader("Content-Encoding", "deflate, gzip"));
+        ByteArrayEntity entity = new ByteArrayEntity(asDeflateOctets(asGzipOctets(PF)), null, "deflate, gzip");
         propfind.setEntity(entity);
-        int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
+        int status = this.client.executeOpen(null, propfind, this.context).getCode();
         assertEquals(400, status);
     }
 
@@ -214,7 +206,7 @@ public class ContentCodingTest extends WebDAVTestBase {
         return bos.toByteArray();
     }
 
-    private static List<String> getContentCodings(HttpResponse response) {
+    private static List<String> getContentCodings(ClassicHttpResponse response) {
         List<String> result = Collections.emptyList();
         for (Header l : response.getHeaders("Accept-Encoding")) {
             for (String h : l.getValue().split(",")) {

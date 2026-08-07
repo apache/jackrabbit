@@ -18,7 +18,7 @@ package org.apache.jackrabbit.webdav.server;
 
 import java.io.IOException;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
@@ -43,8 +43,8 @@ public class RemotingTest extends WebDAVTestBase {
         names.add(pntn);
 
         HttpPropfind propfind = new HttpPropfind(testuri, DavConstants.PROPFIND_BY_PROPERTY, names, 0);
-        HttpResponse resp = this.client.execute(propfind, this.context);
-        int status = resp.getStatusLine().getStatusCode();
+        ClassicHttpResponse resp = this.client.executeOpen(null, propfind, this.context);
+        int status = resp.getCode();
         assertEquals(207, status);
 
         MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus(resp);

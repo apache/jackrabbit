@@ -24,11 +24,12 @@ import javax.jcr.Binary;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.FormBodyPart;
-import org.apache.http.entity.mime.FormBodyPartBuilder;
-import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.entity.mime.content.StringBody;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.client5.http.entity.mime.FormBodyPart;
+import org.apache.hc.client5.http.entity.mime.FormBodyPartBuilder;
+import org.apache.hc.client5.http.entity.mime.InputStreamBody;
+import org.apache.hc.client5.http.entity.mime.MimeField;
+import org.apache.hc.client5.http.entity.mime.StringBody;
 import org.apache.jackrabbit.commons.json.JsonUtil;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.spi.QValue;
@@ -39,7 +40,22 @@ final class Utils {
     private static final String DEFAULT_CHARSET = "UTF-8";
     private static final ContentType DEFAULT_TYPE = ContentType.create("text/plain", DEFAULT_CHARSET);
 
+    private static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
+    private static final String TRANSFER_ENCODING_TEXT = "8bit";
+    private static final String TRANSFER_ENCODING_BINARY = "binary";
+
     private Utils() {};
+
+    /**
+     * HttpClient 5 no longer derives a Content-Transfer-Encoding header from the body,
+     * whereas HttpClient 4 emitted 8bit for string bodies and binary for stream bodies.
+     * Adding it after the part is built keeps it in the same position as before, i.e.
+     * after Content-Disposition and Content-Type.
+     */
+    private static FormBodyPart withTransferEncoding(FormBodyPart part, String encoding) {
+        part.getHeader().addField(new MimeField(CONTENT_TRANSFER_ENCODING, encoding));
+        return part;
+    }
 
     static String getJsonKey(String str) {
         return JsonUtil.getJsonString(str) + ":";
@@ -80,7 +96,9 @@ final class Utils {
      * @param value
      */
     static void addPart(String paramName, String value, List<FormBodyPart> parts) {
-        parts.add(FormBodyPartBuilder.create().setName(paramName).setBody(new StringBody(value, DEFAULT_TYPE)).build());
+        parts.add(withTransferEncoding(
+                FormBodyPartBuilder.create().setName(paramName).setBody(new StringBody(value, DEFAULT_TYPE)).build(),
+                TRANSFER_ENCODING_TEXT));
     }
 
     /**
@@ -99,16 +117,21 @@ final class Utils {
             case PropertyType.BINARY:
                 binaries.add(value);
                 // server detects binaries based on presence of filename parameters (JCR-4154)
-                part = builder.setBody(new InputStreamBody(value.getStream(), ctype, paramName)).build();
+                part = withTransferEncoding(
+                        builder.setBody(new InputStreamBody(value.getStream(), ctype, paramName)).build(),
+                        TRANSFER_ENCODING_BINARY);
                 break;
             case PropertyType.NAME:
-                part = builder.setBody(new StringBody(resolver.getJCRName(value.getName()), ctype)).build();
+                part = withTransferEncoding(
+                        builder.setBody(new StringBody(resolver.getJCRName(value.getName()), ctype)).build(), TRANSFER_ENCODING_TEXT);
                 break;
             case PropertyType.PATH:
-                part = builder.setBody(new StringBody(resolver.getJCRPath(value.getPath()), ctype)).build();
+                part = withTransferEncoding(
+                        builder.setBody(new StringBody(resolver.getJCRPath(value.getPath()), ctype)).build(), TRANSFER_ENCODING_TEXT);
                 break;
             default:
-                part = builder.setBody(new StringBody(value.getString(), ctype)).build();
+                part = withTransferEncoding(
+                        builder.setBody(new StringBody(value.getString(), ctype)).build(), TRANSFER_ENCODING_TEXT);
         }
 
         parts.add(part);

@@ -18,10 +18,10 @@ package org.apache.jackrabbit.webdav.server;
 
 import java.io.IOException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
@@ -44,7 +44,7 @@ public class ProppatchTest extends WebDAVTestBase {
 
             HttpPut put = new HttpPut(testuri);
             put.setEntity(new StringEntity("1"));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals("status: " + status, 201, status);
 
             DavPropertyName name = DavPropertyName.create("foobar", Namespace.EMPTY_NAMESPACE);
@@ -52,16 +52,16 @@ public class ProppatchTest extends WebDAVTestBase {
             DavProperty<String> foobar = new DefaultDavProperty<>(name, "\uD83D\uDCA9");
             props.add(foobar);
             HttpProppatch proppatch = new HttpProppatch(testuri, props, new DavPropertyNameSet());
-            HttpResponse resp = this.client.execute(proppatch, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            ClassicHttpResponse resp = this.client.executeOpen(null, proppatch, this.context);
+            status = resp.getCode();
             assertEquals(207, status);
             EntityUtils.consume(resp.getEntity());
 
             DavPropertyNameSet names = new DavPropertyNameSet();
             names.add(name);
             HttpPropfind propfind = new HttpPropfind(testuri, names, 0);
-            resp = this.client.execute(propfind, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, propfind, this.context);
+            status = resp.getCode();
             assertEquals(207, status);
             MultiStatusResponse[] responses = propfind.getResponseBodyAsMultiStatus(resp).getResponses();
             assertEquals(1, responses.length);

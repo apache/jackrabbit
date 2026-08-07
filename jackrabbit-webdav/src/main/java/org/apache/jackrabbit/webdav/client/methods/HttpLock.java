@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -45,7 +45,7 @@ public class HttpLock extends BaseDavRequest {
     private final boolean isRefresh;
 
     public HttpLock(URI uri, LockInfo lockInfo) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_LOCK, uri);
 
         TimeoutHeader th = new TimeoutHeader(lockInfo.getTimeout());
         super.setHeader(th.getHeaderName(), th.getHeaderValue());
@@ -62,7 +62,7 @@ public class HttpLock extends BaseDavRequest {
     }
 
     public HttpLock(URI uri, long timeout, String[] lockTokens) {
-        super(uri);
+        super(DavMethods.METHOD_LOCK, uri);
 
         TimeoutHeader th = new TimeoutHeader(timeout);
         super.setHeader(th.getHeaderName(), th.getHeaderValue());
@@ -75,22 +75,17 @@ public class HttpLock extends BaseDavRequest {
         this(URI.create(uri), timeout, lockTokens);
     }
 
-    @Override
-    public String getMethod() {
-        return DavMethods.METHOD_LOCK;
-    }
-
-    public String getLockToken(HttpResponse response) {
+    public String getLockToken(ClassicHttpResponse response) {
         Header[] ltHeader = response.getHeaders(DavConstants.HEADER_LOCK_TOKEN);
         if (ltHeader == null || ltHeader.length == 0) {
             return null;
         } else if (ltHeader.length != 1) {
-            LOG.debug("Multiple 'Lock-Token' header fields in response for " + getURI() + ": " + Arrays.asList(ltHeader));
+            LOG.debug("Multiple 'Lock-Token' header fields in response for " + getRequestUri() + ": " + Arrays.asList(ltHeader));
             return null;
         } else {
             String v = ltHeader[0].getValue().trim();
             if (!v.startsWith("<") || !v.endsWith(">")) {
-                LOG.debug("Invalid 'Lock-Token' header field in response for " + getURI() + ": " + Arrays.asList(ltHeader));
+                LOG.debug("Invalid 'Lock-Token' header field in response for " + getRequestUri() + ": " + Arrays.asList(ltHeader));
                 return null;
             } else {
                 return v.substring(1, v.length() - 1);
@@ -99,8 +94,8 @@ public class HttpLock extends BaseDavRequest {
     }
 
     @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         boolean lockTokenHeaderOk = isRefresh || null != getLockToken(response);
         return lockTokenHeaderOk && (statusCode == DavServletResponse.SC_OK || statusCode == DavServletResponse.SC_CREATED);
     }

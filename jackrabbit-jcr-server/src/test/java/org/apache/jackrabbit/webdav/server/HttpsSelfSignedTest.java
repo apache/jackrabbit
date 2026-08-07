@@ -21,9 +21,9 @@ import java.text.ParseException;
 
 import javax.net.ssl.SSLHandshakeException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 
 public class HttpsSelfSignedTest extends WebDAVTestBase {
 
@@ -34,7 +34,7 @@ public class HttpsSelfSignedTest extends WebDAVTestBase {
             String testUri = this.httpsUri.toString();
             HttpPut put = new HttpPut(testUri);
             put.setEntity(new StringEntity("foobar"));
-            HttpResponse response = this.client.execute(put, this.context);
+            ClassicHttpResponse response = this.client.executeOpen(null, put, this.context);
             fail("should failt with SSLHandshakeException, but got: " + response);
         } catch (SSLHandshakeException expected) {
         }

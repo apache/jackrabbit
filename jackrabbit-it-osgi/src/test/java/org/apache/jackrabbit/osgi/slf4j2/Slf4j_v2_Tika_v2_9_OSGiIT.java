@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.osgi.slf4j2;
 
 import static org.junit.Assert.assertEquals;
-import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -115,14 +114,9 @@ public class Slf4j_v2_Tika_v2_9_OSGiIT {
         return new File(new File("src", "test"), "config").getAbsolutePath();
     }
 
-    private Option jarBundles() throws MalformedURLException {
-        DefaultCompositeOption composite = new DefaultCompositeOption();
-        for (File bundle : new File("target", "test-bundles").listFiles()) {
-            if (bundle.getName().endsWith(".jar") && bundle.isFile()) {
-                composite.add(bundle(bundle.toURI().toURL().toString()));
-            }
-        }
-        return composite;
+    private Option jarBundles() throws IOException {
+        // shared with OSGiIT: repacks the HttpClient 5 JARs, which are not bundles
+        return org.apache.jackrabbit.osgi.TestBundles.jarBundles();
     }
 
     @Inject

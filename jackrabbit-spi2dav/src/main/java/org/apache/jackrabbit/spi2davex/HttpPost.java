@@ -18,7 +18,7 @@ package org.apache.jackrabbit.spi2davex;
 
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.client.methods.BaseDavRequest;
@@ -26,21 +26,16 @@ import org.apache.jackrabbit.webdav.client.methods.BaseDavRequest;
 public class HttpPost extends BaseDavRequest {
 
     public HttpPost(URI uri) {
-        super(uri);
+        super(DavMethods.METHOD_POST, uri);
     }
 
     public HttpPost(String uri) {
-        super(URI.create(uri));
+        this(URI.create(uri));
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_POST;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         return statusCode == DavServletResponse.SC_OK || statusCode == DavServletResponse.SC_NO_CONTENT
                 || statusCode == DavServletResponse.SC_CREATED;
     }

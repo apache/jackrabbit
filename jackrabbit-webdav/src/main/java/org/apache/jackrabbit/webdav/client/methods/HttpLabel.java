@@ -19,7 +19,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
@@ -34,7 +34,7 @@ import org.apache.jackrabbit.webdav.version.LabelInfo;
 public class HttpLabel extends BaseDavRequest {
 
     public HttpLabel(URI uri, LabelInfo labelInfo) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_LABEL, uri);
         DepthHeader dh = new DepthHeader(labelInfo.getDepth());
         super.setHeader(dh.getHeaderName(), dh.getHeaderValue());
         super.setEntity(XmlEntity.create(labelInfo));
@@ -45,13 +45,8 @@ public class HttpLabel extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_LABEL;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         return statusCode == DavServletResponse.SC_OK;
     }
 }

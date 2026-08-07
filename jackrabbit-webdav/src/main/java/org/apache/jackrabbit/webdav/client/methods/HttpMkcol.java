@@ -18,7 +18,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 
@@ -31,7 +31,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 public class HttpMkcol extends BaseDavRequest {
 
     public HttpMkcol(URI uri) {
-        super(uri);
+        super(DavMethods.METHOD_MKCOL, uri);
     }
 
     public HttpMkcol(String uri) {
@@ -39,13 +39,8 @@ public class HttpMkcol extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_MKCOL;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         return statusCode == DavServletResponse.SC_CREATED;
     }
 }

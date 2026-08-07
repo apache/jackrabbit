@@ -60,6 +60,8 @@
     <oak-jackrabbit-api.version.used>1.22.24</oak-jackrabbit-api.version.used>
     <jetty.version>9.4.58.v20250814</jetty.version>
     <tika.version>2.4.1</tika.version>
+    <httpcomponents.client5.version>5.6.1</httpcomponents.client5.version>
+    <httpcomponents.core5.version>5.4.2</httpcomponents.core5.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.36</slf4j.api.version>
     <slf4j.version>1.7.36</slf4j.version> <!-- sync with logback version -->
@@ -249,9 +251,8 @@
           <links>
             <link>https://s.apache.org/jcr-2.0-javadoc/</link>
             <link>https://jackrabbit.apache.org/oak/docs/apidocs</link>
-            <link>https://hc.apache.org/httpcomponents-client-4.5.x/current/httpclient/apidocs/</link>
-            <link>https://hc.apache.org/httpcomponents-client-4.5.x/current/httpmime/apidocs/</link>
-            <link>https://hc.apache.org/httpcomponents-core-4.4.x/current/httpcore/apidocs/</link>
+            <link>https://hc.apache.org/httpcomponents-client-5.6.x/current/httpclient5/apidocs/</link>
+            <link>https://hc.apache.org/httpcomponents-core-5.4.x/current/httpcore5/apidocs/</link>
           </links>
         </configuration>
       </plugin>
@@ -630,6 +631,16 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>5.23.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
+        <version>${httpcomponents.client5.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.core5</groupId>
+        <artifactId>httpcore5</artifactId>
+        <version>${httpcomponents.core5.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

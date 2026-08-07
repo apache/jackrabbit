@@ -19,7 +19,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
@@ -33,7 +33,7 @@ import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 public class HttpOrderpatch extends BaseDavRequest {
 
     public HttpOrderpatch(URI uri, OrderPatch info) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_ORDERPATCH, uri);
         super.setEntity(XmlEntity.create(info));
     }
 
@@ -42,12 +42,7 @@ public class HttpOrderpatch extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_ORDERPATCH;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        return response.getStatusLine().getStatusCode() == DavServletResponse.SC_OK;
+    public boolean succeeded(ClassicHttpResponse response) {
+        return response.getCode() == DavServletResponse.SC_OK;
     }
 }

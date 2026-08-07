@@ -26,7 +26,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
@@ -46,7 +46,7 @@ public class ExceptionConverter {
         return generate(davExc, null);
     }
 
-    public static RepositoryException generate(DavException davExc, HttpRequestBase request) {
+    public static RepositoryException generate(DavException davExc, HttpUriRequestBase request) {
         String name = (request == null) ? "_undefined_" : request.getMethod();
         int code = DavMethods.getMethodCode(name);
         return generate(davExc, code, name);

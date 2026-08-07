@@ -24,13 +24,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
@@ -60,8 +60,8 @@ public class BindTest extends WebDAVTestBase {
     // http://greenbytes.de/tech/webdav/rfc5842.html#rfc.section.8.1
     public void testOptions() throws IOException {
         HttpOptions options = new HttpOptions(this.uri);
-        HttpResponse response = this.client.execute(options, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, options, this.context);
+        int status = response.getCode();
         assertEquals(200, status);
         Set<String> allow = options.getAllowedMethods(response);
         Set<String> complianceClasses = options.getDavComplianceClasses(response);
@@ -80,23 +80,23 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             HttpPut put = new HttpPut(testuri1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             // enabling version control always makes the resource referenceable
             HttpVersionControl versioncontrol = new HttpVersionControl(testuri1);
-            status = this.client.execute(versioncontrol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, versioncontrol, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 201);
 
             URI resourceId = getResourceId(testuri1);
 
             HttpMove move = new HttpMove(testuri1, testuri2, true);
-            status = this.client.execute(move, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, move, this.context).getCode();
             assertEquals(201, status);
 
             URI resourceId2 = getResourceId(testuri2);
@@ -113,8 +113,8 @@ public class BindTest extends WebDAVTestBase {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.RESOURCEID);
         HttpPropfind propfind = new HttpPropfind(uri, names, 0);
-        HttpResponse response = this.client.execute(propfind, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, propfind, this.context);
+        int status = response.getCode();
         assertEquals(207, status);
         MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus(response);
         MultiStatusResponse[] responses = multistatus.getResponses();
@@ -133,8 +133,8 @@ public class BindTest extends WebDAVTestBase {
         DavPropertyNameSet names = new DavPropertyNameSet();
         names.add(BindConstants.PARENTSET);
         HttpPropfind propfind = new HttpPropfind(uri, names, 0);
-        HttpResponse response = this.client.execute(propfind, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, propfind, this.context);
+        int status = response.getCode();
         assertEquals(207, status);
         MultiStatus multistatus = propfind.getResponseBodyAsMultiStatus(response);
         MultiStatusResponse[] responses = multistatus.getResponses();
@@ -153,54 +153,54 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol = new HttpMkcol(subcol1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol = new HttpMkcol(subcol2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R with path bindtest1/res1
             HttpPut put = new HttpPut(testres1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //create new binding of R with path bindtest2/res2
             HttpBind bind = new HttpBind(subcol2, new BindInfo(testres1, "res2"));
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertEquals(201, status);
             //check if both bindings report the same DAV:resource-id
             assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
             //compare representations retrieved with both paths
             HttpGet get = new HttpGet(testres1);
-            HttpResponse resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            ClassicHttpResponse resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("foo", EntityUtils.toString(resp.getEntity()));
-            resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("foo", EntityUtils.toString(resp.getEntity()));
 
             //modify R using the new path
             put = new HttpPut(testres2);
             put.setEntity(new StringEntity("bar", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 204);
 
             //compare representations retrieved with both paths
             get = new HttpGet(testres1);
-            resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("bar", EntityUtils.toString(resp.getEntity()));
             get = new HttpGet(testres2);
-            resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("bar", EntityUtils.toString(resp.getEntity()));
         } finally {
@@ -217,44 +217,44 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R with path bindtest1/res1
             HttpPut put = new HttpPut(testres1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             // enabling version control always makes the resource referenceable
             HttpVersionControl versioncontrol = new HttpVersionControl(testres1);
-            status = this.client.execute(versioncontrol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, versioncontrol, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 201);
 
             URI r1 = this.getResourceId(testres1);
 
             HttpGet get = new HttpGet(testres1);
-            HttpResponse resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            ClassicHttpResponse resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("foo", EntityUtils.toString(resp.getEntity()));
 
             //rebind R with path bindtest2/res2
             HttpRebind rebind = new HttpRebind(subcol2, new RebindInfo(testres1, "res2"));
-            status = this.client.execute(rebind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, rebind, this.context).getCode();
             assertEquals(201, status);
 
             URI r2 = this.getResourceId(testres2);
 
             get = new HttpGet(testres2);
-            resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("foo", EntityUtils.toString(resp.getEntity()));
 
@@ -263,7 +263,7 @@ public class BindTest extends WebDAVTestBase {
 
             //verify that the initial binding is gone
             HttpHead head = new HttpHead(testres1);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, head, this.context).getCode();
             assertEquals(404, status);
         } finally {
             delete(testcol);
@@ -279,55 +279,55 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R with path bindtest1/res1
             HttpPut put = new HttpPut(testres1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R' with path bindtest2/res2
             put = new HttpPut(testres2);
             put.setEntity(new StringEntity("bar", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //try to create new binding of R with path bindtest2/res2 and Overwrite:F
             HttpBind bind = new HttpBind(subcol2, new BindInfo(testres1, "res2"));
             bind.addHeader("Overwrite", "F");
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertEquals(412, status);
 
             //verify that bindtest2/res2 still points to R'
             HttpGet get = new HttpGet(testres2);
-            HttpResponse resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            ClassicHttpResponse resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("bar", EntityUtils.toString(resp.getEntity()));
 
             //create new binding of R with path bindtest2/res2
             bind = new HttpBind(subcol2, new BindInfo(testres1, "res2"));
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 204);
 
             //verify that bindtest2/res2 now points to R
             get = new HttpGet(testres2);
-            resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("foo", EntityUtils.toString(resp.getEntity()));
 
             //verify that the initial binding is still there
             HttpHead head = new HttpHead(testres1);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, head, this.context).getCode();
             assertEquals(200, status);
         } finally {
             delete(testcol);
@@ -343,60 +343,60 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             HttpPut put = new HttpPut(testres1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             // enabling version control always makes the resource referenceable
             HttpVersionControl versioncontrol = new HttpVersionControl(testres1);
-            status = this.client.execute(versioncontrol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, versioncontrol, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 201);
 
             //create new resource R' with path testSimpleBind/bindtest2/res2
             put = new HttpPut(testres2);
             put.setEntity(new StringEntity("bar", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //try rebind R with path testSimpleBind/bindtest2/res2 and Overwrite:F
             HttpRebind rebind = new HttpRebind(subcol2, new RebindInfo(testres1, "res2"));
             rebind.addHeader("Overwrite", "F");
-            status = this.client.execute(rebind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, rebind, this.context).getCode();
             assertEquals(412, status);
 
             //verify that testSimpleBind/bindtest2/res2 still points to R'
             HttpGet get = new HttpGet(testres2);
-            HttpResponse resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            ClassicHttpResponse resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("bar", EntityUtils.toString(resp.getEntity()));
 
             //rebind R with path testSimpleBind/bindtest2/res2
             rebind = new HttpRebind(subcol2, new RebindInfo(testres1, "res2"));
-            status = this.client.execute(rebind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, rebind, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 204);
 
             //verify that testSimpleBind/bindtest2/res2 now points to R
             get =  new HttpGet(testres2);
-            resp = this.client.execute(get, this.context);
-            status = resp.getStatusLine().getStatusCode();
+            resp = this.client.executeOpen(null, get, this.context);
+            status = resp.getCode();
             assertEquals(200, status);
             assertEquals("foo", EntityUtils.toString(resp.getEntity()));
 
             //verify that the initial binding is gone
             HttpHead head = new HttpHead(testres1);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, head, this.context).getCode();
             assertEquals(404, status);
         } finally {
             delete(testcol);
@@ -412,24 +412,24 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             HttpPut put = new HttpPut(testres1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //create new binding of R with path testSimpleBind/bindtest2/res2
             HttpBind bind = new HttpBind(subcol2, new BindInfo(testres1, "res2"));
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertEquals(201, status);
             //check if both bindings report the same DAV:resource-id
             assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
@@ -483,43 +483,43 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(a1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(a2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create collection resource C
             mkcol =  new HttpMkcol(b1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(c1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create plain resource R
             HttpPut put = new HttpPut(x1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //create new binding of C with path a2/b2
             HttpBind bind = new HttpBind(a2, new BindInfo(b1, "b2"));
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertEquals(201, status);
             //check if both bindings report the same DAV:resource-id
             assertEquals(this.getResourceId(b1), this.getResourceId(b2));
 
             mkcol =  new HttpMkcol(c2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new binding of R with path a2/b2/c2/r2
             bind = new HttpBind(c2, new BindInfo(x1, "x2"));
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertEquals(201, status);
             //check if both bindings report the same DAV:resource-id
             assertEquals(this.getResourceId(x1), this.getResourceId(x2));
@@ -550,41 +550,41 @@ public class BindTest extends WebDAVTestBase {
         int status;
         try {
             HttpMkcol mkcol = new HttpMkcol(testcol);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol1);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
             mkcol =  new HttpMkcol(subcol2);
-            status = this.client.execute(mkcol, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, mkcol, this.context).getCode();
             assertEquals(201, status);
 
             //create new resource R with path testSimpleBind/bindtest1/res1
             HttpPut put = new HttpPut(testres1);
             put.setEntity(new StringEntity("foo", ContentType.create("text/plain", "UTF-8")));
-            status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, put, this.context).getCode();
             assertEquals(201, status);
 
             //create new binding of R with path testSimpleBind/bindtest2/res2
             HttpBind bind = new HttpBind(subcol2, new BindInfo(testres1, "res2"));
-            status = this.client.execute(bind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, bind, this.context).getCode();
             assertEquals(201, status);
             //check if both bindings report the same DAV:resource-id
             assertEquals(this.getResourceId(testres1), this.getResourceId(testres2));
 
             //remove new path
             HttpUnbind unbind = new HttpUnbind(subcol2, new UnbindInfo("res2"));
-            status = this.client.execute(unbind, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, unbind, this.context).getCode();
             assertTrue("status: " + status, status == 200 || status == 204);
 
             //verify that the new binding is gone
             HttpHead head = new HttpHead(testres2);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, head, this.context).getCode();
             assertEquals(404, status);
 
             //verify that the initial binding is still there
             head = new HttpHead(testres1);
-            status = this.client.execute(head, this.context).getStatusLine().getStatusCode();
+            status = this.client.executeOpen(null, head, this.context).getCode();
             assertEquals(200, status);
         } finally {
             delete(testcol);

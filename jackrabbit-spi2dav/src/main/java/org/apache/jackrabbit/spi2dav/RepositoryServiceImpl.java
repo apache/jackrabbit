@@ -56,42 +56,41 @@ import javax.jcr.lock.LockException;
 import javax.net.ssl.SSLContext;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.ProxyAuthenticationStrategy;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.auth.CredentialsStore;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.routing.DefaultProxyRoutePlanner;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.jackrabbit.commons.webdav.AtomFeedConstants;
 import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
@@ -242,7 +241,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     /**
      * Default value for the maximum number of connections per host such as
-     * configured with {@link PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
+     * configured with {@link PoolingHttpClientConnectionManagerBuilder#setMaxConnPerRoute(int)}.
      */
     public static final int MAX_CONNECTIONS_DEFAULT = 20;
 
@@ -260,7 +259,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final HttpHost httpHost;
     private final ConcurrentMap<Object, HttpClient> clients;
     private final HttpClientBuilder httpClientBuilder;
-    private final Map<AuthScope, org.apache.http.auth.Credentials> commonCredentials;
+    private final Map<AuthScope, org.apache.hc.client5.http.auth.Credentials> commonCredentials;
 
     private final Map<Name, QNodeTypeDefinition> nodeTypeDefinitions = new HashMap<Name, QNodeTypeDefinition>();
 
@@ -345,7 +344,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         try {
             URI repositoryUri = computeRepositoryUri(uri);
-            httpHost = new HttpHost(repositoryUri.getHost(), repositoryUri.getPort(), repositoryUri.getScheme());
+            httpHost = new HttpHost(repositoryUri.getScheme(), repositoryUri.getHost(), repositoryUri.getPort());
 
             nsCache = new NamespaceCache();
             uriResolver = new URIResolverImpl(repositoryUri, this, DomUtil.createDocument());
@@ -360,14 +359,24 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         HttpClientBuilder hcb = HttpClients.custom();
 
+        // HttpClient 5 would follow redirects for every method; restrict this to the
+        // safe methods that HttpClient 4 redirected, so that a redirected MOVE, COPY,
+        // PUT or DELETE surfaces to the caller instead of silently retargeting
+        hcb.setRedirectStrategy(GetHeadRedirectStrategy.INSTANCE);
+
         final SSLConnectionSocketFactory sslSocketFactory;
 
         // request config
-        RequestConfig requestConfig = RequestConfig.custom().
-                setConnectTimeout(connectionOptions.getConnectionTimeoutMs()).
-                setConnectionRequestTimeout(connectionOptions.getRequestTimeoutMs()).
-                setSocketTimeout(connectionOptions.getSocketTimeoutMs()).build();
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(toLeaseTimeout(connectionOptions.getRequestTimeoutMs()))
+                .build();
         hcb.setDefaultRequestConfig(requestConfig);
+
+        // connect and socket timeouts moved from RequestConfig to ConnectionConfig in HttpClient 5
+        ConnectionConfig connectionConfig = ConnectionConfig.custom()
+                .setConnectTimeout(toTimeout(connectionOptions.getConnectionTimeoutMs()))
+                .setSocketTimeout(toTimeout(connectionOptions.getSocketTimeoutMs()))
+                .build();
         if (Boolean.getBoolean("jackrabbit.client.useSystemProperties") || connectionOptions.isUseSystemPropertes()) {
             log.debug("Using system properties for establishing connection!");
 
@@ -391,7 +400,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (connectionOptions.isAllowSelfSignedCertificates()) {
                     log.warn("Nonsecure TLS setting: Accepting self-signed certificates!");
                         sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-                        hcb.setSSLContext(sslContext);
                 } else {
                     sslContext = SSLContextBuilder.create().build();
                 }
@@ -408,33 +416,33 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-            .register("http", PlainConnectionSocketFactory.getSocketFactory())
-            .register("https", sslSocketFactory)
-            .build();
+        PoolingHttpClientConnectionManagerBuilder cmgrBuilder = PoolingHttpClientConnectionManagerBuilder.create()
+            .setSSLSocketFactory(sslSocketFactory)
+            .setDefaultConnectionConfig(connectionConfig);
 
-        PoolingHttpClientConnectionManager cmgr = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
         int maxConnections = connectionOptions.getMaxConnections();
         if (maxConnections > 0) {
-            cmgr.setDefaultMaxPerRoute(connectionOptions.getMaxConnections());
-            cmgr.setMaxTotal(connectionOptions.getMaxConnections());
+            cmgrBuilder.setMaxConnPerRoute(maxConnections);
+            cmgrBuilder.setMaxConnTotal(maxConnections);
         } else {
             maxConnections = ConnectionOptions.MAX_CONNECTIONS_DEFAULT;
         }
-        hcb.setConnectionManager(cmgr);
+        hcb.setConnectionManager(cmgrBuilder.build());
 
         if (connectionOptions.getProxyHost() != null) {
-            // https://hc.apache.org/httpcomponents-client-4.5.x/tutorial/html/connmgmt.html#d5e485
-            HttpHost proxy = new HttpHost(connectionOptions.getProxyHost(), connectionOptions.getProxyPort(), connectionOptions.getProxyProtocol());
+            // https://hc.apache.org/httpcomponents-client-5.6.x/current/tutorial/html/connmgmt.html
+            HttpHost proxy = new HttpHost(connectionOptions.getProxyProtocol(), connectionOptions.getProxyHost(), connectionOptions.getProxyPort());
             DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
             hcb.setRoutePlanner(routePlanner);
             log.debug("Connection via proxy {}", proxy);
             if (connectionOptions.getProxyUsername() != null) {
                 log.debug("Proxy connection with credentials {}", proxy);
+                // HttpClient 5 handles proxy authentication through the shared
+                // authentication strategy, so no separate proxy strategy is needed
                 commonCredentials.put(
                         new AuthScope(proxy),
-                        new UsernamePasswordCredentials(connectionOptions.getProxyUsername(), connectionOptions.getProxyPassword()));
-                hcb.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+                        new UsernamePasswordCredentials(connectionOptions.getProxyUsername(),
+                                connectionOptions.getProxyPassword().toCharArray()));
             }
         }
         httpClientBuilder = hcb;
@@ -444,6 +452,34 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // connections allowed on the httpClient level.
         // TODO: review again
         clients = new ConcurrentHashMap<Object, HttpClient>(maxConnections, .75f, maxConnections);
+    }
+
+    /**
+     * A timeout that never expires. Note that neither {@link Timeout#DISABLED} nor
+     * {@link Timeout#INFINITE} can be used for this: both are zero, which the socket
+     * layer reads as "no timeout" but the connection pool reads as "do not wait at
+     * all", so a contended lease fails immediately.
+     */
+    private static final Timeout NO_TIMEOUT = Timeout.ofMilliseconds(Long.MAX_VALUE);
+
+    /**
+     * Converts a jackrabbit connect or socket timeout in milliseconds to an HttpClient 5
+     * {@link Timeout}. The value -1 means "not configured", which under HttpClient 4 left
+     * the timeout infinite; zero carries that meaning to the socket layer. Simply omitting
+     * the setter would instead pick up the HttpClient 5 default of three minutes.
+     */
+    private static Timeout toTimeout(int timeoutMs) {
+        return timeoutMs == -1 ? Timeout.DISABLED : Timeout.ofMilliseconds(timeoutMs);
+    }
+
+    /**
+     * Converts a jackrabbit connection request timeout in milliseconds to an HttpClient 5
+     * {@link Timeout}. This is the time spent waiting for a connection from the pool, where
+     * a zero timeout means "fail immediately" rather than "wait forever", so -1 has to map
+     * to an explicitly unbounded value.
+     */
+    private static Timeout toLeaseTimeout(int timeoutMs) {
+        return timeoutMs == -1 ? NO_TIMEOUT : Timeout.ofMilliseconds(timeoutMs);
     }
 
     private static void checkSessionInfo(SessionInfo sessionInfo) throws RepositoryException {
@@ -624,18 +660,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     protected HttpContext getContext(SessionInfo sessionInfo) throws RepositoryException {
         HttpClientContext result = HttpClientContext.create();
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        CredentialsStore credsProvider = new BasicCredentialsProvider();
         result.setCredentialsProvider(credsProvider);
         // take over default credentials (e.g. for proxy)
-        for (Map.Entry<AuthScope, org.apache.http.auth.Credentials> entry : commonCredentials.entrySet()) {
+        for (Map.Entry<AuthScope, org.apache.hc.client5.http.auth.Credentials> entry : commonCredentials.entrySet()) {
             credsProvider.setCredentials(entry.getKey(), entry.getValue());
         }
         if (sessionInfo != null) {
             checkSessionInfo(sessionInfo);
-            org.apache.http.auth.Credentials creds = ((SessionInfoImpl) sessionInfo).getCredentials().getHttpCredentials();
+            org.apache.hc.client5.http.auth.Credentials creds = ((SessionInfoImpl) sessionInfo).getCredentials().getHttpCredentials();
             if (creds != null) {
-                credsProvider.setCredentials(new org.apache.http.auth.AuthScope(httpHost.getHostName(), httpHost.getPort()), creds);
+                credsProvider.setCredentials(new AuthScope(httpHost), creds);
                 BasicScheme basicAuth = new BasicScheme();
+                // HttpClient 5 only pre-authenticates from a cached scheme that
+                // has been primed with the credentials
+                basicAuth.initPreemptive(creds);
                 AuthCache authCache = new BasicAuthCache();
                 authCache.put(httpHost, basicAuth);
                 result.setAuthCache(authCache);
@@ -730,11 +769,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * Execute a 'Workspace' operation.
      */
-    private HttpResponse execute(BaseDavRequest request, SessionInfo sessionInfo) throws RepositoryException {
+    private ClassicHttpResponse execute(BaseDavRequest request, SessionInfo sessionInfo) throws RepositoryException {
         try {
             initMethod(request, sessionInfo, !isUnLockMethod(request));
 
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
             return response;
         } catch (IOException e) {
@@ -778,8 +817,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             HttpReport request = null;
             try {
                 request = new HttpReport(uriResolver.getRepositoryUri(), info);
-                HttpResponse response = executeRequest(null, request);
-                int sc = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = executeRequest(null, request);
+                int sc = response.getCode();
                 if (sc == HttpStatus.SC_UNAUTHORIZED
                         || sc == HttpStatus.SC_PROXY_AUTHENTICATION_REQUIRED) {
                     // JCR-3076: Mandatory authentication prevents us from
@@ -822,7 +861,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw ExceptionConverter.generate(e);
             } finally {
                 if (request != null) {
-                    request.releaseConnection();
+                    request.reset();
                 }
             }
         }
@@ -861,7 +900,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             nameSet.add(JcrRemotingConstants.JCR_WORKSPACE_NAME_LN, ItemResourceConstants.NAMESPACE);
 
             request = new HttpPropfind(uriResolver.getWorkspaceUri(workspaceName), nameSet, DEPTH_0);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] responses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -895,7 +934,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
 
@@ -927,7 +966,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpPropfind request = null;
         try {
             request = new HttpPropfind(uriResolver.getRepositoryUri(), nameSet, DEPTH_1);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
             Set<String> wspNames = new HashSet<String>();
@@ -947,7 +986,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -961,7 +1000,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             reportInfo.setContentElement(DomUtil.hrefToXml(uri, DomUtil.createDocument()));
 
             request = new HttpReport(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()), reportInfo);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] responses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -993,7 +1032,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1018,7 +1057,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpPropfind propfindRequest = null;
         try {
             propfindRequest = new HttpPropfind(uri, nameSet, DEPTH_0);
-            HttpResponse response = execute(propfindRequest, sessionInfo);
+            ClassicHttpResponse response = execute(propfindRequest, sessionInfo);
             propfindRequest.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = propfindRequest.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1044,7 +1083,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (propfindRequest != null) {
-                propfindRequest.releaseConnection();
+                propfindRequest.reset();
             }
         }
     }
@@ -1055,7 +1094,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpPropfind request = null;
         try {
             request = new HttpPropfind(uri, nameSet, DEPTH_0);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1096,7 +1135,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1140,7 +1179,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(itemId, sessionInfo);
             request = new HttpPropfind(uri, nameSet, DEPTH_0);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1186,7 +1225,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1209,7 +1248,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             request = new HttpPropfind(uri, nameSet, DEPTH_1);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1264,7 +1303,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1354,7 +1393,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(parentId, sessionInfo);
             request = new HttpPropfind(uri, nameSet, DEPTH_1);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             List<ChildInfo> childEntries;
@@ -1384,7 +1423,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1408,7 +1447,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             request = new HttpPropfind(uri, nameSet, DEPTH_0);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1441,7 +1480,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1452,17 +1491,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(propertyId, sessionInfo);
             request = new HttpGet(uri);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
 
-            int status = response.getStatusLine().getStatusCode();
+            int status = response.getCode();
             if (status != DavServletResponse.SC_OK) {
-                throw ExceptionConverter.generate(new DavException(status, response.getStatusLine().getReasonPhrase()));
+                throw ExceptionConverter.generate(new DavException(status, response.getReasonPhrase()));
             }
 
             Path path = uriResolver.getQPath(uri, sessionInfo);
 
             HttpEntity entity = response.getEntity();
-            ContentType ct = ContentType.get(entity);
+            ContentType ct = (entity == null) ? null : ContentType.parse(entity.getContentType());
 
             boolean isMultiValued;
             QValue[] values;
@@ -1509,7 +1548,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1558,7 +1597,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpPropfind request = null;
         try {
             request = new HttpPropfind(propertyURI, nameSet, DEPTH_0);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1575,7 +1614,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1597,29 +1636,29 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             return;
         }
 
-        HttpRequestBase request = null;
+        HttpUriRequestBase request = null;
         try {
             HttpClient client = batchImpl.start();
             boolean success = false;
 
             try {
-                Iterator<HttpRequestBase> it = batchImpl.requests();
+                Iterator<HttpUriRequestBase> it = batchImpl.requests();
                 while (it.hasNext()) {
                     request = it.next();
                     initMethod(request, batchImpl, true);
 
-                    HttpResponse response = client.execute(request);
+                    ClassicHttpResponse response = client.executeOpen(null, request, null);
                     if (request instanceof BaseDavRequest) {
                         ((BaseDavRequest) request).checkSuccess(response);
                     } else {
                         // use generic HTTP status code checking
-                        int statusCode = response.getStatusLine().getStatusCode();
+                        int statusCode = response.getCode();
                         if (statusCode < 200 || statusCode >= 300) {
                             throw new DavException(statusCode, "Unexpected status code " + statusCode + " in response to "
                                     + request.getMethod() + " request.");
                         }
                     }
-                    request.releaseConnection();
+                    request.reset();
                 }
                 success = true;
             } finally {
@@ -1663,7 +1702,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpMove request = new HttpMove(uri, destUri, false);
         try {
             initMethod(request, sessionInfo);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
             // need to clear the cache as the move may have affected nodes with
             // uuid.
@@ -1673,7 +1712,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (DavException e) {
             throw ExceptionConverter.generate(e, request);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -1687,14 +1726,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpCopy request = new HttpCopy(uri, destUri, false, false);
         try {
             initMethod(request, sessionInfo);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException ex) {
             throw new RepositoryException(ex);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e, request);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -1725,7 +1764,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             request = new HttpPropfind(uri, nameSet, DEPTH_0);
             initMethod(request, sessionInfo, false);
 
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -1753,7 +1792,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1776,7 +1815,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             Scope scope = (sessionScoped) ? ItemResourceConstants.EXCLUSIVE_SESSION : Scope.EXCLUSIVE;
             request  = new HttpLock(uri,
                     new org.apache.jackrabbit.webdav.lock.LockInfo(scope, Type.WRITE, ownerInfo, davTimeout, deep));
-            HttpResponse response = execute(request, sessionInfo);
+            ClassicHttpResponse response = execute(request, sessionInfo);
 
             String lockToken = request.getLockToken(response);
             ((SessionInfoImpl) sessionInfo).addLockToken(lockToken, sessionScoped);
@@ -1789,7 +1828,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -1808,7 +1847,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             execute(httpLock, sessionInfo);
         } finally {
             if (httpLock != null) {
-                httpLock.releaseConnection();
+                httpLock.reset();
             }
         }
     }
@@ -1837,7 +1876,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             execute(unlockRequest, sessionInfo);
             ((SessionInfoImpl) sessionInfo).removeLockToken(lockToken, isSessionScoped);
         } finally {
-            unlockRequest.releaseConnection();
+            unlockRequest.reset();
         }
     }
 
@@ -1883,16 +1922,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpCheckin request = new HttpCheckin(uri);
         try {
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
-            org.apache.http.Header rh = response.getFirstHeader(DeltaVConstants.HEADER_LOCATION);
+            Header rh = response.getFirstHeader(DeltaVConstants.HEADER_LOCATION);
             return uriResolver.getNodeId(resolve(uri, rh.getValue()), sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -1902,14 +1941,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpCheckout request = new HttpCheckout(uri);
         try {
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -1947,14 +1986,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpDelete request = new HttpDelete(uri);
         try {
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException ex) {
             throw new RepositoryException(ex);
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -1991,7 +2030,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private boolean exists(SessionInfo sInfo, String uri) {
         HttpHead request = new HttpHead(uri);
         try {
-            int statusCode = executeRequest(sInfo, request).getStatusLine().getStatusCode();
+            int statusCode = executeRequest(sInfo, request).getCode();
             return (statusCode == DavServletResponse.SC_OK);
         } catch (IOException e) {
             log.error("Unexpected error while testing existence of item.", e);
@@ -2000,7 +2039,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             log.error(e.getMessage());
             return false;
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -2036,7 +2075,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             request = new HttpUpdate(uri, uInfo);
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2046,7 +2085,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2071,7 +2110,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String uri = getItemUri(nodeId, sessionInfo);
             request = new HttpMerge(uri, mInfo);
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatusResponse[] resps = request.getResponseBodyAsMultiStatus(response).getResponses();
@@ -2089,7 +2128,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2115,7 +2154,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             request = new HttpProppatch(getItemUri(nodeId, sessionInfo), changeList);
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2123,7 +2162,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2136,14 +2175,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String strLabel = getNamePathResolver(sessionInfo).getJCRName(label);
             request = new HttpLabel(uri, new LabelInfo(strLabel, moveLabel ? LabelInfo.TYPE_SET : LabelInfo.TYPE_ADD));
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -2155,14 +2194,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String strLabel = getNamePathResolver(sessionInfo).getJCRName(label);
             request = new HttpLabel(uri, new LabelInfo(strLabel, LabelInfo.TYPE_REMOVE));
             initMethod(request, sessionInfo, !isUnLockMethod(request));
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -2194,8 +2233,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws RepositoryException {
         HttpOptions request = new HttpOptions(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()));
         try {
-            HttpResponse response = executeRequest(sessionInfo, request);
-            int status = response.getStatusLine().getStatusCode();
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
+            int status = response.getCode();
             if (status != DavServletResponse.SC_OK) {
                 throw new DavException(status);
             }
@@ -2205,7 +2244,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         } finally {
-            request.releaseConnection();
+            request.reset();
         }
     }
 
@@ -2240,7 +2279,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             request = new HttpSearch(uri, sInfo);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
@@ -2252,7 +2291,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2309,10 +2348,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             request.addHeader("If-None-Match", "\"" + Long.toHexString(after) + "\""); // TODO
             initMethod(request, sessionInfo);
 
-            HttpResponse response = executeRequest(sessionInfo, request);
-            int status = response.getStatusLine().getStatusCode();
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
+            int status = response.getCode();
             if (status != 200) {
-                throw new RepositoryException("getEvents to " + rootUri + " failed with " + response.getStatusLine());
+                throw new RepositoryException("getEvents to " + rootUri + " failed with " + new StatusLine(response));
             }
 
             HttpEntity entity = response.getEntity();
@@ -2355,7 +2394,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException("extracting events from journal feed: " + ex.getMessage(), ex);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2430,7 +2469,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 request.setHeader(ch.getHeaderName(), ch.getHeaderValue());
             }
 
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             org.apache.jackrabbit.webdav.observation.Subscription[] subs = request.getResponseBodyAsSubscriptionDiscovery(response)
@@ -2447,7 +2486,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2457,7 +2496,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             request = new HttpUnsubscribe(uri, subscriptionId);
             initMethod(request, sessionInfo);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2465,7 +2504,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2486,7 +2525,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpPoll request = null;
         try {
             request = new HttpPoll(uri, subscriptionId, timeout);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             EventDiscovery disc = request.getResponseBodyAsEventDiscovery(response);
@@ -2522,7 +2561,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2622,7 +2661,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         HttpReport request = null;
         try {
             request = new HttpReport(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()), info);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             Document doc = request.getResponseBodyAsDocument(response.getEntity());
@@ -2655,7 +2694,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2734,7 +2773,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             request = new HttpProppatch(uri, setProperties, new DavPropertyNameSet());
             initMethod(request, sessionInfo, true);
 
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2742,7 +2781,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2756,7 +2795,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             String workspaceUri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
             request = new HttpReport(workspaceUri, info);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
 
             Document reportDoc = request.getResponseBodyAsDocument(response.getEntity());
@@ -2769,7 +2808,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2790,7 +2829,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
             request = new HttpProppatch(uri, setProperties, new DavPropertyNameSet());
             initMethod(request, sessionInfo, true);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2798,7 +2837,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2812,7 +2851,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
             request = new HttpProppatch(uri, setProperties, new DavPropertyNameSet());
             initMethod(request, sessionInfo, true);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2820,7 +2859,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2835,7 +2874,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             request = new HttpMkworkspace(uriResolver.getWorkspaceUri(name));
             initMethod(request, sessionInfo, true);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2843,7 +2882,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2854,7 +2893,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             request = new HttpDelete(uriResolver.getWorkspaceUri(name));
             initMethod(request, sessionInfo, true);
-            HttpResponse response = executeRequest(sessionInfo, request);
+            ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2862,7 +2901,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         } finally {
             if (request != null) {
-                request.releaseConnection();
+                request.reset();
             }
         }
     }
@@ -2887,8 +2926,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return repositoryUri;
     }
 
-    public HttpResponse executeRequest(SessionInfo sessionInfo, HttpUriRequest request) throws IOException, RepositoryException {
-        return getClient(sessionInfo).execute(request, getContext(sessionInfo));
+    public ClassicHttpResponse executeRequest(SessionInfo sessionInfo, HttpUriRequest request) throws IOException, RepositoryException {
+        return getClient(sessionInfo).executeOpen(null, request, getContext(sessionInfo));
     }
 
     /**
@@ -3022,8 +3061,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         if (this.remoteDavComplianceClasses == null) {
             HttpOptions request = new HttpOptions(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()));
             try {
-                HttpResponse response = executeRequest(sessionInfo, request);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = executeRequest(sessionInfo, request);
+                int status = response.getCode();
                 if (status != DavServletResponse.SC_OK) {
                     throw new DavException(status);
                 }
@@ -3033,7 +3072,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } catch (DavException e) {
                 throw ExceptionConverter.generate(e);
             } finally {
-                request.releaseConnection();
+                request.reset();
             }
         }
         return this.remoteDavComplianceClasses;
@@ -3081,7 +3120,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         private final SessionInfo sessionInfo;
         private final ItemId targetId;
-        private final List<HttpRequestBase> requests = new ArrayList<HttpRequestBase>();
+        private final List<HttpUriRequestBase> requests = new ArrayList<HttpUriRequestBase>();
         private final NamePathResolver resolver;
 
         private String batchId;
@@ -3106,8 +3145,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 initMethod(request, sessionInfo, true);
 
                 HttpClient client = getClient(sessionInfo);
-                HttpResponse response = client.execute(request,getContext(sessionInfo));
-                if (response.getStatusLine().getStatusCode() == DavServletResponse.SC_PRECONDITION_FAILED) {
+                ClassicHttpResponse response = client.executeOpen(null, request, getContext(sessionInfo));
+                if (response.getCode() == DavServletResponse.SC_PRECONDITION_FAILED) {
                     throw new InvalidItemStateException("Unable to persist transient changes.");
                 }
                 request.checkSuccess(response);
@@ -3121,7 +3160,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw ExceptionConverter.generate(e);
             } finally {
                 if (request != null) {
-                    request.releaseConnection();
+                    request.reset();
                 }
             }
         }
@@ -3140,7 +3179,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // in contrast to standard UNLOCK, the tx-unlock provides a
                 // request body.
                 request.setEntity(XmlEntity.create(new TransactionInfo(commit)));
-                HttpResponse response = client.execute(request, getContext(sessionInfo));
+                ClassicHttpResponse response = client.executeOpen(null, request, getContext(sessionInfo));
                 request.checkSuccess(response);
                 if (sessionInfo instanceof SessionInfoImpl) {
                     ((SessionInfoImpl) sessionInfo).setLastBatchId(batchId);
@@ -3155,7 +3194,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } finally {
                 if (request != null) {
                     // release UNLOCK method
-                    request.releaseConnection();
+                    request.reset();
                 }
             }
         }
@@ -3175,7 +3214,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             return requests.isEmpty();
         }
 
-        private Iterator<HttpRequestBase> requests() {
+        private Iterator<HttpUriRequestBase> requests() {
             return requests.iterator();
         }
 

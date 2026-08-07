@@ -23,9 +23,9 @@ import java.util.Calendar;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.spi.AbstractSPITest;
 import org.apache.jackrabbit.spi.Batch;
@@ -136,7 +136,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
     private DavPropertyNameSet doPropFindNames(String uri) throws Exception {
         HttpPropfind request = new HttpPropfind(uri, DavConstants.PROPFIND_PROPERTY_NAMES, DavConstants.DEPTH_0);
         HttpClient cl = rs.getClient(si);
-        HttpResponse response = cl.execute(request, rs.getContext(si));
+        ClassicHttpResponse response = cl.executeOpen(null, request, rs.getContext(si));
         request.checkSuccess(response);
 
         MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
@@ -147,7 +147,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
     private DavPropertyNameSet doPropFindAll(String uri) throws Exception {
         HttpPropfind request = new HttpPropfind(uri, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_0);
         HttpClient cl = rs.getClient(si);
-        HttpResponse response = cl.execute(request, rs.getContext(si));
+        ClassicHttpResponse response = cl.executeOpen(null, request, rs.getContext(si));
         request.checkSuccess(response);
 
         MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
@@ -158,7 +158,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
     private DavPropertyNameSet doPropFindByProp(String uri, DavPropertyNameSet props) throws Exception {
         HttpPropfind request = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, props, DavConstants.DEPTH_0);
         HttpClient cl = rs.getClient(si);
-        HttpResponse response = cl.execute(request, rs.getContext(si));
+        ClassicHttpResponse response = cl.executeOpen(null, request, rs.getContext(si));
         request.checkSuccess(response);
 
         MultiStatus ms = request.getResponseBodyAsMultiStatus(response);

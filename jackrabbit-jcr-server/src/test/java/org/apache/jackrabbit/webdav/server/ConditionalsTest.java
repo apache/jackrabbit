@@ -19,13 +19,13 @@ package org.apache.jackrabbit.webdav.server;
 import java.io.IOException;
 import java.text.ParseException;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 public class ConditionalsTest extends WebDAVTestBase {
 
@@ -39,8 +39,8 @@ public class ConditionalsTest extends WebDAVTestBase {
             {
                 HttpPut put = new HttpPut(testUri);
                 put.setEntity(new StringEntity("foobar"));
-                HttpResponse response = this.client.execute(put, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, put, this.context);
+                int status = response.getCode();
                 assertEquals(201, status);
             }
 
@@ -51,8 +51,8 @@ public class ConditionalsTest extends WebDAVTestBase {
             Header lm = null;
             {
                 HttpHead head = new HttpHead(testUri);
-                HttpResponse response = this.client.execute(head, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, head, this.context);
+                int status = response.getCode();
                 assertEquals(200, status);
                 lm = response.getFirstHeader("last-modified");
                 assertNotNull(lm);
@@ -65,8 +65,8 @@ public class ConditionalsTest extends WebDAVTestBase {
             {
                 HttpGet get = new HttpGet(testUri);
                 get.setHeader("If-Modified-Since", lm.getValue());
-                HttpResponse response = this.client.execute(get, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, get, this.context);
+                int status = response.getCode();
                 assertEquals(304, status);
                 if (etag != null) {
                     Header newetag = response.getFirstHeader("etag");
@@ -79,8 +79,8 @@ public class ConditionalsTest extends WebDAVTestBase {
             {
                 HttpHead head = new HttpHead(testUri);
                 head.setHeader("If-Modified-Since", lm.getValue());
-                HttpResponse response = this.client.execute(head, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, head, this.context);
+                int status = response.getCode();
                 assertEquals(304, status);
                 if (etag != null) {
                     Header newetag = response.getFirstHeader("etag");
@@ -93,8 +93,8 @@ public class ConditionalsTest extends WebDAVTestBase {
             {
                 HttpHead head = new HttpHead(testUri);
                 head.setHeader("If-Modified-Since", "broken");
-                HttpResponse response = this.client.execute(head, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, head, this.context);
+                int status = response.getCode();
                 assertEquals(200, status);
             }
 
@@ -103,8 +103,8 @@ public class ConditionalsTest extends WebDAVTestBase {
                 HttpGet req = new HttpGet(testUri);
                 req.addHeader("If-Modified-Since", lm.getValue());
                 req.addHeader("If-Modified-Since", "foo");
-                HttpResponse response = this.client.execute(req, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, req, this.context);
+                int status = response.getCode();
                 assertEquals(200, status);
                 EntityUtils.consume(response.getEntity());
             }
@@ -120,8 +120,8 @@ public class ConditionalsTest extends WebDAVTestBase {
             // verify last modified did not change
             {
                 HttpHead head = new HttpHead(testUri);
-                HttpResponse response = this.client.execute(head, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, head, this.context);
+                int status = response.getCode();
                 assertEquals(200, status);
                 Header newlm = response.getFirstHeader("last-modified");
                 assertNotNull(newlm);
@@ -133,8 +133,8 @@ public class ConditionalsTest extends WebDAVTestBase {
                 HttpPut put = new HttpPut(testUri);
                 put.setHeader("If-Unmodified-Since", lm.getValue());
                 put.setEntity(new StringEntity("qux"));
-                HttpResponse response = this.client.execute(put, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, put, this.context);
+                int status = response.getCode();
                 assertEquals(204, status);
             }
 
@@ -143,8 +143,8 @@ public class ConditionalsTest extends WebDAVTestBase {
                 HttpPut put = new HttpPut(testUri);
                 put.setHeader("If-Unmodified-Since", lm.getValue());
                 put.setEntity(new StringEntity("lazydog"));
-                HttpResponse response = this.client.execute(put, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, put, this.context);
+                int status = response.getCode();
                 assertEquals(412, status);
             }
 
@@ -154,8 +154,8 @@ public class ConditionalsTest extends WebDAVTestBase {
                 put.addHeader("If-Unmodified-Since", lm.getValue());
                 put.addHeader("If-Unmodified-Since", "foo");
                 put.setEntity(new StringEntity("qux"));
-                HttpResponse response = this.client.execute(put, this.context);
-                int status = response.getStatusLine().getStatusCode();
+                ClassicHttpResponse response = this.client.executeOpen(null, put, this.context);
+                int status = response.getCode();
                 assertEquals(204, status);
             }
         } finally {
@@ -166,8 +166,8 @@ public class ConditionalsTest extends WebDAVTestBase {
     public void testGetCollectionEtag() throws IOException, ParseException {
         String testUri = this.uri.toString() + (this.uri.toString().endsWith("/") ? "" : "/");
         HttpGet get = new HttpGet(testUri);
-        HttpResponse response = this.client.execute(get, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, get, this.context);
+        int status = response.getCode();
         assertEquals(200, status);
         Header etag = response.getFirstHeader("etag");
         if (etag != null) {

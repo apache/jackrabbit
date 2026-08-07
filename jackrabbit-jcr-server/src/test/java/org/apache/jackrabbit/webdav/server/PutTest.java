@@ -19,9 +19,9 @@ package org.apache.jackrabbit.webdav.server;
 import java.io.IOException;
 import java.text.ParseException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 
 /**
  * Test cases for HTTP PUT method
@@ -33,8 +33,8 @@ public class PutTest extends WebDAVTestBase {
         HttpPut put = new HttpPut(testUri);
         put.addHeader("Content-Range", "bytes 0-5/6");
         put.setEntity(new StringEntity("foobar"));
-        HttpResponse response = this.client.execute(put, this.context);
-        int status = response.getStatusLine().getStatusCode();
+        ClassicHttpResponse response = this.client.executeOpen(null, put, this.context);
+        int status = response.getCode();
         assertEquals(400, status);
     }
 }

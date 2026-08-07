@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.osgi;
 
 import static org.junit.Assert.assertEquals;
-import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -28,7 +27,6 @@ import static org.ops4j.pax.exam.CoreOptions.vmOption;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import javax.inject.Inject;
@@ -103,14 +101,8 @@ public class OSGiIT {
         return new File(new File("src", "test"), "config").getAbsolutePath();
     }
 
-    private Option jarBundles() throws MalformedURLException {
-        DefaultCompositeOption composite = new DefaultCompositeOption();
-        for (File bundle : new File("target", "test-bundles").listFiles()) {
-            if (bundle.getName().endsWith(".jar") && bundle.isFile()) {
-                composite.add(bundle(bundle.toURI().toURL().toString()));
-            }
-        }
-        return composite;
+    private Option jarBundles() throws IOException {
+        return TestBundles.jarBundles();
     }
 
     @Inject

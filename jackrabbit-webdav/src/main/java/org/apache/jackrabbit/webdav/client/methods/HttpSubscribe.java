@@ -19,7 +19,7 @@ package org.apache.jackrabbit.webdav.client.methods;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -38,7 +38,7 @@ import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 public class HttpSubscribe extends BaseDavRequest {
 
     public HttpSubscribe(URI uri, SubscriptionInfo info, String subscriptionId) throws IOException {
-        super(uri);
+        super(DavMethods.METHOD_SUBSCRIBE, uri);
         if (info == null) {
             throw new IllegalArgumentException("SubscriptionInfo must not be null.");
         }
@@ -64,8 +64,8 @@ public class HttpSubscribe extends BaseDavRequest {
         this(URI.create(uri), info, subscriptionId);
     }
 
-    public String getSubscriptionId(HttpResponse response) {
-        org.apache.http.Header sbHeader = response.getFirstHeader(ObservationConstants.HEADER_SUBSCRIPTIONID);
+    public String getSubscriptionId(ClassicHttpResponse response) {
+        org.apache.hc.core5.http.Header sbHeader = response.getFirstHeader(ObservationConstants.HEADER_SUBSCRIPTIONID);
         if (sbHeader != null) {
             CodedUrlHeader cuh = new CodedUrlHeader(ObservationConstants.HEADER_SUBSCRIPTIONID, sbHeader.getValue());
             return cuh.getCodedUrl();
@@ -76,13 +76,8 @@ public class HttpSubscribe extends BaseDavRequest {
     }
 
     @Override
-    public String getMethod() {
-        return DavMethods.METHOD_SUBSCRIBE;
-    }
-
-    @Override
-    public boolean succeeded(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
+    public boolean succeeded(ClassicHttpResponse response) {
+        int statusCode = response.getCode();
         return statusCode == DavServletResponse.SC_OK;
     }
 }
