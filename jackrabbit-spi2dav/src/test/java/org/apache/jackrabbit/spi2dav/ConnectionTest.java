@@ -24,6 +24,7 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -88,9 +89,13 @@ public class ConnectionTest extends WebDAVTestBase {
         try {
             repositoryService.obtain(new SimpleCredentials("admin", "admin".toCharArray()), null);
         } catch (RepositoryException e) {
-            Throwable cause = ExceptionUtils.getRootCause(e);
-            if (!(cause instanceof SSLPeerUnverifiedException)) {
-                fail("should have failed with SSLPeerUnverifiedException but got " + e.getCause());
+            // HttpClient 5 enables the JSSE built-in endpoint identification by default, which rejects the
+            // host name during the handshake (SSLHandshakeException wrapping a CertificateException) instead
+            // of afterwards (SSLPeerUnverifiedException, as thrown by the client-side verifier of HttpClient 4)
+            boolean isHostnameVerificationFailure = ExceptionUtils.getThrowableList(e).stream()
+                    .anyMatch(t -> t instanceof SSLPeerUnverifiedException || t instanceof SSLHandshakeException);
+            if (!isHostnameVerificationFailure) {
+                fail("should have failed with SSLPeerUnverifiedException or SSLHandshakeException but got " + e.getCause());
             }
         }
     }

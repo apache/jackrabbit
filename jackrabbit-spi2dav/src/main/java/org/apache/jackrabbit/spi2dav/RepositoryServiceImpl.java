@@ -76,6 +76,7 @@ import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.TlsSocketStrategy;
 import org.apache.hc.core5.http.ContentType;
@@ -412,7 +413,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             if (connectionOptions.isDisableHostnameVerification()) {
                 log.warn("Nonsecure TLS setting: Host name verification of TLS certificates disabled!");
                 // we can optionally disable hostname verification.
-                tlsSocketStrategy = new DefaultClientTlsStrategy(sslContext, NoopHostnameVerifier.INSTANCE);
+                // HostnameVerificationPolicy.CLIENT is required in addition to the noop verifier: with the
+                // default policy the JSSE built-in endpoint identification still runs during the handshake
+                tlsSocketStrategy = new DefaultClientTlsStrategy(sslContext, HostnameVerificationPolicy.CLIENT,
+                        NoopHostnameVerifier.INSTANCE);
             } else {
                 tlsSocketStrategy = new DefaultClientTlsStrategy(sslContext);
             }
