@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -353,7 +354,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
                     ItemInfoJsonHandler handler = new ItemInfoJsonHandler(resolver, nInfo, getRootURI(sessionInfo), getQValueFactory(sessionInfo), getPathFactory(), getIdFactory());
                     JsonParser ps = new JsonParser(handler);
-                    ps.parse(entity.getContent(), ContentType.parse(entity.getContentType()).getCharset().name());
+                    // both the header and its charset parameter are optional; JSON defaults to UTF-8
+                    ContentType contentType = ContentType.parse(entity.getContentType());
+                    Charset charset = contentType == null ? null : contentType.getCharset();
+                    ps.parse(entity.getContent(), (charset == null ? StandardCharsets.UTF_8 : charset).name());
 
                     Iterator<? extends ItemInfo> it = handler.getItemInfos();
                     if (!it.hasNext()) {
@@ -466,8 +470,11 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         }
         HttpPost request = null;
         try {
-            request = new HttpPost(getWorkspaceURI(sessionInfo));
-            request.setHeader("Referer", request.getRequestUri());
+            String workspaceUri = getWorkspaceURI(sessionInfo);
+            request = new HttpPost(workspaceUri);
+            // the absolute request URI: HttpClient 5's getRequestUri() would only
+            // return the path, which a CSRF referrer check may reject
+            request.setHeader("Referer", workspaceUri);
             addIfHeader(sessionInfo, request);
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
@@ -502,8 +509,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName, boolean removeExisting) throws RepositoryException {
         HttpPost request = null;
         try {
-            request = new HttpPost(getWorkspaceURI(sessionInfo));
-            request.setHeader("Referer", request.getRequestUri());
+            String workspaceUri = getWorkspaceURI(sessionInfo);
+            request = new HttpPost(workspaceUri);
+            // the absolute request URI, see copy()
+            request.setHeader("Referer", workspaceUri);
             addIfHeader(sessionInfo, request);
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
@@ -580,7 +589,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         private void start() throws RepositoryException {
             checkConsumed();
 
-            request.setHeader("Referer", request.getRequestUri());
+            try {
+                // the absolute request URI, see copy()
+                request.setHeader("Referer", request.getUri().toASCIIString());
+            } catch (URISyntaxException e) {
+                throw new RepositoryException(e);
+            }
 
             // add lock tokens
             addIfHeader(sessionInfo, request);
@@ -600,8 +614,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             Utils.addPart(PARAM_DIFF, buf.toString(), parts);
 
             // JCR-4317: part names carry the JCR path and must survive as UTF-8,
-            // which MultipartEntityBuilder cannot do in HttpClient 5
-            request.setEntity(new Rfc6532MultipartEntity(parts, "----=_Part_" + UUID.randomUUID()));
+            // which MultipartEntityBuilder cannot do in HttpClient 5.
+            // The boundary must consist of token characters only ('=' is not one),
+            // because Rfc6532MultipartEntity does not quote it in the Content-Type
+            request.setEntity(new Rfc6532MultipartEntity(parts, "----Part_" + UUID.randomUUID()));
 
             HttpClient client = getClient(sessionInfo);
             try {

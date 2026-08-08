@@ -75,9 +75,9 @@ import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
+import org.apache.hc.client5.http.ssl.TlsSocketStrategy;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -364,7 +364,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // PUT or DELETE surfaces to the caller instead of silently retargeting
         hcb.setRedirectStrategy(GetHeadRedirectStrategy.INSTANCE);
 
-        final SSLConnectionSocketFactory sslSocketFactory;
+        final TlsSocketStrategy tlsSocketStrategy;
 
         // request config
         RequestConfig requestConfig = RequestConfig.custom()
@@ -392,14 +392,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             // support Java system proxy? (JCR-3211)
             hcb.useSystemProperties();
 
-            sslSocketFactory = SSLConnectionSocketFactory.getSystemSocketFactory();
+            tlsSocketStrategy = DefaultClientTlsStrategy.createSystemDefault();
         } else {
             // TLS settings (via connection manager)
             final SSLContext sslContext;
             try {
                 if (connectionOptions.isAllowSelfSignedCertificates()) {
                     log.warn("Nonsecure TLS setting: Accepting self-signed certificates!");
-                        sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
+                    // what the deprecated TrustSelfSignedStrategy did: trust any
+                    // certificate that arrives without an issuer chain
+                    sslContext = SSLContextBuilder.create().loadTrustMaterial((chain, authType) -> chain.length == 1).build();
                 } else {
                     sslContext = SSLContextBuilder.create().build();
                 }
@@ -410,14 +412,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             if (connectionOptions.isDisableHostnameVerification()) {
                 log.warn("Nonsecure TLS setting: Host name verification of TLS certificates disabled!");
                 // we can optionally disable hostname verification.
-                sslSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+                tlsSocketStrategy = new DefaultClientTlsStrategy(sslContext, NoopHostnameVerifier.INSTANCE);
             } else {
-                sslSocketFactory = new SSLConnectionSocketFactory(sslContext);
+                tlsSocketStrategy = new DefaultClientTlsStrategy(sslContext);
             }
         }
 
         PoolingHttpClientConnectionManagerBuilder cmgrBuilder = PoolingHttpClientConnectionManagerBuilder.create()
-            .setSSLSocketFactory(sslSocketFactory)
+            .setTlsSocketStrategy(tlsSocketStrategy)
             .setDefaultConnectionConfig(connectionConfig);
 
         int maxConnections = connectionOptions.getMaxConnections();
@@ -439,10 +441,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 log.debug("Proxy connection with credentials {}", proxy);
                 // HttpClient 5 handles proxy authentication through the shared
                 // authentication strategy, so no separate proxy strategy is needed
+                String proxyPassword = connectionOptions.getProxyPassword();
                 commonCredentials.put(
                         new AuthScope(proxy),
                         new UsernamePasswordCredentials(connectionOptions.getProxyUsername(),
-                                connectionOptions.getProxyPassword().toCharArray()));
+                                proxyPassword == null ? new char[0] : proxyPassword.toCharArray()));
             }
         }
         httpClientBuilder = hcb;
@@ -464,22 +467,24 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     /**
      * Converts a jackrabbit connect or socket timeout in milliseconds to an HttpClient 5
-     * {@link Timeout}. The value -1 means "not configured", which under HttpClient 4 left
-     * the timeout infinite; zero carries that meaning to the socket layer. Simply omitting
-     * the setter would instead pick up the HttpClient 5 default of three minutes.
+     * {@link Timeout}. The value -1 means "not configured" and HttpClient 4 treated any
+     * other negative value as infinite too, so all of them map to a disabled timeout;
+     * zero carries that meaning to the socket layer as well. Simply omitting the setter
+     * would instead pick up the HttpClient 5 default of three minutes.
      */
     private static Timeout toTimeout(int timeoutMs) {
-        return timeoutMs == -1 ? Timeout.DISABLED : Timeout.ofMilliseconds(timeoutMs);
+        return timeoutMs < 0 ? Timeout.DISABLED : Timeout.ofMilliseconds(timeoutMs);
     }
 
     /**
      * Converts a jackrabbit connection request timeout in milliseconds to an HttpClient 5
      * {@link Timeout}. This is the time spent waiting for a connection from the pool, where
-     * a zero timeout means "fail immediately" rather than "wait forever", so -1 has to map
-     * to an explicitly unbounded value.
+     * a zero timeout means "fail immediately" rather than the "wait forever" it meant under
+     * HttpClient 4, so zero and every negative value have to map to an explicitly unbounded
+     * value.
      */
     private static Timeout toLeaseTimeout(int timeoutMs) {
-        return timeoutMs == -1 ? NO_TIMEOUT : Timeout.ofMilliseconds(timeoutMs);
+        return timeoutMs <= 0 ? NO_TIMEOUT : Timeout.ofMilliseconds(timeoutMs);
     }
 
     private static void checkSessionInfo(SessionInfo sessionInfo) throws RepositoryException {
@@ -1925,6 +1930,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             ClassicHttpResponse response = executeRequest(sessionInfo, request);
             request.checkSuccess(response);
             Header rh = response.getFirstHeader(DeltaVConstants.HEADER_LOCATION);
+            if (rh == null) {
+                throw new RepositoryException("CHECKIN of " + uri + " failed: no Location header in response.");
+            }
             return uriResolver.getNodeId(resolve(uri, rh.getValue()), sessionInfo);
         } catch (IOException e) {
             throw new RepositoryException(e);

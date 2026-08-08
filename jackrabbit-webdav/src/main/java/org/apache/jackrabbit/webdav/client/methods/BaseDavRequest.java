@@ -196,7 +196,10 @@ public abstract class BaseDavRequest extends HttpUriRequestBase {
 
         Element responseRoot = null;
         try {
-            responseRoot = getResponseBodyAsDocument(response.getEntity()).getDocumentElement();
+            Document doc = getResponseBodyAsDocument(response.getEntity());
+            if (doc != null) {
+                responseRoot = doc.getDocumentElement();
+            }
         } catch (IOException e) {
             // non-parseable body -> use null element
         }

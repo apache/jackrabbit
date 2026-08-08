@@ -108,6 +108,29 @@ public class Rfc6532MultipartEntityTest {
                 "name=\"/testroot/na\\\"me-with\\\\quote-ä\""));
     }
 
+    /**
+     * For a path outside ISO-8859-1 the builder would append an RFC 5987 encoded
+     * {@code filename*} parameter that HttpClient 4 never emitted, so {@code Utils}
+     * sets the Content-Disposition explicitly; this pins that construction.
+     */
+    @Test
+    public void testNonLatin1PartNameSurvivesWithoutFilenameStar() throws Exception {
+        String name = "/testroot/テスト/jcr:content/jcr:data";
+        List<FormBodyPart> parts = new ArrayList<FormBodyPart>();
+        FormBodyPart binary = FormBodyPartBuilder.create().setName(name)
+                .setBody(new InputStreamBody(
+                        new ByteArrayInputStream("XYZ".getBytes(StandardCharsets.UTF_8)), BINARY, name))
+                .setField("Content-Disposition", "form-data; name=\"" + name + "\"; filename=\"" + name + "\"")
+                .build();
+        binary.getHeader().addField(new MimeField("Content-Transfer-Encoding", "binary"));
+        parts.add(binary);
+
+        String written = write(parts);
+        Assert.assertFalse("no RFC 5987 filename* parameter expected", written.contains("filename*"));
+        Assert.assertTrue(written.contains(
+                "Content-Disposition: form-data; name=\"" + name + "\"; filename=\"" + name + "\"\r\n"));
+    }
+
     @Test
     public void testContentTypeCarriesNoCharset() {
         // a charset here would make the server decode the UTF-8 part headers as something else

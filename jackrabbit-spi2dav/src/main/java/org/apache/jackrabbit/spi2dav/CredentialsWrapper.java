@@ -38,7 +38,10 @@ class CredentialsWrapper {
         } else if (creds instanceof SimpleCredentials) {
             SimpleCredentials sCred = (SimpleCredentials) creds;
             userId = sCred.getUserID();
-            this.credentials = new UsernamePasswordCredentials(userId, sCred.getPassword());
+            // copy the password: SimpleCredentials hands out its internal array and
+            // UsernamePasswordCredentials keeps the reference, so without a copy a
+            // caller zeroing the password after login would break the open session
+            this.credentials = new UsernamePasswordCredentials(userId, sCred.getPassword().clone());
         } else {
             userId = "";
             // HttpClient 5 dropped the single-argument "username:password"

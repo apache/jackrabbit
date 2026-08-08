@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.hc.client5.http.entity.mime.FormBodyPart;
 import org.apache.hc.client5.http.entity.mime.MimeField;
 import org.apache.hc.core5.function.Supplier;
+import org.apache.hc.core5.http.ContentTooLongException;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
 
@@ -79,13 +80,32 @@ final class Rfc6532MultipartEntity implements HttpEntity {
             }
             total += length;
         }
-        ByteArrayOutputStream framing = new ByteArrayOutputStream();
+        CountingOutputStream framing = new CountingOutputStream();
         try {
             writeTo(framing, false);
         } catch (IOException e) {
-            return -1;
+            throw new AssertionError("CountingOutputStream does not throw", e);
         }
-        return total + framing.size();
+        return total + framing.count;
+    }
+
+    /**
+     * Measures the framing without buffering it: the part headers are written once
+     * more for real in {@link #writeTo(OutputStream)}.
+     */
+    private static final class CountingOutputStream extends OutputStream {
+
+        private long count;
+
+        @Override
+        public void write(int b) {
+            count++;
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) {
+            count += len;
+        }
     }
 
     @Override
@@ -122,7 +142,8 @@ final class Rfc6532MultipartEntity implements HttpEntity {
     @Override
     public String getContentType() {
         // deliberately without a charset parameter, so that a server does not decode the
-        // UTF-8 part headers as anything else
+        // UTF-8 part headers as anything else. The boundary is emitted unquoted and must
+        // therefore consist of token characters only.
         return "multipart/form-data; boundary=" + boundary;
     }
 
@@ -151,8 +172,22 @@ final class Rfc6532MultipartEntity implements HttpEntity {
         return null;
     }
 
+    /**
+     * The 25 KB limit HttpClient 4's {@code MultipartFormEntity.getContent()} enforced
+     * before buffering; anything larger (or of unknown length) is expected to go
+     * through {@link #writeTo(OutputStream)} instead.
+     */
+    private static final long MAX_BUFFERED_CONTENT_LENGTH = 25 * 1024;
+
     @Override
     public InputStream getContent() throws IOException {
+        // do not buffer arbitrarily large bodies; buffering would also drain any
+        // stream-backed part, leaving a subsequent writeTo with empty part bodies
+        if (contentLength < 0) {
+            throw new ContentTooLongException("Content length is unknown");
+        } else if (contentLength > MAX_BUFFERED_CONTENT_LENGTH) {
+            throw new ContentTooLongException("Content length is too long: " + contentLength);
+        }
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         writeTo(buffer, true);
         return new ByteArrayInputStream(buffer.toByteArray());

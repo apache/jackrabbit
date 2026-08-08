@@ -47,6 +47,14 @@ final class Utils {
     private Utils() {};
 
     /**
+     * Quotes a Content-Disposition parameter value, escaping backslashes and quotes the
+     * way HttpClient 4 did.
+     */
+    private static String quote(String value) {
+        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    /**
      * HttpClient 5 no longer derives a Content-Transfer-Encoding header from the body,
      * whereas HttpClient 4 emitted 8bit for string bodies and binary for stream bodies.
      * Adding it after the part is built keeps it in the same position as before, i.e.
@@ -116,9 +124,16 @@ final class Utils {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 binaries.add(value);
-                // server detects binaries based on presence of filename parameters (JCR-4154)
+                // server detects binaries based on presence of filename parameters (JCR-4154).
+                // Set the Content-Disposition explicitly: for a path outside ISO-8859-1 the
+                // builder would append an RFC 5987 encoded filename* parameter that
+                // HttpClient 4 never emitted, and the server would prefer it over the
+                // verbatim JCR path in the filename parameter
                 part = withTransferEncoding(
-                        builder.setBody(new InputStreamBody(value.getStream(), ctype, paramName)).build(),
+                        builder.setBody(new InputStreamBody(value.getStream(), ctype, paramName))
+                                .setField("Content-Disposition",
+                                        "form-data; name=" + quote(paramName) + "; filename=" + quote(paramName))
+                                .build(),
                         TRANSFER_ENCODING_BINARY);
                 break;
             case PropertyType.NAME:
