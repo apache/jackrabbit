@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -75,6 +77,13 @@ public class TokenProvider extends ProtectedItemModifier {
     private static final Name TOKENS_NT_NAME = NameConstants.NT_UNSTRUCTURED;
 
     private static final char DELIM = '_';
+
+    /**
+     * Number of attempts to persist a new token node before giving up. Concurrent logins
+     * of the same user write below a shared token parent and may invalidate each other's
+     * pending changes (JCR-5095).
+     */
+    private static final int CREATE_TOKEN_MAX_ATTEMPTS = 3;
 
     private static final Set<String> RESERVED_ATTRIBUTES = new HashSet(3);
     static {
@@ -146,6 +155,39 @@ public class TokenProvider extends ProtectedItemModifier {
      */
     private TokenInfo createToken(User user, Map<String, ?> attributes) throws RepositoryException {
         String error = "Failed to create login token. ";
+        // Concurrent logins of the same user add token nodes below the very same token
+        // parent. A concurrent commit below that parent may invalidate the pending changes
+        // of this session, so that the token node can neither be saved
+        // (InvalidItemStateException) nor resolved afterwards (ItemNotFoundException while
+        // building its path). Both are transient, so retry with a refreshed session,
+        // analogous to the conflict handling in getTokenParent (JCR-5095).
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return createTokenNode(user, attributes, error);
+            } catch (InvalidItemStateException | ItemNotFoundException e) {
+                if (attempt >= CREATE_TOKEN_MAX_ATTEMPTS) {
+                    throw e;
+                }
+                log.debug("Conflict while creating login token (attempt {}) -> retrying", attempt, e);
+                // discard the token node that could not be persisted before retrying
+                session.refresh(false);
+            }
+        }
+    }
+
+    /**
+     * Creates and persists a single token node below the token parent of the given user.
+     *
+     * @param user       The user for which a new token should be created.
+     * @param attributes The attributes associated with the new token.
+     * @param error      Prefix used for log messages.
+     * @return A new {@code TokenInfo} or {@code null} if the token could not be created.
+     * @throws InvalidItemStateException If the token node could not be persisted because
+     *                                   the token parent was modified concurrently.
+     * @throws ItemNotFoundException If the token node could not be resolved after saving
+     *                               because the token parent was modified concurrently.
+     */
+    private TokenInfo createTokenNode(User user, Map<String, ?> attributes, String error) throws RepositoryException {
         NodeImpl tokenParent = getTokenParent(user);
         if (tokenParent != null) {
             try {
