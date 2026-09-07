@@ -181,6 +181,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the stopDelay configuration attribute. */
     public static final String STOP_DELAY_ATTRIBUTE = "stopDelay";
 
+    /** Name of the disableAutoSync configuration attribute. */
+    public static final String DISABLE_AUTO_SYNC_ATTRIBUTE = "disableAutoSync";
+
     /** Name of the default search index implementation class. */
     public static final String DEFAULT_QUERY_HANDLER =
         "org.apache.jackrabbit.core.query.lucene.SearchIndex";
@@ -895,7 +898,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                         element, STOP_DELAY_ATTRIBUTE, "-1")));
 
                 JournalFactory jf = getJournalFactory(element, home, id);
-                return new ClusterConfig(id, syncDelay, stopDelay, jf);
+
+                boolean disableAutoSync = Boolean.parseBoolean(replaceVariables(getAttribute(
+                        element, DISABLE_AUTO_SYNC_ATTRIBUTE, "false")));
+
+                return new ClusterConfig(id, syncDelay, stopDelay, jf, disableAutoSync);
             }
         }
         return null;

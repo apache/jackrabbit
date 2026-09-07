@@ -130,6 +130,33 @@ public class ClusterSyncTest extends JUnitTest {
     }
 
     /**
+     * Verify that a cluster node with sync disabled does not fetch results when changes
+     * are made.
+     *
+     * @throws Exception
+     */
+    public void testSyncDisabled() throws Exception {
+        // create channel on master and slave
+        LockEventChannel channel = master.createLockChannel(DEFAULT_WORKSPACE);
+        channel.setListener(new SimpleEventListener());
+
+        // add first entry
+        LockEvent event = new LockEvent(NodeId.randomId(), true, "admin");
+        channel.create(event.getNodeId(), event.isDeep(), event.getUserId()).ended(true);
+
+        // do not sync slave
+
+        // add second entry
+        event = new LockEvent(NodeId.randomId(), true, "admin");
+        channel.create(event.getNodeId(), event.isDeep(), event.getUserId()).ended(true);
+
+        long masterRevision = master.getRevision();
+        long slaveRevision = slave.getRevision();
+
+        assertTrue(masterRevision > slaveRevision);
+    }
+
+    /**
      * Create a cluster node, with a memory journal referencing a list of records.
      *
      * @param id cluster node id
