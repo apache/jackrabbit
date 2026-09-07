@@ -22,7 +22,6 @@ import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Collections;
 
 /**
@@ -33,7 +32,14 @@ import java.util.Collections;
  * <p>
  * File deletion is handled by a low-priority background thread.
  * <p>
+ * <b>WARNING:</b> depending on GC and VM implementation details, file removal
+ * can not only happen "late" but also "early". It is not safe to rely on
+ * the file being present once the {@linkplain File} object is not referenced
+ * anymore.
+ * <p>
+ * @deprecated manage transient files properly without relying on this class
  */
+@Deprecated(since="2.22.4")
 public class TransientFileFactory {
 
     /**
@@ -45,14 +51,14 @@ public class TransientFileFactory {
      * Queue where <code>MoribundFileReference</code> instances will be enqueued
      * once the associated target <code>File</code> objects have been gc'ed.
      */
-    private final ReferenceQueue<File> phantomRefQueue = new ReferenceQueue<File>();
+    private final ReferenceQueue<File> phantomRefQueue = new ReferenceQueue<>();
 
     /**
      * Collection of <code>MoribundFileReference</code> instances currently
      * being tracked.
      */
     private final Collection<MoribundFileReference> trackedRefs =
-        Collections.synchronizedList(new ArrayList<MoribundFileReference>());
+        Collections.synchronizedList(new ArrayList<>());
 
     /**
      * The reaper thread responsible for removing files awaiting deletion
@@ -87,11 +93,7 @@ public class TransientFileFactory {
         reaper.start();
         // register shutdownhook for final cleaning up
         try {
-            shutdownHook = new Thread() {
-                public void run() {
-                    doShutdown();
-                }
-            };
+            shutdownHook = new Thread(this::doShutdown);
             Runtime.getRuntime().addShutdownHook(shutdownHook);
         } catch (IllegalStateException e) {
             // can't register shutdownhook because
@@ -134,7 +136,8 @@ public class TransientFileFactory {
      * the webapp classloader. This must be called after all repositories had
      * been stopped, so use with great care!
      * <p>
-     * See http://issues.apache.org/jira/browse/JCR-1636 for details.
+     * See <a href="http://issues.apache.org/jira/browse/JCR-1636"
+     * >http://issues.apache.org/jira/browse/JCR-1636</a> for details.
      */
     public static void shutdown() {
         getInstance().doShutdown();
@@ -146,15 +149,9 @@ public class TransientFileFactory {
      * Shutdown hook is removed.
      */
     private synchronized void doShutdown() {
-        // synchronize on the list before iterating over it in order
-        // to avoid ConcurrentModificationException (JCR-549)
-        // @see java.lang.util.Collections.synchronizedList(java.util.List)
-        synchronized(trackedRefs) {
-            for (Iterator<MoribundFileReference> it = trackedRefs.iterator(); it.hasNext();) {
-                it.next().delete();
-            }
 
-        }
+        deleteTransientFiles();
+
         if (shutdownHook != null) {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
@@ -166,6 +163,21 @@ public class TransientFileFactory {
             shutdownHook = null;
         }
         reaper.stopWorking();
+    }
+
+    /**
+     * Deletes all transient files unconditionally.
+     * Only present for unit test.
+     */
+    protected synchronized void deleteTransientFiles() {
+        // synchronize on the list before iterating over it in order
+        // to avoid ConcurrentModificationException (JCR-549)
+        // @see java.lang.util.Collections.synchronizedList(java.util.List)
+        synchronized(trackedRefs) {
+            for (MoribundFileReference trackedRef : trackedRefs) {
+                trackedRef.delete();
+            }
+        }
     }
 
     //--------------------------------------------------------< inner classes >
@@ -198,10 +210,13 @@ public class TransientFileFactory {
                     // silently ignore...
                     continue;
                 }
+
                 // delete target
-                fileRef.delete();
-                fileRef.clear();
-                trackedRefs.remove(fileRef);
+                if (fileRef != null) {
+                    fileRef.delete();
+                    fileRef.clear();
+                    trackedRefs.remove(fileRef);
+                }
             }
         }
 
