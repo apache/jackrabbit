@@ -191,8 +191,19 @@ public class TextTest extends TestCase {
 
     public void testEscapeIllegalJcrChars() throws Exception {
         // single and double quote are valid since JCR 2.0
-        assertEquals("local'name", Text.escapeIllegalJcrChars("local'name"));
-        assertEquals("local\"name", Text.escapeIllegalJcrChars("local\"name"));
+        assertEscapeIllegalJcrChars("local'name", "local'name");
+        assertEscapeIllegalJcrChars("local\"name", "local\"name");
+        assertEscapeIllegalJcrChars("..", "%2E%2E");
+        assertEscapeIllegalJcrChars("...", "...");
+        // FIXME: JCR-5153
+        assertEscapeIllegalJcrChars("\u000F", "\u000F");
+    }
+
+    private void assertEscapeIllegalJcrChars(String name, String expectedEscapedName) {
+        String escaped = Text.escapeIllegalJcrChars(name);
+        assertEquals(expectedEscapedName, escaped);
+        assertTrue("Escaped name is not valid in JCR local names", Text.isValidJcrLocalName(escaped));
+        assertEquals(name, Text.unescapeIllegalJcrChars(escaped));
     }
 
     public void testEscapeXML() {
