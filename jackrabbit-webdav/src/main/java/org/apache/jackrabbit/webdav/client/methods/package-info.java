@@ -1,5 +1,4 @@
 /*
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,25 +16,22 @@
  */
 
 /**
- *
- * <p>
  * This package contains classes and utilities used to build a WebDAV client
- * implementation.<br>
- * Currently it consists of DAV-specific extensions to the
+ * implementation.
+ * <p>
+ * Currently, it consists of DAV-specific extensions to the
  * <a href="http://jakarta.apache.org/httpcomponents/httpclient-3.x/" target="_blank">Jakarta Commons HttpClient</a>,
  * namely a set of methods.
- * </p>
  *
+ * <h2>How to use Jakarta Commons HttpClient</h2>
  * <p>
- * <h3>How to use Jakarta Commons HttpClient</h3>
  * Please refer to the
  * <a href="http://jakarta.apache.org/httpcomponents/httpclient-3.x/tutorial.html" target="_blank">tutorial</a>
  * present with Jakarta Commons HttpClient for detailed
  * instructions.
- * </p>
  *
+ * <h3>Simple Example</h3>
  * <p>
- * <h4>Simple Example</h4>
  * The following simple example illustrates the additional functionality exposed
  * by the <strong>DavMethod</strong> which serves as basic interface for all
  * WebDAV specific extensions:<br><br>
@@ -92,6 +88,5 @@
  * <pre>
  * MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
  * </pre>
- * </p>
  */
 package org.apache.jackrabbit.webdav.client.methods;
