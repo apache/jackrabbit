@@ -18,6 +18,6 @@
 
 /**
  *
- * Provides interfaces and classes for locking related issues.
+ * Contains JCR specific reports.
  */
-package org.apache.jackrabbit.webdav.lock;
+package org.apache.jackrabbit.webdav.jcr.version.report;

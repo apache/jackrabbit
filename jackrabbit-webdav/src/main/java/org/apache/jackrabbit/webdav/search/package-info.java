@@ -1,4 +1,5 @@
 /*
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -6,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,5 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@org.osgi.annotation.versioning.Version("1.0.0")
+
+/**
+ *
+ * Contains interfaces and classes used to cover the functionality defined by the
+ * <a href="http://greenbytes.de/tech/webdav/draft-reschke-webdav-search-latest.html">Internet
+ * Draft WebDAV Search</a>.
+ */
 package org.apache.jackrabbit.webdav.search;

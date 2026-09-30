@@ -18,6 +18,12 @@
 
 /**
  *
- * Provides interfaces and classes for locking related issues.
+ * Contains JCR specific implementations for the following interfaces:
+ * <ul>
+ * <li>VersionableResource</li>
+ * <li>VersionControlledResource</li>
+ * <li>VersionResource</li>
+ * <li>VersionHistoryResource</li>
+ * </ul>
  */
-package org.apache.jackrabbit.webdav.lock;
+package org.apache.jackrabbit.webdav.jcr.version;

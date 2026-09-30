@@ -18,6 +18,15 @@
 
 /**
  *
- * Provides interfaces and classes for locking related issues.
+ * <p>
+ * This package contains a UUID (Universally Unique Identifier) version 4
+ * generator implementation copied from from the
+ * <a href="http://jakarta.apache.org/commons/sandbox/id/"
+ * >Jakarta Commons-Id</a> project.
+ * </p>
+ * <p>
+ * <b>TODO:</b> Replace with commons-id.jar as soon as official release is
+ * available.
+ * </p>
  */
-package org.apache.jackrabbit.webdav.lock;
+package org.apache.jackrabbit.uuid;

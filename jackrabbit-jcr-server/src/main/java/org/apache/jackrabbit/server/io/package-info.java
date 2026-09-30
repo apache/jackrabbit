@@ -18,6 +18,8 @@
 
 /**
  *
- * Provides interfaces and classes for locking related issues.
+ * The jackrabbit webdav server uses the classes defined in this package in order
+ * to perform import and export operations in order to respond to PUT, MKCOL, PROPPATCH
+ * and PROPFIND, GET, HEAD requests, respectively.
  */
-package org.apache.jackrabbit.webdav.lock;
+package org.apache.jackrabbit.server.io;
