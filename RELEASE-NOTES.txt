@@ -1,13 +1,13 @@
-Release Notes -- Apache Jackrabbit -- Version 2.22.4
+Release Notes -- Apache Jackrabbit -- Version 2.22.5
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.22.4, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.22.5, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.22.4 is an incremental feature release based on
+Apache Jackrabbit 2.22.5 is an incremental feature release based on
 and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 2.22.x releases are considered stable and targeted for production use.
 
@@ -18,36 +18,12 @@ The minimum Java version for this release is Java 11. See
 for maintenance versions that support earlier Java versions.
 
 
-Changes in Jackrabbit 2.22.4
+Changes in Jackrabbit 2.22.5
 ----------------------------
 
-** Sub-task
-    * [JCR-5244] - improve test coverage for HttpMultipartPost
-
-** Bug
-    * [JCR-5226] - Base64 decoder does not handle input without padding correctly
-
 ** Improvement
-    * [JCR-4521] - upgrade to commons-dbcp2
-    * [JCR-5249] - jackrabbit-spi-commons: add broken namepace names / prefixes to exception message
-
-** Test
-    * [JCR-4945] - Ensure OSGi-enabled Jackrabbit bundles deploy in environments featuring only Slf4j v2 or even Tika v2.9
-
-** Task
-    * [JCR-5211] - package-version jcr2spi
-    * [JCR-5216] - Update Jackrabbit Trunk to Oak 1.90.0
-    * [JCR-5217] - Update Mockito dependency to 5.23.0
-    * [JCR-5222] - webapp: update tomcat dependency to 9.0.116
-    * [JCR-5223] - update Apache parent pom to version 37
-    * [JCR-5224] - remove jackrabbit 2.0 compatibility and performance tests
-    * [JCR-5230] - improve diagnostics in IndexingQueueTest
-    * [JCR-5232] - Update Jackrabbit Trunk to Oak 1.92.0
-    * [JCR-5233] - commons-fileupload (1.6) restricts header size in upload parts
-    * [JCR-5242] - Update Jackrabbit Trunk to Oak 2.2.0
-    * [JCR-5243] - Update oak-jackrabbit-api.version.used to Oak 1.22.24
-    * [JCR-5246] - webapp: update tomcat dependency to 9.0.118
-    * [JCR-5247] - update Apache parent pom to version 39
+    * [JCR-5260] - Uncaught non-RepositoryException types in HTTP responses break JCR clients
+    * [JCR-5261] - WebDAV lock tokens violate specs due to path-based generation
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
