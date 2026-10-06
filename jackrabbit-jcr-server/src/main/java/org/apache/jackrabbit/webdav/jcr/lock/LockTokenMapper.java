@@ -19,7 +19,12 @@ package org.apache.jackrabbit.webdav.jcr.lock;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.jackrabbit.util.Text;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Maps between WebDAV lock tokens and JCR lock tokens.
@@ -27,7 +32,7 @@ import org.apache.jackrabbit.util.Text;
  * The following notations are used:
  * 
  * <pre>
- * opaquelocktoken:SESSIONSCOPED:<em>NODEIDENTIFIER</em>
+ * urn:uuid:<em>UUID of mapping</em>
  * opaquelocktoken:OPENSCOPED:<em>JCRLOCKTOKEN</em>
  * </pre>
  * 
@@ -44,22 +49,34 @@ public class LockTokenMapper {
 
     private static final String OL = "opaquelocktoken:";
 
-    private static final String SESSIONSCOPED = "4403ef44-4124-11e1-b965-00059a3c7a00";
     private static final String OPENSCOPED = "dccce564-412e-11e1-b969-00059a3c7a00";
 
-    private static final String SESSPREFIX = OL + SESSIONSCOPED + ":";
+    private static final String SESSPREFIX = "urn:uuid:";
     private static final String OPENPREFIX = OL + OPENSCOPED + ":";
 
+    // map node identifiers to randomized session locks, 4k mappings should be enough for everyone
+    private static final Map<String, String> mappings = Collections.synchronizedMap(new LRUMap<>(4196));
+
+    private LockTokenMapper() {
+        /* This utility class should not be instantiated */
+    }
+
+    /**
+     * Generate a WebDAV lock token from a JCR {@link Lock}.
+     */
     public static String getDavLocktoken(Lock lock) throws RepositoryException {
         String jcrLockToken = lock.getLockToken();
 
         if (jcrLockToken == null) {
-            return SESSPREFIX + Text.escape(lock.getNode().getIdentifier());
+            return SESSPREFIX + Text.escape(getMapping(lock.getNode().getIdentifier()));
         } else {
             return OPENPREFIX + Text.escape(jcrLockToken);
         }
     }
 
+    /**
+     * Map from a WebDAV lock token to JCR lock token (requires an open scoped lock).
+     */
     public static String getJcrLockToken(String token) throws RepositoryException {
         if (token.startsWith(OPENPREFIX)) {
             return Text.unescape(token.substring(OPENPREFIX.length()));
@@ -68,7 +85,26 @@ public class LockTokenMapper {
         }
     }
 
+    /**
+     * Discards the DAV lock token mapping recorded for the given node, if
+     * present. This is called when a lock is removed or newly created, so
+     * that the token of an earlier lock on the same node can never be
+     * reused against a later one.
+     *
+     * @param nodeIdentifier the identifier of the lock holding node.
+     */
+    public static void releaseSessionScopedToken(String nodeIdentifier) {
+        mappings.remove(nodeIdentifier);
+    }
+
     public static boolean isForSessionScopedLock(String token) {
         return token.startsWith(SESSPREFIX);
+    }
+
+    private static String getMapping(String nodeIdentifier) {
+        return mappings.computeIfAbsent(
+                nodeIdentifier,
+                k -> UUID.randomUUID().toString()
+        );
     }
 }
