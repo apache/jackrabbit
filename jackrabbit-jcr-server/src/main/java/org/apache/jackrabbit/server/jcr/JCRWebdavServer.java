@@ -227,6 +227,10 @@ public class JCRWebdavServer implements DavSessionProvider {
                 }
             }
 
+            if (session != null) {
+                session = checkSameUser(session, request);
+            }
+
             // no cached session present -> create new one.
             if (session == null) {
                 Session repSession = getRepositorySession(request);
@@ -242,7 +246,34 @@ public class JCRWebdavServer implements DavSessionProvider {
             return session;
         }
 
-        /**
+        private DavSession checkSameUser(DavSession cached, WebdavRequest request)
+                throws DavException {
+            Session repSession = getRepositorySession(request);
+            String userId = repSession.getUserID();
+            String cachedUserId = null;
+            try {
+                Session cachedSession = DavSessionImpl.getRepositorySession(cached);
+                if (cachedSession != null) {
+                    cachedUserId = cachedSession.getUserID();
+                }
+            } catch (DavException e) {
+                // should not occur, since only DavSessionImpl instances
+                // are put into the cache.
+                log.error("Unexpected error: {}", e.getMessage(), e.getCause());
+            }
+            if (cachedUserId != null && cachedUserId.equals(userId)) {
+                // same user: reuse the cached session and release the
+                // session that was only needed to authenticate the request.
+                sessionProvider.releaseSession(repSession);
+                return cached;
+            } else {
+                log.warn("Request of user '{}' presented a token referencing a session of user '{}' - token ignored.", userId, cachedUserId);
+                DavSession session = new DavSessionImpl(repSession);
+                sessionMap.put(session, new HashSet<>());
+                return session;
+            }
+        }
+            /**
          * Add a references to the specified <code>DavSession</code>.
          *
          * @param session
