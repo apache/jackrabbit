@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
@@ -23,7 +26,6 @@ import java.util.UUID;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
 
 import org.apache.jackrabbit.webdav.jcr.lock.LockTokenMapper;
 
@@ -44,6 +46,42 @@ public class LockTokenMappingTest extends TestCase {
         testRoundtrip("\n\u00c4 \u20ac");
     }
 
+    // the DAV token of a session-scoped lock must not be derivable from
+    // the (world-readable) node identifier
+    public void testSessionScopedTokenIsNotDerivedFromNodeId()
+            throws RepositoryException, URISyntaxException {
+        String nodeId = UUID.randomUUID().toString();
+        Lock l = new TestLock(nodeWithIdentifier(nodeId), true);
+        String davtoken = LockTokenMapper.getDavLocktoken(l);
+
+        assertNotNull(davtoken);
+        assertTrue(LockTokenMapper.isForSessionScopedLock(davtoken));
+        assertTrue("token must not contain the node identifier",
+                davtoken.indexOf(nodeId) < 0);
+
+        // valid URI?
+        URI u = new URI(davtoken);
+        assertTrue("lock token must be absolute URI", u.isAbsolute());
+        assertEquals("lock token URI must be all-ASCII", u.toASCIIString(), u.toString());
+
+        // stable for the same lock...
+        assertEquals(davtoken, LockTokenMapper.getDavLocktoken(l));
+
+        // ...but not reused once the lock is gone
+        LockTokenMapper.releaseSessionScopedToken(nodeId);
+        String next = LockTokenMapper.getDavLocktoken(l);
+        assertFalse("a new lock on the same node must get a fresh token",
+                davtoken.equals(next));
+    }
+
+    // two session-scoped locks on different nodes must get distinct tokens
+    public void testSessionScopedTokensAreDistinct() throws RepositoryException {
+        Lock l1 = new TestLock(nodeWithIdentifier(UUID.randomUUID().toString()), true);
+        Lock l2 = new TestLock(nodeWithIdentifier(UUID.randomUUID().toString()), true);
+        assertFalse(LockTokenMapper.getDavLocktoken(l1).equals(
+                LockTokenMapper.getDavLocktoken(l2)));
+    }
+
     private void testRoundtrip(String token) throws RepositoryException, URISyntaxException {
 
         Lock l = new TestLock(token);
@@ -59,14 +97,45 @@ public class LockTokenMappingTest extends TestCase {
     }
 
     /**
+     * Returns a minimal {@link Node} that only supports
+     * {@link Node#getIdentifier()}.
+     */
+    private static Node nodeWithIdentifier(final String id) {
+        return (Node) Proxy.newProxyInstance(
+                LockTokenMappingTest.class.getClassLoader(),
+                new Class<?>[] {Node.class},
+                new InvocationHandler() {
+                    public Object invoke(Object proxy, Method method, Object[] args) {
+                        if ("getIdentifier".equals(method.getName())) {
+                            return id;
+                        }
+                        throw new UnsupportedOperationException(method.getName());
+                    }
+                });
+    }
+
+    /**
      * Minimal Lock impl for tests above
      */
     private static class TestLock implements Lock {
 
         private final String token;
+        private final Node node;
+        private final boolean sessionScoped;
+        private final boolean lockOwningSession;
 
         public TestLock(String token) {
             this.token = token;
+            this.node = null;
+            this.sessionScoped = false;
+            this.lockOwningSession = false;
+        }
+
+        public TestLock(Node node, boolean lockOwningSession) {
+            this.token = null;
+            this.node = node;
+            this.sessionScoped = true;
+            this.lockOwningSession = lockOwningSession;
         }
 
         public String getLockOwner() {
@@ -78,30 +147,30 @@ public class LockTokenMappingTest extends TestCase {
         }
 
         public Node getNode() {
-            return null;
+            return node;
         }
 
         public String getLockToken() {
             return token;
         }
 
-        public long getSecondsRemaining() throws RepositoryException {
+        public long getSecondsRemaining() {
             return 0;
         }
 
-        public boolean isLive() throws RepositoryException {
+        public boolean isLive() {
             return false;
         }
 
         public boolean isSessionScoped() {
-            return false;
+            return sessionScoped;
         }
 
         public boolean isLockOwningSession() {
-            return false;
+            return lockOwningSession;
         }
 
-        public void refresh() throws LockException, RepositoryException {
+        public void refresh() {
         }
     }
 }

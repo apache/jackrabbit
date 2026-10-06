@@ -62,6 +62,7 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.jcr.lock.LockTokenMapper;
 import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.jcr.security.JcrUserPrivilegesProperty;
 import org.apache.jackrabbit.webdav.jcr.security.JcrSupportedPrivilegesProperty;
@@ -695,6 +696,10 @@ public class DefaultItemCollection extends AbstractItemResource
                 javax.jcr.lock.LockManager lockMgr = getRepositorySession().getWorkspace().getLockManager();
                 Lock jcrLock = lockMgr.lock((item).getPath(), reqLockInfo.isDeep(),
                         sessionScoped, timeout, reqLockInfo.getOwner());
+                if (sessionScoped) {
+                    // discard any mapping of a previous lock on this node
+                    LockTokenMapper.releaseSessionScopedToken(jcrLock.getNode().getIdentifier());
+                }
                 ActiveLock lock = new JcrActiveLock(jcrLock);
                  // add reference to DAVSession for this lock
                 getSession().addReference(lock.getToken());
@@ -767,8 +772,12 @@ public class DefaultItemCollection extends AbstractItemResource
         ActiveLock lock = getWriteLock();
         if (lock != null && lockToken.equals(lock.getToken())) {
             try {
-                ((Node) item).unlock();
-                getSession().removeReference(lock.getToken());                
+                Node n = (Node) item;
+                n.unlock();
+                getSession().removeReference(lockToken);
+                // the lock is gone: discard its DAV token secret so it can
+                // not be replayed against a future lock on this node.
+                LockTokenMapper.releaseSessionScopedToken(n.getIdentifier());
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
