@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.util.db;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -26,6 +28,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.apache.jackrabbit.data.core.TransactionContext;
@@ -83,9 +87,240 @@ public class ConnectionHelper {
     private Map<Object, Connection> batchConnectionMap = Collections.synchronizedMap(new HashMap<Object, Connection>());
 
     /**
-     * The default fetchSize is '0'. This means the fetchSize Hint will be ignored 
+     * The default fetchSize is '0'. This means the fetchSize Hint will be ignored
      */
     private int fetchSize = 0;
+
+    // ------------------------------------------------------------------------
+    // JTA-aware autoCommit / commit / rollback handling.
+    //
+    // When this helper runs inside a Jakarta/Java EE container (WildFly,
+    // JBoss, ...) the DataSource handed in here is typically a JCA-managed
+    // connection pool. As soon as the application thread holds an active
+    // container-managed JTA transaction, the wrapped Connection refuses
+    // explicit setAutoCommit(false), commit() and rollback() calls (e.g.
+    // IronJacamar IJ031017 / IJ031018 / IJ031019) -- the transaction
+    // manager owns the lifecycle.
+    //
+    // The {@link JtaContext} below resolves the ambient container
+    // TransactionSynchronizationRegistry on first use (lazy JNDI lookup so
+    // ConnectionHelper instances created before the namespace is fully
+    // bound still work) and offers two operations:
+    //   - hasManagedTransaction(): true when a transaction is currently
+    //     associated with this thread; STATUS_NO_TRANSACTION is the only
+    //     status considered safe for direct JDBC tx-control. STATUS_UNKNOWN
+    //     means the TM cannot determine the status, so the helper treats
+    //     it as "associated" (fail closed). Reflection or invocation
+    //     failures with a TSR present are also treated as "associated".
+    //   - markRollbackOnly(): mirrors a caller's local rollback intent
+    //     onto the global JTA transaction so the TM aborts the global
+    //     branch when the caller could not.
+    //
+    // The TSR is referenced through reflection so the class compiles and
+    // runs unchanged against javax.transaction (Java EE 8) and
+    // jakarta.transaction (Jakarta EE 9+) container stacks.
+    // ------------------------------------------------------------------------
+
+    private volatile JtaContext jtaContext;
+
+    /**
+     * Returns the {@link JtaContext} for this helper, performing the
+     * (idempotent) lazy JNDI lookup on first call. The method is
+     * {@code final} and package-private; tests in this package can
+     * inject a context up front via {@link #setJtaContext(JtaContext)}.
+     */
+    final JtaContext getJtaContext() {
+        JtaContext ctx = jtaContext;
+        if (ctx == null) {
+            ctx = JtaContext.discover();
+            jtaContext = ctx;
+        }
+        return ctx;
+    }
+
+    /**
+     * Test hook: replace the discovered JtaContext with a stub. Visible
+     * to tests in this package (the method is final and package-private,
+     * not a subclass extension point). Must be called before the first
+     * batch operation; subsequent calls to {@link #getJtaContext()} will
+     * return the supplied instance.
+     */
+    final void setJtaContext(JtaContext ctx) {
+        this.jtaContext = ctx;
+    }
+
+    /**
+     * Encapsulates the JTA TransactionSynchronizationRegistry access
+     * required by JCR-5239. Package-private. Each {@link ConnectionHelper}
+     * holds its own resolved {@code JtaContext} (the TSR object provided
+     * by the container is itself thread-aware, so there is no shared
+     * caller state inside this class beyond the bound reflective methods).
+     * The {@link #NONE} sentinel for "no TSR available" is reused.
+     *
+     * <p>Two factory methods:
+     * <ul>
+     *   <li>{@link #discover()} performs the JNDI lookup against
+     *       {@code java:comp/TransactionSynchronizationRegistry} and the
+     *       reflective method binding. Always returns a non-null instance;
+     *       when no TSR is available the returned instance reports
+     *       {@code hasManagedTransaction() == false} on every call.</li>
+     *   <li>{@link #forTesting(Object)} accepts an externally supplied
+     *       TSR-like object so unit tests can drive the decision logic
+     *       without bringing up a JNDI context.</li>
+     * </ul>
+     */
+    static final class JtaContext {
+
+        private static final int STATUS_NO_TRANSACTION_VALUE = 6;
+
+        private static final JtaContext NONE = new JtaContext(null, null, null);
+
+        private final Object tsr;
+        private final Method getTransactionStatusMethod;
+        private final Method setRollbackOnlyMethod;
+
+        private JtaContext(Object tsr, Method getStatus, Method setRollbackOnly) {
+            this.tsr = tsr;
+            this.getTransactionStatusMethod = getStatus;
+            this.setRollbackOnlyMethod = setRollbackOnly;
+        }
+
+        static JtaContext discover() {
+            Object tsr = lookupTsr();
+            if (tsr == null) {
+                return NONE;
+            }
+            Method getStatus = resolveMethod(tsr, "getTransactionStatus");
+            Method setRollback = resolveMethod(tsr, "setRollbackOnly");
+            return new JtaContext(tsr, getStatus, setRollback);
+        }
+
+        static JtaContext forTesting(Object tsr) {
+            if (tsr == null) {
+                return NONE;
+            }
+            return new JtaContext(
+                    tsr,
+                    resolveMethod(tsr, "getTransactionStatus"),
+                    resolveMethod(tsr, "setRollbackOnly"));
+        }
+
+        private static Object lookupTsr() {
+            InitialContext ctx = null;
+            try {
+                ctx = new InitialContext();
+                return ctx.lookup("java:comp/TransactionSynchronizationRegistry");
+            } catch (NamingException e) {
+                LoggerFactory.getLogger(ConnectionHelper.class).debug(
+                        "No TransactionSynchronizationRegistry bound at "
+                                + "java:comp/TransactionSynchronizationRegistry, "
+                                + "JTA-aware tx handling disabled: {}",
+                        e.toString());
+                return null;
+            } finally {
+                if (ctx != null) {
+                    try {
+                        ctx.close();
+                    } catch (NamingException ignored) {
+                        // close failure is not actionable
+                    }
+                }
+            }
+        }
+
+        private static Method resolveMethod(Object tsr, String name) {
+            // Prefer the public TSR interface types so we do not depend on a
+            // package-private container implementation class. Try Jakarta
+            // first, then Java EE 8.
+            for (String typeName : new String[] {
+                    "jakarta.transaction.TransactionSynchronizationRegistry",
+                    "javax.transaction.TransactionSynchronizationRegistry" }) {
+                try {
+                    Class<?> type = Class.forName(typeName);
+                    if (type.isInstance(tsr)) {
+                        return type.getMethod(name);
+                    }
+                } catch (ClassNotFoundException e) {
+                    // expected on the other platform variant
+                } catch (NoSuchMethodException e) {
+                    // unexpected on a public TSR interface, fall through
+                }
+            }
+            try {
+                return tsr.getClass().getMethod(name);
+            } catch (NoSuchMethodException e) {
+                LoggerFactory.getLogger(ConnectionHelper.class).warn(
+                        "TransactionSynchronizationRegistry instance {} does not expose method {}(); "
+                                + "JTA-aware handling for this method will be unavailable. "
+                                + "hasManagedTransaction() will fall back to fail-closed (treat as managed); "
+                                + "markRollbackOnly() will report failure to the caller.",
+                        tsr.getClass().getName(), name);
+                return null;
+            }
+        }
+
+        /**
+         * @return {@code true} if a managed JTA transaction is currently
+         *         associated with this thread. Fail-closed: when a TSR is
+         *         present but the status cannot be determined (reflection
+         *         binding missing, invocation failure, non-integer return,
+         *         etc.) this method returns {@code true} so callers do not
+         *         run direct JDBC tx-control on a possibly enrolled
+         *         connection.
+         */
+        boolean hasManagedTransaction() {
+            if (tsr == null) {
+                return false;
+            }
+            if (getTransactionStatusMethod == null) {
+                // TSR was discovered but status cannot be read -- assume a
+                // transaction may be associated and skip direct JDBC calls.
+                return true;
+            }
+            Object status;
+            try {
+                status = getTransactionStatusMethod.invoke(tsr);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                LoggerFactory.getLogger(ConnectionHelper.class).debug(
+                        "Failed to read TransactionSynchronizationRegistry status; "
+                                + "treating thread as transaction-associated.", e);
+                return true;
+            }
+            if (!(status instanceof Integer)) {
+                return true;
+            }
+            return ((Integer) status).intValue() != STATUS_NO_TRANSACTION_VALUE;
+        }
+
+        /**
+         * Mark the currently associated JTA transaction as rollback-only.
+         *
+         * @return {@code true} if the rollback-only marker was applied to
+         *         the global JTA transaction; {@code false} when no TSR
+         *         was discovered, when the {@code setRollbackOnly()}
+         *         method could not be bound, or when the reflective
+         *         invocation failed. Callers in batch-rollback paths
+         *         (e.g. {@link ConnectionHelper#endBatch(boolean)} with
+         *         {@code commit==false}) must surface a {@code false}
+         *         return as a failure to the caller, otherwise a
+         *         requested rollback can disappear silently while the
+         *         global transaction still commits.
+         */
+        boolean markRollbackOnly() {
+            if (tsr == null || setRollbackOnlyMethod == null) {
+                return false;
+            }
+            try {
+                setRollbackOnlyMethod.invoke(tsr);
+                return true;
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                LoggerFactory.getLogger(ConnectionHelper.class).warn(
+                        "Failed to mark managed JTA transaction as rollback-only "
+                                + "via TransactionSynchronizationRegistry.setRollbackOnly()", e);
+                return false;
+            }
+        }
+    }
 
     /**
      * @param dataSrc the {@link DataSource} on which this instance acts
@@ -237,7 +472,14 @@ public class ConnectionHelper {
         Connection batchConnection = null;
         try {
             batchConnection = getConnection(false);
-            batchConnection.setAutoCommit(false);
+            // JTA-aware tx handling: inside a container-managed JTA
+            // transaction the connection's auto-commit state is controlled
+            // by the transaction manager; an explicit setAutoCommit(false)
+            // here would be rejected by the JCA pool (e.g. IronJacamar
+            // IJ031017).
+            if (!getJtaContext().hasManagedTransaction()) {
+                batchConnection.setAutoCommit(false);
+            }
             setTransactionAwareBatchConnection(batchConnection);
         } catch (SQLException e) {
             removeTransactionAwareBatchConnection();
@@ -260,12 +502,37 @@ public class ConnectionHelper {
         if (!inBatchMode()) {
             throw new SQLException("not in batch mode");
         }
-        Connection batchConnection = getTransactionAwareBatchConnection(); 
+        Connection batchConnection = getTransactionAwareBatchConnection();
         try {
-            if (commit) {
-            	batchConnection.commit();
+            // JTA-aware tx handling: inside a container-managed JTA
+            // transaction the transaction manager owns commit/rollback on
+            // the underlying XAResource -- issuing them directly on the
+            // wrapped Connection is rejected by JCA pools (IJ031018 /
+            // IJ031019). For commit==true the global TM commits the branch
+            // when the outer JTA transaction commits, so the local commit()
+            // would be redundant either way. For commit==false the caller
+            // requested a rollback that we cannot perform locally, so the
+            // closest semantic equivalent is to mark the global JTA
+            // transaction rollback-only via the TSR; the TM will then
+            // abort the global transaction (and this branch with it). If
+            // setRollbackOnly() is unavailable or fails, surface that as
+            // a SQLException so the caller's rollback intent is not lost
+            // silently. Outside a managed tx the historical behaviour
+            // applies.
+            JtaContext ctx = getJtaContext();
+            if (ctx.hasManagedTransaction()) {
+                if (!commit && !ctx.markRollbackOnly()) {
+                    throw new SQLException(
+                            "Unable to roll back batch inside managed JTA transaction: "
+                                    + "TransactionSynchronizationRegistry.setRollbackOnly() "
+                                    + "is unavailable or failed");
+                }
             } else {
-            	batchConnection.rollback();
+                if (commit) {
+                    batchConnection.commit();
+                } else {
+                    batchConnection.rollback();
+                }
             }
         } finally {
             removeTransactionAwareBatchConnection();
@@ -446,8 +713,14 @@ public class ConnectionHelper {
             return getTransactionAwareBatchConnection();
         } else {
             Connection con = dataSource.getConnection();
-            // JCR-1013: Setter may fail unnecessarily on a managed connection
-            if (!con.getAutoCommit()) {
+            // JCR-1013 + JTA-aware skip: the original mitigation flips
+            // auto-commit back to true when the wrapped Connection reports
+            // it off, but on a JCA-managed connection enrolled in an
+            // active JTA transaction the setAutoCommit call is rejected
+            // (IJ031017). Skip the flip while a managed tx is in progress.
+            // The JTA check runs first so managed-JTA paths do not even
+            // read the auto-commit state.
+            if (!getJtaContext().hasManagedTransaction() && !con.getAutoCommit()) {
                 con.setAutoCommit(true);
             }
             return con;
