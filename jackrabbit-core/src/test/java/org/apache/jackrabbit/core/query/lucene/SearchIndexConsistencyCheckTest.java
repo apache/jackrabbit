@@ -63,7 +63,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
         assertEquals("Expected 1 index consistency error", 1, errors.size());
 
@@ -74,7 +74,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
 
-        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+        assertTrue("Consistency check still reports errors", searchIndex.doConsistencyCheck().getErrors().isEmpty());
     }
 
     public void testMissingNodeDoubleCheck() throws Exception {
@@ -91,7 +91,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
         assertEquals("Expected 1 index consistency error", 1, errors.size());
 
@@ -121,7 +121,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
         assertEquals("Expected 1 index consistency error", 1, errors.size());
 
@@ -132,7 +132,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         assertFalse("Index was not repaired properly", searchIndexContainsNode(searchIndex, nodeId));
 
-        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+        assertTrue("Consistency check still reports errors", searchIndex.doConsistencyCheck().getErrors().isEmpty());
     }
 
     public void testUnknownNodeDoubleCheck() throws Exception {
@@ -149,7 +149,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
         assertEquals("Expected 1 index consistency error", 1, errors.size());
 
@@ -180,7 +180,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
 
         assertEquals("Expected 2 index consistency errors", 2, errors.size());
@@ -192,7 +192,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
 
-        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+        assertTrue("Consistency check still reports errors", searchIndex.doConsistencyCheck().getErrors().isEmpty());
     }
 
     public void testMissingAncestorDoubleCheck() throws Exception {
@@ -211,7 +211,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
 
         assertEquals("Expected 2 index consistency errors", 2, errors.size());
@@ -248,7 +248,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         searchIndex.updateNodes(remove, add);
 
-        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
 
         assertEquals("Expected 1 index consistency error", 1, errors.size());
@@ -268,7 +268,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         errors = consistencyCheck.getErrors();
 
         assertTrue("Consistency double check of multiple entries failed", errors.isEmpty());
-        assertTrue("Consistency check still finds errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+        assertTrue("Consistency check still finds errors", searchIndex.doConsistencyCheck().getErrors().isEmpty());
 
     }
 
@@ -302,7 +302,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
             t.start();
             Thread.sleep(100);
             for (int i = 100; i > 0; i--) {
-                final ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+                final ConsistencyCheckInterface consistencyCheck = searchIndex.doConsistencyCheck();
                 consistencyCheck.doubleCheckErrors();
                 final List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
                 assertTrue(errors.isEmpty());

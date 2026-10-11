@@ -469,7 +469,7 @@ public class MultiIndex {
      * @throws IOException if an error occurs while adding the document to the
      *                     index.
      */
-    void addDocument(Document doc) throws IOException {
+    public void addDocument(Document doc) throws IOException {
         Collection<NodeId> empty = Collections.emptyList();
         update(empty, Collections.singleton(doc));
     }
@@ -492,7 +492,7 @@ public class MultiIndex {
      * @return the number of deleted documents.
      * @throws IOException if an error occurs while deleting documents.
      */
-    synchronized int removeAllDocuments(NodeId id) throws IOException {
+    public synchronized int removeAllDocuments(NodeId id) throws IOException {
         synchronized (updateMonitor) {
             updateInProgress = true;
         }
@@ -774,13 +774,39 @@ public class MultiIndex {
     }
 
     /**
+     * @deprecated use {@link #doConsistencyCheck()} instead
+     */
+    ConsistencyCheck runConsistencyCheck() throws IOException {
+        return (ConsistencyCheck) doConsistencyCheck();
+    }
+
+    /**
      * Runs a consistency check on this multi index.
      *
      * @return the consistency check.
      * @throws IOException if an error occurs while running the check.
      */
-    ConsistencyCheck runConsistencyCheck() throws IOException {
-        return ConsistencyCheck.run(this, handler, excludedIDs);
+    ConsistencyCheckInterface doConsistencyCheck() throws IOException {
+        ConsistencyCheckInterface check = createConsistencyCheck();
+        check.run();
+        return check;
+    }
+    
+    /**
+     * Creates a new ConsistencyCheckInterface instance. This method can be overridden by
+     * subclasses to provide a custom implementation.
+     * 
+     * @return a new ConsistencyCheckInterface instance
+     */
+    protected ConsistencyCheckInterface createConsistencyCheck() {
+        try {
+            return handler.getConsistencyCheckClass()
+                    .getConstructor(MultiIndex.class, SearchIndex.class, Set.class)
+                    .newInstance(this, handler, excludedIDs);
+        } catch (Exception e) {
+            log.error("Failed to create ConsistencyCheckInterface instance, using default", e);
+            return new DefaultConsistencyCheck(this, handler, excludedIDs);
+        }
     }
 
     /**
@@ -863,7 +889,7 @@ public class MultiIndex {
      * @throws RepositoryException if an error occurs while reading from the
      *                             workspace.
      */
-    Document createDocument(NodeState node) throws RepositoryException {
+    public Document createDocument(NodeState node) throws RepositoryException {
         return handler.createDocument(node, nsMappings, version);
     }
 

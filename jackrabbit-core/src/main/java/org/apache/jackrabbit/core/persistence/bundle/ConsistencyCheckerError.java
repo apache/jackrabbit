@@ -25,7 +25,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 /**
  * Base class for errors reported by the {@link ConsistencyCheckerImpl}
  */
-abstract class ConsistencyCheckerError {
+public abstract class ConsistencyCheckerError {
 
     protected final String message;
     protected final NodeId nodeId;
