@@ -252,7 +252,7 @@ public class S3Backend extends AbstractBackend {
                 return false;
             }
             throw new DataStoreException(
-                "Error occured to getObjectMetadata for key ["
+                "Error occurred to getObjectMetadata for key ["
                     + identifier.toString() + "]", e);
         } finally {
             if (contextClassLoader != null) {
