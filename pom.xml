@@ -80,6 +80,7 @@
             <exclude>test/performance/base/src/main/resources/deepTree.xml</exclude>
             <exclude>.git/**</exclude>
             <exclude>.gitignore</exclude>
+            <exclude>.mvn/.develocity/**</exclude>
           </excludes>
         </configuration>
       </plugin>
