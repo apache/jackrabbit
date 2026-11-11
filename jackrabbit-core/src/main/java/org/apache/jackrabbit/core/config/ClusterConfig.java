@@ -48,6 +48,11 @@ public class ClusterConfig implements JournalFactory {
     private final JournalFactory jf;
 
     /**
+     * Disable auto sync
+     */
+    private final boolean disableAutoSync;
+
+    /**
      * Creates a new cluster configuration.
      *
      * @param id custom cluster node id
@@ -68,10 +73,26 @@ public class ClusterConfig implements JournalFactory {
      */
     public ClusterConfig(String id, long syncDelay,
                          long stopDelay, JournalFactory jf) {
+        this (id, syncDelay, stopDelay, jf, false);
+    }
+
+    /**
+     * Creates a new cluster configuration.
+     *
+     * @param id custom cluster node id
+     * @param syncDelay syncDelay, in milliseconds
+     * @param stopDelay stopDelay in milliseconds
+     * @param jf journal factory
+     * @param disableAutoSync trye if auto sync is disabled
+     */
+    public ClusterConfig(String id, long syncDelay,
+                         long stopDelay, JournalFactory jf,
+                         boolean disableAutoSync) {
         this.id = id;
         this.syncDelay = syncDelay;
         this.stopDelay = stopDelay < 0 ? syncDelay * 10 : stopDelay;
         this.jf = jf;
+        this.disableAutoSync = disableAutoSync;
     }
 
     /**
@@ -112,4 +133,10 @@ public class ClusterConfig implements JournalFactory {
         return jf.getJournal(resolver);
     }
 
+    /**
+     * @return disableAutoSync true if auto sync is disabled
+     */
+    public boolean isDisableAutoSync() {
+        return disableAutoSync;
+    }
 }
